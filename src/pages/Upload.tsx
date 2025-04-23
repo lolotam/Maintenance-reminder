@@ -10,8 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { downloadTemplate } from "@/utils/excelTemplates";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const Upload = () => {
+  const navigate = useNavigate();
   const { addMachines } = useAppContext();
   const [uploadStatus, setUploadStatus] = useState<{
     success: boolean;
@@ -25,6 +28,20 @@ const Upload = () => {
         success: true,
         message: `Successfully imported ${machines.length} ${type} machines.`,
       });
+      
+      // Show toast notification
+      toast.success(`${machines.length} machines imported successfully!`, {
+        description: "The data is now available in the LDR Machines page.",
+        action: {
+          label: "View Machines",
+          onClick: () => navigate("/ldr-machines"),
+        },
+      });
+      
+      // After a delay, optionally navigate to LDR Machines page
+      setTimeout(() => {
+        setUploadStatus(null);
+      }, 5000);
     } catch (error: any) {
       setUploadStatus({
         success: false,
@@ -57,6 +74,11 @@ const Upload = () => {
               {uploadStatus.success ? "Success" : "Error"}
             </AlertTitle>
             <AlertDescription>{uploadStatus.message}</AlertDescription>
+            {uploadStatus.success && (
+              <Button variant="outline" size="sm" className="mt-2" onClick={() => navigate("/ldr-machines")}>
+                Go to LDR Machines
+              </Button>
+            )}
           </Alert>
         )}
 
@@ -80,6 +102,9 @@ const Upload = () => {
                     Download Template
                   </Button>
                 </div>
+                <p className="text-muted-foreground text-sm">
+                  Template contains: Equipment_Name, Model, Serial_Number, Manufacturer, Log_Number, Q1_Date, Q1_Engineer, Q2_Date, Q2_Engineer, Q3_Date, Q3_Engineer, Q4_Date, Q4_Engineer
+                </p>
               </CardHeader>
               <CardContent>
                 <FileUploader 
@@ -104,6 +129,9 @@ const Upload = () => {
                     Download Template
                   </Button>
                 </div>
+                <p className="text-muted-foreground text-sm">
+                  Template contains: Equipment_Name, Model, Serial_Number, Manufacturer, Log_Number, 2025_Maintenance_Date, 2025_Engineer, 2026_Maintenance_Date
+                </p>
               </CardHeader>
               <CardContent>
                 <FileUploader 
