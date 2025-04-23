@@ -1,4 +1,3 @@
-
 import {
   Table,
   TableBody,
@@ -181,13 +180,35 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
     setDialogOpen(true);
   };
 
+  const calculateYearlyDate = (maintenanceDate: string) => {
+    const currentDate = new Date(maintenanceDate);
+    const nextYear = new Date(currentDate);
+    nextYear.setDate(nextYear.getDate() + 365); // Add 365 days for next year
+    
+    return {
+      currentYear: currentDate.toISOString().split('T')[0],
+      nextYear: nextYear.toISOString().split('T')[0]
+    };
+  };
+
   const onSubmit = (data: FormData) => {
     if (editingMachine) {
+      const dates = calculateYearlyDate(data.maintenanceDate);
+      const updatedMachine = {
+        ...editingMachine,
+        equipment: data.equipment,
+        model: data.model,
+        serialNumber: data.serialNumber,
+        manufacturer: data.manufacturer,
+        logNo: data.logNo,
+        maintenanceDate: dates.currentYear,
+        nextYearDate: dates.nextYear
+      };
+      
       const updatedMachines = storedMachines.map(machine => 
-        machine.id === editingMachine.id 
-          ? { ...machine, ...data } 
-          : machine
+        machine.id === editingMachine.id ? updatedMachine : machine
       );
+      
       setStoredMachines(updatedMachines);
       saveToLocalStorage(updatedMachines);
       toast.success(`${data.equipment} has been updated`);

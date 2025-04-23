@@ -2,8 +2,9 @@
 import { MainLayout } from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Wrench, Settings } from "lucide-react";
+import { Wrench, Settings, Bell } from "lucide-react";
 import { useAppContext } from "@/contexts/AppContext";
+import { toast } from "sonner";
 
 const LdrMachines = () => {
   const { countMachinesByType } = useAppContext();
@@ -11,19 +12,35 @@ const LdrMachines = () => {
   const ppmMachinesCount = countMachinesByType("PPM");
   const ocmMachinesCount = countMachinesByType("OCM");
 
+  const handleDashboardLink = () => {
+    // Integration with dashboard will be implemented here
+    toast.info("Redirecting to dashboard...");
+  };
+
+  const handleNotifications = () => {
+    // Integration with notifications will be implemented here
+    toast.info("Checking maintenance notifications...");
+  };
+
   return (
     <MainLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-primary">
-            LDR Machines 
-            <span className="ml-2 text-sm text-muted-foreground">
-              ({ppmMachinesCount + ocmMachinesCount} Total)
-            </span>
-          </h1>
-          <p className="text-lg text-muted-foreground mt-2">
-            Maintenance Management Dashboard
-          </p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-primary">
+              LDR Machines 
+              <span className="ml-2 text-sm text-muted-foreground">
+                ({ppmMachinesCount + ocmMachinesCount} Total)
+              </span>
+            </h1>
+            <p className="text-lg text-muted-foreground mt-2">
+              Maintenance Management Dashboard
+            </p>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleNotifications}>
+            <Bell className="h-4 w-4 mr-2" />
+            Notifications
+          </Button>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">

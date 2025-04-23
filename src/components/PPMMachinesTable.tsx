@@ -1,4 +1,3 @@
-
 import {
   Table,
   TableBody,
@@ -214,8 +213,27 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
     );
   };
 
+  const calculateQuarterlyDates = (q1Date: string) => {
+    const q1 = new Date(q1Date);
+    const q2 = new Date(q1);
+    const q3 = new Date(q1);
+    const q4 = new Date(q1);
+    
+    q2.setDate(q2.getDate() + 90); // Add 90 days for Q2
+    q3.setDate(q3.getDate() + 180); // Add 180 days for Q3
+    q4.setDate(q4.getDate() + 270); // Add 270 days for Q4
+    
+    return {
+      q1: q1.toISOString().split('T')[0],
+      q2: q2.toISOString().split('T')[0],
+      q3: q3.toISOString().split('T')[0],
+      q4: q4.toISOString().split('T')[0]
+    };
+  };
+
   const onSubmit = (data: FormData) => {
     if (editingMachine) {
+      const dates = calculateQuarterlyDates(data.q1_date);
       const updatedMachine = {
         ...editingMachine,
         equipment: data.equipment,
@@ -223,10 +241,10 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
         serialNumber: data.serialNumber,
         manufacturer: data.manufacturer,
         logNo: data.logNo,
-        q1: { date: data.q1_date, engineer: data.q1_engineer },
-        q2: { date: data.q2_date, engineer: data.q2_engineer },
-        q3: { date: data.q3_date, engineer: data.q3_engineer },
-        q4: { date: data.q4_date, engineer: data.q4_engineer },
+        q1: { date: dates.q1, engineer: data.q1_engineer },
+        q2: { date: dates.q2, engineer: data.q2_engineer },
+        q3: { date: dates.q3, engineer: data.q3_engineer },
+        q4: { date: dates.q4, engineer: data.q4_engineer },
       };
       
       const updatedMachines = storedMachines.map(machine => 
