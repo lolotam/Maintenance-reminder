@@ -273,7 +273,7 @@ export const AddMachineDialog = ({ type, onAddMachine }: AddMachineDialogProps) 
                 <div className="grid gap-4 md:grid-cols-2 border-t pt-4">
                   <FormField
                     control={form.control}
-                    name="maintenance2026.date" as any
+                    name="maintenance2026.date"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>2026 Maintenance Date</FormLabel>
@@ -285,7 +285,7 @@ export const AddMachineDialog = ({ type, onAddMachine }: AddMachineDialogProps) 
                   />
                   <FormField
                     control={form.control}
-                    name="maintenance2026.engineer" as any
+                    name="maintenance2026.engineer"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>2026 Engineer</FormLabel>
