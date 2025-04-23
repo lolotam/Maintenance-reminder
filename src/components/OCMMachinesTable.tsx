@@ -1,4 +1,3 @@
-
 import {
   Table,
   TableBody,
@@ -103,17 +102,28 @@ export const OCMMachinesTable = ({ searchTerm }: OCMMachinesTableProps) => {
   });
   
   const filteredMachines = storedMachines.filter((machine) => {
-    const matchesSearch = 
-      machine.equipment.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      machine.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const equipmentMatch = machine.equipment && 
+      machine.equipment.toLowerCase().includes(searchTerm.toLowerCase());
+    const modelMatch = machine.model && 
+      machine.model.toLowerCase().includes(searchTerm.toLowerCase());
+    const manufacturerMatch = machine.manufacturer && 
       machine.manufacturer.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesSearch = equipmentMatch || modelMatch || manufacturerMatch;
 
-    const matchesFilters = 
-      machine.equipment.toLowerCase().includes(filters.equipment.toLowerCase()) &&
-      machine.model.toLowerCase().includes(filters.model.toLowerCase()) &&
-      machine.serialNumber.toLowerCase().includes(filters.serialNumber.toLowerCase()) &&
-      machine.manufacturer.toLowerCase().includes(filters.manufacturer.toLowerCase()) &&
-      machine.logNo.toLowerCase().includes(filters.logNo.toLowerCase());
+    const matchesEquipmentFilter = !filters.equipment || 
+      (machine.equipment && machine.equipment.toLowerCase().includes(filters.equipment.toLowerCase()));
+    const matchesModelFilter = !filters.model || 
+      (machine.model && machine.model.toLowerCase().includes(filters.model.toLowerCase()));
+    const matchesSerialFilter = !filters.serialNumber || 
+      (machine.serialNumber && machine.serialNumber.toLowerCase().includes(filters.serialNumber.toLowerCase()));
+    const matchesManufacturerFilter = !filters.manufacturer || 
+      (machine.manufacturer && machine.manufacturer.toLowerCase().includes(filters.manufacturer.toLowerCase()));
+    const matchesLogNoFilter = !filters.logNo || 
+      (machine.logNo && machine.logNo.toString().toLowerCase().includes(filters.logNo.toLowerCase()));
+
+    const matchesFilters = matchesEquipmentFilter && matchesModelFilter && 
+      matchesSerialFilter && matchesManufacturerFilter && matchesLogNoFilter;
 
     return matchesSearch && matchesFilters;
   });
@@ -166,7 +176,6 @@ export const OCMMachinesTable = ({ searchTerm }: OCMMachinesTableProps) => {
 
   const onSubmit = (data: FormData) => {
     if (editingMachine) {
-      // Update existing machine
       const updatedMachines = storedMachines.map(machine => 
         machine.id === editingMachine.id 
           ? { ...machine, ...data } 
