@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useAppContext } from "@/contexts/AppContext";
+import { addMonths } from "date-fns";
 
 const PPMMachines = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -20,16 +21,11 @@ const PPMMachines = () => {
   const handleAddMachine = (machineData: any) => {
     try {
       console.log("Adding new PPM machine:", machineData);
-      const q1Date = machineData.q1_date || new Date().toISOString().split('T')[0];
+      const q1Date = new Date(machineData.q1_date || new Date());
       
-      const q1 = new Date(q1Date);
-      const q2 = new Date(q1);
-      const q3 = new Date(q1);
-      const q4 = new Date(q1);
-      
-      q2.setDate(q2.getDate() + 90);
-      q3.setDate(q3.getDate() + 180);
-      q4.setDate(q4.getDate() + 270);
+      const q2Date = addMonths(q1Date, 3);
+      const q3Date = addMonths(q1Date, 6);
+      const q4Date = addMonths(q1Date, 9);
       
       const newMachine = {
         id: machineData.id,
@@ -39,19 +35,19 @@ const PPMMachines = () => {
         manufacturer: machineData.manufacturer,
         logNo: machineData.logNo,
         q1: { 
-          date: q1.toISOString().split('T')[0], 
+          date: q1Date.toISOString().split('T')[0], 
           engineer: machineData.q1_engineer 
         },
         q2: { 
-          date: q2.toISOString().split('T')[0], 
+          date: q2Date.toISOString().split('T')[0], 
           engineer: machineData.q2_engineer 
         },
         q3: { 
-          date: q3.toISOString().split('T')[0], 
+          date: q3Date.toISOString().split('T')[0], 
           engineer: machineData.q3_engineer 
         },
         q4: { 
-          date: q4.toISOString().split('T')[0], 
+          date: q4Date.toISOString().split('T')[0], 
           engineer: machineData.q4_engineer 
         },
       };

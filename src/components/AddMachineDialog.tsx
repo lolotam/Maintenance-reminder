@@ -20,22 +20,11 @@ const ppmFormSchema = z.object({
   serialNumber: z.string().min(1, "Serial number is required"),
   manufacturer: z.string().min(1, "Manufacturer is required"),
   logNo: z.string().min(1, "Log number is required"),
-  q1: z.object({
-    date: z.string().min(1, "Q1 date is required"),
-    engineer: z.string().min(1, "Q1 engineer is required"),
-  }),
-  q2: z.object({
-    date: z.string().min(1, "Q2 date is required"),
-    engineer: z.string().min(1, "Q2 engineer is required"),
-  }),
-  q3: z.object({
-    date: z.string().min(1, "Q3 date is required"),
-    engineer: z.string().min(1, "Q3 engineer is required"),
-  }),
-  q4: z.object({
-    date: z.string().min(1, "Q4 date is required"),
-    engineer: z.string().min(1, "Q4 engineer is required"),
-  }),
+  q1_date: z.string().min(1, "Q1 date is required"),
+  q1_engineer: z.string().min(1, "Q1 engineer is required"),
+  q2_engineer: z.string().min(1, "Q2 engineer is required"),
+  q3_engineer: z.string().min(1, "Q3 engineer is required"),
+  q4_engineer: z.string().min(1, "Q4 engineer is required"),
 });
 
 // Updated OCM Form schema with multi-year maintenance
@@ -69,10 +58,11 @@ export const AddMachineDialog = ({ type, onAddMachine }: AddMachineDialogProps) 
       serialNumber: "",
       manufacturer: "",
       logNo: "",
-      q1: { date: "", engineer: "" },
-      q2: { date: "", engineer: "" },
-      q3: { date: "", engineer: "" },
-      q4: { date: "", engineer: "" },
+      q1_date: "",
+      q1_engineer: "",
+      q2_engineer: "",
+      q3_engineer: "",
+      q4_engineer: "",
     } : {
       equipment: "",
       model: "",
@@ -87,7 +77,9 @@ export const AddMachineDialog = ({ type, onAddMachine }: AddMachineDialogProps) 
 
   const onSubmit = (data: any) => {
     try {
-      onAddMachine(data);
+      // Generate a unique ID for the new machine
+      const newId = crypto.randomUUID();
+      onAddMachine({ ...data, id: newId });
       toast.success(`${type.toUpperCase()} machine added successfully`);
     } catch (error) {
       toast.error("Failed to add machine");
@@ -176,24 +168,45 @@ export const AddMachineDialog = ({ type, onAddMachine }: AddMachineDialogProps) 
             </div>
 
             {type === "ppm" ? (
-              <>
-                {[1, 2, 3, 4].map((quarter) => (
+              <div className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2 border-t pt-4">
+                  <FormField
+                    control={form.control}
+                    name="q1_date"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Q1 Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="q1_engineer"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Q1 Engineer</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter engineer name" {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {[2, 3, 4].map((quarter) => (
                   <div key={quarter} className="grid gap-4 md:grid-cols-2 border-t pt-4">
+                    <FormItem>
+                      <FormLabel>Q{quarter} Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" disabled placeholder="Auto-calculated" />
+                      </FormControl>
+                    </FormItem>
                     <FormField
                       control={form.control}
-                      name={`q${quarter}.date` as any}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Q{quarter} Date</FormLabel>
-                          <FormControl>
-                            <Input type="date" {...field} />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`q${quarter}.engineer` as any}
+                      name={`q${quarter}_engineer` as any}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Q{quarter} Engineer</FormLabel>
@@ -205,7 +218,7 @@ export const AddMachineDialog = ({ type, onAddMachine }: AddMachineDialogProps) 
                     />
                   </div>
                 ))}
-              </>
+              </div>
             ) : (
               <div className="space-y-4">
                 {[2024, 2025, 2026].map((year) => (
