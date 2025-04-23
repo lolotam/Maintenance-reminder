@@ -57,35 +57,39 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
     }
   };
 
-  const checkDuplicateSerialNumbers = (data: any[], existingMachines: Machine[]) => {
-    const serialNumbers = new Set<string>();
+  const checkDuplicates = (data: any[], existingMachines: Machine[]) => {
+    const uniqueCombinations = new Map<string, boolean>();
     const duplicates = new Set<string>();
     
-    // Check for duplicates within the new data
     data.forEach(row => {
-      const serialNumber = row.Serial_Number;
-      if (serialNumbers.has(serialNumber)) {
-        duplicates.add(serialNumber);
+      const serialNumber = row.Serial_Number || '';
+      const equipmentName = row.Equipment_Name || '';
+      const uniqueKey = `${serialNumber}|${equipmentName}`;
+      
+      if (uniqueCombinations.has(uniqueKey)) {
+        duplicates.add(`${equipmentName} (${serialNumber})`);
       } else {
-        serialNumbers.add(serialNumber);
+        uniqueCombinations.set(uniqueKey, true);
       }
     });
     
-    // Check against existing machines
     existingMachines.forEach(machine => {
-      if (serialNumbers.has(machine.serialNumber || '')) {
-        duplicates.add(machine.serialNumber || '');
+      const serialNumber = machine.serialNumber || '';
+      const equipmentName = machine.name || '';
+      const uniqueKey = `${serialNumber}|${equipmentName}`;
+      
+      if (uniqueCombinations.has(uniqueKey)) {
+        duplicates.add(`${equipmentName} (${serialNumber})`);
       }
     });
     
     if (duplicates.size > 0) {
-      throw new Error(`Duplicate serial numbers found: ${Array.from(duplicates).join(", ")}`);
+      throw new Error(`Duplicate machines found: ${Array.from(duplicates).join(", ")}`);
     }
   };
 
   const getExistingMachines = () => {
     try {
-      // Get machines from localStorage
       if (type === 'PPM') {
         const stored = localStorage.getItem("ppmMachines");
         return stored ? JSON.parse(stored) : [];
@@ -112,15 +116,12 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
       
       const existingMachines = getExistingMachines();
       
-      // Check for duplicate serial numbers
-      checkDuplicateSerialNumbers(data, existingMachines);
+      checkDuplicates(data, existingMachines);
 
       const machines: Machine[] = data.map(row => {
-        // Determine the last maintenance date based on the machine type
         let lastMaintenanceDate: string;
         
         if (type === 'PPM') {
-          // For PPM, use the most recent quarter date that has a value
           const dates = [row.Q1_Date, row.Q2_Date, row.Q3_Date, row.Q4_Date].filter(Boolean);
           lastMaintenanceDate = dates.length > 0 ? 
             new Date(Math.max(...dates.map(d => new Date(d).getTime()))).toISOString() :
@@ -144,7 +145,6 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
             }
           };
         } else {
-          // For OCM, use the most recent year date that has a value
           const dates = [
             row['2025_Maintenance_Date'], 
             row['2026_Maintenance_Date']
@@ -235,12 +235,9 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
 
   const saveToApplication = () => {
     try {
-      // Save to the app context for the Upload page integration
       onDataReady(parsedData);
       
-      // Also save to localStorage for the LDR Machines page integration
       if (type === 'PPM') {
-        // Convert to PPMMachine format for LDR page
         const ppmMachines = parsedData.map(machine => ({
           id: machine.id,
           equipment: machine.name,
@@ -254,24 +251,23 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
           q4: machine.quarters?.q4 || { date: '', engineer: '' },
         }));
         
-        // Get existing machines and merge them, excluding duplicates
         const existingMachines = JSON.parse(localStorage.getItem("ppmMachines") || "[]");
         const mergedMachines = [...existingMachines];
         
         ppmMachines.forEach(newMachine => {
-          const existingIndex = mergedMachines.findIndex(m => m.serialNumber === newMachine.serialNumber);
+          const existingIndex = mergedMachines.findIndex(m => 
+            m.serialNumber === newMachine.serialNumber && 
+            m.equipment === newMachine.equipment
+          );
           if (existingIndex >= 0) {
-            // Replace existing machine
             mergedMachines[existingIndex] = newMachine;
           } else {
-            // Add new machine
             mergedMachines.push(newMachine);
           }
         });
         
         localStorage.setItem("ppmMachines", JSON.stringify(mergedMachines));
       } else {
-        // Convert to OCMMachine format for LDR page
         const ocmMachines = parsedData.map(machine => ({
           id: machine.id,
           equipment: machine.name,
@@ -283,17 +279,17 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
           engineer: machine.years?.['2025']?.engineer || '',
         }));
         
-        // Get existing machines and merge them, excluding duplicates
         const existingMachines = JSON.parse(localStorage.getItem("ocmMachines") || "[]");
         const mergedMachines = [...existingMachines];
         
         ocmMachines.forEach(newMachine => {
-          const existingIndex = mergedMachines.findIndex(m => m.serialNumber === newMachine.serialNumber);
+          const existingIndex = mergedMachines.findIndex(m => 
+            m.serialNumber === newMachine.serialNumber && 
+            m.equipment === newMachine.equipment
+          );
           if (existingIndex >= 0) {
-            // Replace existing machine
             mergedMachines[existingIndex] = newMachine;
           } else {
-            // Add new machine
             mergedMachines.push(newMachine);
           }
         });

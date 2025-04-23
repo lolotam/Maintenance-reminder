@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Machine, AppSettings, NotificationSettings } from "@/types";
 import { addMonths, addYears } from "date-fns";
@@ -69,14 +68,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Add new machines
   const addMachines = (newMachines: Machine[]) => {
     setMachines((prevMachines) => {
-      // Create a map of existing machines by name for easy checking
-      const existingMap = new Map(prevMachines.map(m => [m.name, m]));
-      
       // Process new machines - update existing or add new
       const updatedMachines = [...prevMachines];
       
       newMachines.forEach(newMachine => {
-        const existingIndex = updatedMachines.findIndex(m => m.name === newMachine.name);
+        // Check for duplicates based on both name AND serial number
+        const existingIndex = updatedMachines.findIndex(
+          m => m.name === newMachine.name && m.serialNumber === newMachine.serialNumber
+        );
         
         if (existingIndex >= 0) {
           // Update existing machine
