@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { MainLayout } from "@/components/MainLayout";
 import { FileUploader } from "@/components/FileUploader";
@@ -12,36 +11,85 @@ import { downloadTemplate } from "@/utils/excelTemplates";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { databaseService } from "@/services/databaseService";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const Upload = () => {
   const navigate = useNavigate();
   const { addMachines } = useAppContext();
+  const queryClient = useQueryClient();
   const [uploadStatus, setUploadStatus] = useState<{
     success: boolean;
     message: string;
   } | null>(null);
 
-  const handleDataReady = (machines: Machine[], type: 'PPM' | 'OCM') => {
-    try {
-      addMachines(machines);
+  const bulkAddPPMMachinesMutation = useMutation({
+    mutationFn: databaseService.bulkAddPPMMachines,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['ppmMachines'] });
       setUploadStatus({
         success: true,
-        message: `Successfully imported ${machines.length} ${type} machines.`,
+        message: `Successfully imported ${data.insertedCount} PPM machines.`,
       });
       
-      // Show toast notification
-      toast.success(`${machines.length} machines imported successfully!`, {
-        description: "The data is now available in the LDR Machines page.",
+      toast.success(`${data.insertedCount} PPM machines imported successfully!`, {
+        description: "The data is now available in the PPM Machines page.",
         action: {
           label: "View Machines",
-          onClick: () => navigate("/ldr-machines"),
+          onClick: () => navigate("/ldr-machines/ppm"),
         },
       });
       
-      // After a delay, optionally navigate to LDR Machines page
       setTimeout(() => {
         setUploadStatus(null);
       }, 5000);
+    },
+    onError: (error: any) => {
+      setUploadStatus({
+        success: false,
+        message: `Error: ${error.message || "Unknown error occurred"}`,
+      });
+    }
+  });
+
+  const bulkAddOCMMachinesMutation = useMutation({
+    mutationFn: databaseService.bulkAddOCMMachines,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['ocmMachines'] });
+      setUploadStatus({
+        success: true,
+        message: `Successfully imported ${data.insertedCount} OCM machines.`,
+      });
+      
+      toast.success(`${data.insertedCount} OCM machines imported successfully!`, {
+        description: "The data is now available in the OCM Machines page.",
+        action: {
+          label: "View Machines",
+          onClick: () => navigate("/ldr-machines/ocm"),
+        },
+      });
+      
+      setTimeout(() => {
+        setUploadStatus(null);
+      }, 5000);
+    },
+    onError: (error: any) => {
+      setUploadStatus({
+        success: false,
+        message: `Error: ${error.message || "Unknown error occurred"}`,
+      });
+    }
+  });
+
+  const handleDataReady = (machines: Machine[], type: 'PPM' | 'OCM') => {
+    try {
+      addMachines(machines);
+      
+      if (type === 'PPM') {
+        bulkAddPPMMachinesMutation.mutate(machines);
+      } else {
+        bulkAddOCMMachinesMutation.mutate(machines);
+      }
     } catch (error: any) {
       setUploadStatus({
         success: false,

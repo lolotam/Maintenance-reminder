@@ -1,73 +1,46 @@
-# Welcome to your Lovable project
 
-## Project info
+# Maintenance Schedule App
 
-**URL**: https://lovable.dev/projects/2334fba2-127d-4621-b5ae-843cbedde728
+This application helps manage maintenance schedules for PPM (Planned Preventive Maintenance) and OCM (Operational Condition Monitoring) machines.
 
-## How can I edit this code?
+## Setup Instructions
 
-There are several ways of editing your application.
+### MongoDB Atlas Setup
 
-**Use Lovable**
+1. Create a MongoDB Atlas account at [https://www.mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas)
+2. Create a new project and cluster
+3. Get your connection string from the MongoDB Atlas dashboard
+4. Replace the placeholder in the `.env` file with your actual connection string:
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/2334fba2-127d-4621-b5ae-843cbedde728) and start prompting.
+```
+MONGO_URI=mongodb+srv://yourusername:yourpassword@yourcluster.mongodb.net/?retryWrites=true&w=majority
+```
 
-Changes made via Lovable will be committed automatically to this repo.
+### Running the Application
 
-**Use your preferred IDE**
+1. Start the MongoDB backend server:
+```bash
+node server.js
+```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+2. In a separate terminal, start the React frontend:
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+3. The application should now be running with MongoDB Atlas integration.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Using the Application
 
-**Use GitHub Codespaces**
+- The app will store data in MongoDB Atlas, allowing access from any device
+- All data will be synced across devices when connected to the internet
+- Upload machine data using Excel templates
+- View and manage PPM and OCM machines separately
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Technologies Used
 
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/2334fba2-127d-4621-b5ae-843cbedde728) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+- React with TypeScript
+- MongoDB Atlas for cross-device data storage
+- Express for the backend API
+- React Query for data fetching and state management
+- Tailwind CSS and shadcn/ui for styling
