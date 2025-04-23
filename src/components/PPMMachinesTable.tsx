@@ -24,7 +24,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { format, parse } from "date-fns";
+import { format } from "date-fns";
 
 interface PPMMachine {
   id: string;
@@ -157,18 +157,30 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
     localStorage.setItem("ppmMachines", JSON.stringify(machines));
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | any) => {
     if (!dateString) return "";
-    const parsedDate = parse(dateString, 'yyyy-MM-dd', new Date());
-    return format(parsedDate, 'dd/MM/yyyy');
+    try {
+      const dateObj = new Date(dateString);
+      if (isNaN(dateObj.getTime())) return "";
+      return format(dateObj, 'dd/MM/yyyy');
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "";
+    }
   };
 
   const isDueSoon = (dateString: string) => {
-    const today = new Date();
-    const dueDate = new Date(dateString);
-    const diffTime = dueDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays >= 0 && diffDays <= 7;
+    if (!dateString) return false;
+    try {
+      const today = new Date();
+      const dueDate = new Date(dateString);
+      const diffTime = dueDate.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays >= 0 && diffDays <= 7;
+    } catch (error) {
+      console.error("Error checking if date is due soon:", error);
+      return false;
+    }
   };
 
   const setReminder = (machine: PPMMachine, quarter: string) => {
