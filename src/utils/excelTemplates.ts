@@ -1,4 +1,3 @@
-
 import * as XLSX from 'xlsx';
 
 export const PPM_HEADERS = [
@@ -23,12 +22,9 @@ export const OCM_HEADERS = [
   'Serial_Number',
   'Manufacturer',
   'Log_Number',
-  '2024_Maintenance_Date',
-  '2024_Engineer',
   '2025_Maintenance_Date',
   '2025_Engineer',
-  '2026_Maintenance_Date',
-  '2026_Engineer'
+  '2026_Maintenance_Date'
 ];
 
 export const generateTemplate = (headers: string[]) => {
