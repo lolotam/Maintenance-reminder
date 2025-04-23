@@ -286,12 +286,8 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
               <TableHead>Model_Serial Number</TableHead>
               <TableHead>Manufacturer</TableHead>
               <TableHead>Log_Number</TableHead>
-              <TableHead>2024 Maintenance Date</TableHead>
-              <TableHead>2024 Engineer</TableHead>
               <TableHead>2025 Maintenance Date</TableHead>
               <TableHead>2025 Engineer</TableHead>
-              <TableHead>2026 Maintenance Date</TableHead>
-              <TableHead>2026 Engineer</TableHead>
               <TableHead>ACTION</TableHead>
               <TableHead>Edit/Delete</TableHead>
             </TableRow>
@@ -310,16 +306,8 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
                   <TableCell>{`${machine.model} - ${machine.serialNumber}`}</TableCell>
                   <TableCell>{machine.manufacturer}</TableCell>
                   <TableCell>{machine.logNo}</TableCell>
-                  <TableCell className={isDueSoon(machine.maintenanceDate) ? "text-amber-600 font-medium" : ""}>
-                    {formatYearlyDate(machine.maintenanceDate, 2024)}
-                  </TableCell>
-                  <TableCell>{machine.engineer || "-"}</TableCell>
                   <TableCell>
                     {formatYearlyDate(machine.maintenanceDate, 2025)}
-                  </TableCell>
-                  <TableCell>-</TableCell>
-                  <TableCell>
-                    {formatYearlyDate(machine.maintenanceDate, 2026)}
                   </TableCell>
                   <TableCell>-</TableCell>
                   <TableCell>
@@ -364,7 +352,7 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={12} className="text-center py-4">
+                <TableCell colSpan={9} className="text-center py-4">
                   No OCM machines found matching your criteria.
                 </TableCell>
               </TableRow>
