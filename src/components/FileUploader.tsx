@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import * as XLSX from "xlsx";
 import { v4 as uuidv4 } from "uuid";
-import { addDays, addMonths, addYears, format } from "date-fns";
+import { addDays, addMonths, addYears, format, isValid, parseISO } from "date-fns";
 import { Machine } from "@/types";
 import { Upload, FileCheck, AlertCircle } from "lucide-react";
 import { 
@@ -27,10 +27,49 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
   const [parsedData, setParsedData] = useState<Machine[]>([]);
   const [processingError, setProcessingError] = useState<string | null>(null);
 
+  const parseExcelDate = (value: any): string => {
+    if (!value) return '';
+    
+    try {
+      if (typeof value === 'number') {
+        const excelEpoch = new Date(1900, 0, 1);
+        const date = new Date(excelEpoch);
+        date.setDate(excelEpoch.getDate() + value - 1);
+        return date.toISOString();
+      }
+      
+      if (typeof value === 'string') {
+        const isoDate = new Date(value);
+        if (isValid(isoDate)) {
+          return isoDate.toISOString();
+        }
+        
+        const parts = value.split(/[-\/]/);
+        if (parts.length === 3) {
+          const month = parseInt(parts[0]) - 1;
+          const day = parseInt(parts[1]);
+          const year = parseInt(parts[2]);
+          const date = new Date(year, month, day);
+          if (isValid(date)) {
+            return date.toISOString();
+          }
+        }
+      }
+      
+      console.warn("Could not parse date value:", value);
+      return '';
+    } catch (error) {
+      console.error("Error parsing date:", error, value);
+      return '';
+    }
+  };
+
   const calculateNextDate = (lastDate: string, frequency: string) => {
     try {
-      const date = new Date(lastDate);
-      if (isNaN(date.getTime())) {
+      if (!lastDate) return '';
+      
+      const date = parseISO(lastDate);
+      if (!isValid(date)) {
         throw new Error("Invalid date");
       }
       
@@ -43,7 +82,7 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
       }
     } catch (error) {
       console.error("Error calculating next date:", error);
-      return null;
+      return '';
     }
   };
 
@@ -119,12 +158,20 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
       checkDuplicates(data, existingMachines);
 
       const machines: Machine[] = data.map(row => {
-        let lastMaintenanceDate: string;
+        let lastMaintenanceDate: string = '';
         
         if (type === 'PPM') {
-          const dates = [row.Q1_Date, row.Q2_Date, row.Q3_Date, row.Q4_Date].filter(Boolean);
+          const q1Date = parseExcelDate(row.Q1_Date);
+          const q2Date = parseExcelDate(row.Q2_Date);
+          const q3Date = parseExcelDate(row.Q3_Date);
+          const q4Date = parseExcelDate(row.Q4_Date);
+          
+          const dates = [q1Date, q2Date, q3Date, q4Date].filter(date => date);
+          
           lastMaintenanceDate = dates.length > 0 ? 
-            new Date(Math.max(...dates.map(d => new Date(d).getTime()))).toISOString() :
+            dates.reduce((latest, current) => {
+              return new Date(current) > new Date(latest) ? current : latest;
+            }) : 
             new Date().toISOString();
 
           return {
@@ -136,22 +183,24 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
             logNo: row.Log_Number,
             frequency: 'Quarterly' as const,
             lastMaintenanceDate,
-            nextMaintenanceDate: calculateNextDate(lastMaintenanceDate, 'Quarterly') || '',
+            nextMaintenanceDate: calculateNextDate(lastMaintenanceDate, 'Quarterly'),
             quarters: {
-              q1: { date: row.Q1_Date || '', engineer: row.Q1_Engineer || '' },
-              q2: { date: row.Q2_Date || '', engineer: row.Q2_Engineer || '' },
-              q3: { date: row.Q3_Date || '', engineer: row.Q3_Engineer || '' },
-              q4: { date: row.Q4_Date || '', engineer: row.Q4_Engineer || '' },
+              q1: { date: q1Date, engineer: row.Q1_Engineer || '' },
+              q2: { date: q2Date, engineer: row.Q2_Engineer || '' },
+              q3: { date: q3Date, engineer: row.Q3_Engineer || '' },
+              q4: { date: q4Date, engineer: row.Q4_Engineer || '' },
             }
           };
         } else {
-          const dates = [
-            row['2025_Maintenance_Date'], 
-            row['2026_Maintenance_Date']
-          ].filter(Boolean);
+          const date2025 = parseExcelDate(row['2025_Maintenance_Date']);
+          const date2026 = parseExcelDate(row['2026_Maintenance_Date']);
+          
+          const dates = [date2025, date2026].filter(date => date);
           
           lastMaintenanceDate = dates.length > 0 ? 
-            new Date(Math.max(...dates.map(d => new Date(d).getTime()))).toISOString() :
+            dates.reduce((latest, current) => {
+              return new Date(current) > new Date(latest) ? current : latest;
+            }) : 
             new Date().toISOString();
 
           return {
@@ -163,10 +212,10 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
             logNo: row.Log_Number,
             frequency: 'Yearly' as const,
             lastMaintenanceDate,
-            nextMaintenanceDate: calculateNextDate(lastMaintenanceDate, 'Yearly') || '',
+            nextMaintenanceDate: calculateNextDate(lastMaintenanceDate, 'Yearly'),
             years: {
-              '2025': { date: row['2025_Maintenance_Date'] || '', engineer: row['2025_Engineer'] || '' },
-              '2026': { date: row['2026_Maintenance_Date'] || '', engineer: '' },
+              '2025': { date: date2025, engineer: row['2025_Engineer'] || '' },
+              '2026': { date: date2026, engineer: row['2026_Engineer'] || '' },
             }
           };
         }
@@ -366,9 +415,9 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
                   return (
                     <TableRow key={machine.id}>
                       <TableCell className="font-medium">{machine.name}</TableCell>
-                      <TableCell>{!isNaN(lastDate.getTime()) ? format(lastDate, "MMM d, yyyy") : "N/A"}</TableCell>
+                      <TableCell>{isValid(lastDate) ? format(lastDate, "MMM d, yyyy") : "N/A"}</TableCell>
                       <TableCell>{machine.frequency}</TableCell>
-                      <TableCell>{nextDate && !isNaN(nextDate.getTime()) ? format(nextDate, "MMM d, yyyy") : "N/A"}</TableCell>
+                      <TableCell>{nextDate && isValid(nextDate) ? format(nextDate, "MMM d, yyyy") : "N/A"}</TableCell>
                     </TableRow>
                   );
                 })}
