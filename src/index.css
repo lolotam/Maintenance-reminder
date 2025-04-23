@@ -98,4 +98,32 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  h1 {
+    @apply text-3xl font-bold text-primary;
+  }
+
+  h2 {
+    @apply text-2xl font-semibold text-primary;
+  }
+
+  h3 {
+    @apply text-xl font-medium text-primary;
+  }
+
+  th {
+    @apply text-base font-bold text-primary;
+  }
+
+  td {
+    @apply text-base;
+  }
+
+  .engineer-name {
+    @apply text-blue-600 font-medium;
+  }
+
+  .menu-item {
+    @apply text-lg font-medium;
+  }
 }

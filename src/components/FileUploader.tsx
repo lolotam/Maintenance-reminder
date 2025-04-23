@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import * as XLSX from "xlsx";
@@ -20,13 +19,13 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface FileUploaderProps {
   onDataReady: (machines: Machine[]) => void;
+  type: 'PPM' | 'OCM';
 }
 
-export function FileUploader({ onDataReady }: FileUploaderProps) {
+export function FileUploader({ onDataReady, type }: FileUploaderProps) {
   const [parsedData, setParsedData] = useState<Machine[]>([]);
   const [processingError, setProcessingError] = useState<string | null>(null);
-  
-  // Calculate next maintenance date based on frequency and last date
+
   const calculateNextDate = (lastDate: string, frequency: string) => {
     try {
       const date = new Date(lastDate);
@@ -46,69 +45,88 @@ export function FileUploader({ onDataReady }: FileUploaderProps) {
       return null;
     }
   };
-  
+
+  const validateHeaders = (headers: string[], expectedHeaders: string[]) => {
+    const missingColumns = expectedHeaders.filter(expected => 
+      !headers.some(header => header.toLowerCase() === expected.toLowerCase())
+    );
+    
+    if (missingColumns.length) {
+      throw new Error(`Missing required columns: ${missingColumns.join(", ")}`);
+    }
+  };
+
   const processFileData = (data: any[]) => {
     try {
-      // Basic validation
       if (!data || !data.length) {
         throw new Error("No data found in file");
       }
-      
-      // Check required columns
-      const requiredColumns = ["Machine Name", "Last Maintenance Date", "Frequency"];
+
       const headers = Object.keys(data[0]);
-      
-      const missingColumns = requiredColumns.filter(col => 
-        !headers.some(header => header.toLowerCase() === col.toLowerCase())
-      );
-      
-      if (missingColumns.length) {
-        throw new Error(`Missing required columns: ${missingColumns.join(", ")}`);
-      }
-      
-      // Process rows
-      const machines: Machine[] = data.map(row => {
-        // Get values with case-insensitive column names
-        const getName = () => {
-          const key = headers.find(h => h.toLowerCase() === "machine name".toLowerCase());
-          return key ? row[key] : null;
-        };
-        
-        const getDate = () => {
-          const key = headers.find(h => h.toLowerCase() === "last maintenance date".toLowerCase());
-          return key ? row[key] : null;
-        };
-        
-        const getFrequency = () => {
-          const key = headers.find(h => h.toLowerCase() === "frequency".toLowerCase());
-          return key ? row[key] : null;
-        };
-        
-        const name = getName();
-        const lastDate = getDate();
-        const frequency = getFrequency();
-        
-        // Validate values
-        if (!name) throw new Error("Missing machine name in row");
-        if (!lastDate) throw new Error(`Missing last maintenance date for ${name}`);
-        if (!frequency) throw new Error(`Missing frequency for ${name}`);
-        
-        const normalizedFrequency = frequency.toLowerCase() === "quarterly" ? "Quarterly" : "Yearly";
-        
-        // Calculate next date
-        const nextDate = calculateNextDate(lastDate, frequency);
-        
-        if (!nextDate) throw new Error(`Could not calculate next date for ${name}`);
-        
-        return {
+      const expectedHeaders = type === 'PPM' ? [
+        'Equipment_Name',
+        'Model',
+        'Serial_Number',
+        'Manufacturer',
+        'Log_Number',
+        'Q1_Date',
+        'Q1_Engineer',
+        'Q2_Date',
+        'Q2_Engineer',
+        'Q3_Date',
+        'Q3_Engineer',
+        'Q4_Date',
+        'Q4_Engineer'
+      ] : [
+        'Equipment_Name',
+        'Model',
+        'Serial_Number',
+        'Manufacturer',
+        'Log_Number',
+        '2024_Maintenance_Date',
+        '2024_Engineer',
+        '2025_Maintenance_Date',
+        '2025_Engineer',
+        '2026_Maintenance_Date',
+        '2026_Engineer'
+      ];
+
+      validateHeaders(headers, expectedHeaders);
+
+      const machines = data.map(row => {
+        const baseFields = {
           id: uuidv4(),
-          name,
-          lastMaintenanceDate: new Date(lastDate).toISOString(),
-          frequency: normalizedFrequency as "Quarterly" | "Yearly",
-          nextMaintenanceDate: nextDate
+          name: row.Equipment_Name,
+          manufacturer: row.Manufacturer,
+          model: row.Model,
+          serialNumber: row.Serial_Number,
+          logNo: row.Log_Number,
         };
+
+        if (type === 'PPM') {
+          return {
+            ...baseFields,
+            frequency: 'Quarterly',
+            quarters: {
+              q1: { date: row.Q1_Date, engineer: row.Q1_Engineer },
+              q2: { date: row.Q2_Date, engineer: row.Q2_Engineer },
+              q3: { date: row.Q3_Date, engineer: row.Q3_Engineer },
+              q4: { date: row.Q4_Date, engineer: row.Q4_Engineer },
+            }
+          };
+        } else {
+          return {
+            ...baseFields,
+            frequency: 'Yearly',
+            years: {
+              '2024': { date: row['2024_Maintenance_Date'], engineer: row['2024_Engineer'] },
+              '2025': { date: row['2025_Maintenance_Date'], engineer: row['2025_Engineer'] },
+              '2026': { date: row['2026_Maintenance_Date'], engineer: row['2026_Engineer'] },
+            }
+          };
+        }
       });
-      
+
       setParsedData(machines);
       setProcessingError(null);
     } catch (error: any) {
@@ -117,7 +135,7 @@ export function FileUploader({ onDataReady }: FileUploaderProps) {
       setParsedData([]);
     }
   };
-  
+
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setProcessingError(null);
     
@@ -128,7 +146,6 @@ export function FileUploader({ onDataReady }: FileUploaderProps) {
     
     const file = acceptedFiles[0];
     
-    // Validate file type
     const validTypes = [
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // xlsx
       "application/vnd.ms-excel", // xls
@@ -151,7 +168,6 @@ export function FileUploader({ onDataReady }: FileUploaderProps) {
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         
-        // Convert to JSON with headers
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
         processFileData(jsonData);
       } catch (error: any) {
@@ -162,7 +178,7 @@ export function FileUploader({ onDataReady }: FileUploaderProps) {
     
     reader.readAsBinaryString(file);
   }, []);
-  
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
     onDrop,
     accept: {
@@ -171,7 +187,7 @@ export function FileUploader({ onDataReady }: FileUploaderProps) {
       'text/csv': ['.csv']
     }
   });
-  
+
   return (
     <div className="space-y-6">
       <div
@@ -183,13 +199,15 @@ export function FileUploader({ onDataReady }: FileUploaderProps) {
         <input {...getInputProps()} />
         <div className="flex flex-col items-center justify-center space-y-2">
           <Upload className="h-10 w-10 text-gray-400" />
-          <p className="text-lg font-medium">Drag & drop your Excel file here</p>
+          <p className="text-lg font-medium">
+            Drag & drop your {type} Excel file here
+          </p>
           <p className="text-sm text-gray-500">
             or click to select a file (xlsx, xls, csv)
           </p>
         </div>
       </div>
-      
+
       {processingError && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -197,7 +215,7 @@ export function FileUploader({ onDataReady }: FileUploaderProps) {
           <AlertDescription>{processingError}</AlertDescription>
         </Alert>
       )}
-      
+
       {parsedData.length > 0 && (
         <Card className="overflow-hidden">
           <div className="p-4 bg-muted flex items-center justify-between">
@@ -209,7 +227,7 @@ export function FileUploader({ onDataReady }: FileUploaderProps) {
               Save Data
             </Button>
           </div>
-          
+
           <div className="p-0 overflow-x-auto">
             <Table>
               <TableHeader>
