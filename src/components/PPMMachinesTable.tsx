@@ -84,9 +84,11 @@ type FormData = z.infer<typeof formSchema>;
 
 interface PPMMachinesTableProps {
   searchTerm: string;
+  selectedMachines: string[];
+  setSelectedMachines: (machines: string[]) => void;
 }
 
-export const PPMMachinesTable = ({ searchTerm }: PPMMachinesTableProps) => {
+export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMachines }: PPMMachinesTableProps) => {
   const [storedMachines, setStoredMachines] = useState<PPMMachine[]>(() => {
     const stored = localStorage.getItem("ppmMachines");
     return stored ? JSON.parse(stored) : mockPPMMachines;
@@ -202,6 +204,14 @@ export const PPMMachinesTable = ({ searchTerm }: PPMMachinesTableProps) => {
     setDialogOpen(true);
   };
 
+  const toggleMachineSelection = (machineId: string) => {
+    setSelectedMachines(
+      selectedMachines.includes(machineId)
+        ? selectedMachines.filter(id => id !== machineId)
+        : [...selectedMachines, machineId]
+    );
+  };
+
   const onSubmit = (data: FormData) => {
     if (editingMachine) {
       const updatedMachine = {
@@ -264,6 +274,7 @@ export const PPMMachinesTable = ({ searchTerm }: PPMMachinesTableProps) => {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">Select</TableHead>
               <TableHead>Equipment_Name</TableHead>
               <TableHead>Model_Serial Number</TableHead>
               <TableHead>Manufacturer</TableHead>
@@ -284,6 +295,12 @@ export const PPMMachinesTable = ({ searchTerm }: PPMMachinesTableProps) => {
             {filteredMachines.length > 0 ? (
               filteredMachines.map((machine) => (
                 <TableRow key={machine.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedMachines.includes(machine.id)}
+                      onCheckedChange={() => toggleMachineSelection(machine.id)}
+                    />
+                  </TableCell>
                   <TableCell>{machine.equipment}</TableCell>
                   <TableCell>{`${machine.model} - ${machine.serialNumber}`}</TableCell>
                   <TableCell>{machine.manufacturer}</TableCell>

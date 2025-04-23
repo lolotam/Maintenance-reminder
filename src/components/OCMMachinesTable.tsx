@@ -1,4 +1,3 @@
-
 import {
   Table,
   TableBody,
@@ -71,9 +70,11 @@ type FormData = z.infer<typeof formSchema>;
 
 interface OCMMachinesTableProps {
   searchTerm: string;
+  selectedMachines: string[];
+  setSelectedMachines: (machines: string[]) => void;
 }
 
-export const OCMMachinesTable = ({ searchTerm }: OCMMachinesTableProps) => {
+export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMachines }: OCMMachinesTableProps) => {
   const { machines, addMachines, updateMachine, deleteMachine } = useAppContext();
   const [storedMachines, setStoredMachines] = useState<OCMMachine[]>(() => {
     const stored = localStorage.getItem("ocmMachines");
@@ -194,7 +195,6 @@ export const OCMMachinesTable = ({ searchTerm }: OCMMachinesTableProps) => {
     form.reset();
   };
 
-  // Helper function to safely format year-specific maintenance dates
   const formatYearlyDate = (dateString: string | Date, targetYear: number) => {
     if (!dateString) return "";
     
@@ -202,7 +202,6 @@ export const OCMMachinesTable = ({ searchTerm }: OCMMachinesTableProps) => {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return "";
       
-      // Create a new date with the target year but same month and day
       const formattedDate = new Date(date);
       formattedDate.setFullYear(targetYear);
       
@@ -211,6 +210,14 @@ export const OCMMachinesTable = ({ searchTerm }: OCMMachinesTableProps) => {
       console.error("Error formatting date:", e);
       return "";
     }
+  };
+
+  const toggleMachineSelection = (machineId: string) => {
+    setSelectedMachines(
+      selectedMachines.includes(machineId)
+        ? selectedMachines.filter(id => id !== machineId)
+        : [...selectedMachines, machineId]
+    );
   };
 
   return (
@@ -247,6 +254,7 @@ export const OCMMachinesTable = ({ searchTerm }: OCMMachinesTableProps) => {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">Select</TableHead>
               <TableHead>Equipment_Name</TableHead>
               <TableHead>Model_Serial Number</TableHead>
               <TableHead>Manufacturer</TableHead>
@@ -265,6 +273,12 @@ export const OCMMachinesTable = ({ searchTerm }: OCMMachinesTableProps) => {
             {filteredMachines.length > 0 ? (
               filteredMachines.map((machine) => (
                 <TableRow key={machine.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedMachines.includes(machine.id)}
+                      onCheckedChange={() => toggleMachineSelection(machine.id)}
+                    />
+                  </TableCell>
                   <TableCell>{machine.equipment}</TableCell>
                   <TableCell>{`${machine.model} - ${machine.serialNumber}`}</TableCell>
                   <TableCell>{machine.manufacturer}</TableCell>

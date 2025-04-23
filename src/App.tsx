@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +10,8 @@ import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
 import LdrMachines from "./pages/LdrMachines";
 import NotFound from "./pages/NotFound";
+import PPMMachines from "./pages/PPMMachines";
+import OCMMachines from "./pages/OCMMachines";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,8 @@ const App = () => (
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/ldr-machines" element={<LdrMachines />} />
+            <Route path="/ldr-machines/ppm" element={<PPMMachines />} />
+            <Route path="/ldr-machines/ocm" element={<OCMMachines />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
