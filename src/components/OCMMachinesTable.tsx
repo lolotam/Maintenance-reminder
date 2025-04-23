@@ -152,6 +152,14 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return "";
       
+      if (targetYear === 2026 && dateString) {
+        const date2025 = new Date(dateString);
+        date2025.setFullYear(2025);
+        const date2026 = new Date(date2025);
+        date2026.setFullYear(2026);
+        return formatDate(date2026);
+      }
+      
       const formattedDate = new Date(date);
       formattedDate.setFullYear(targetYear);
       
@@ -288,6 +296,7 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
               <TableHead>Log_Number</TableHead>
               <TableHead>2025 Maintenance Date</TableHead>
               <TableHead>2025 Engineer</TableHead>
+              <TableHead>2026 Maintenance Date</TableHead>
               <TableHead>ACTION</TableHead>
               <TableHead>Edit/Delete</TableHead>
             </TableRow>
@@ -309,7 +318,10 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
                   <TableCell>
                     {formatYearlyDate(machine.maintenanceDate, 2025)}
                   </TableCell>
-                  <TableCell>-</TableCell>
+                  <TableCell>{machine.engineer || "-"}</TableCell>
+                  <TableCell>
+                    {formatYearlyDate(machine.maintenanceDate, 2026)}
+                  </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       <Button
@@ -352,7 +364,7 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-4">
+                <TableCell colSpan={10} className="text-center py-4">
                   No OCM machines found matching your criteria.
                 </TableCell>
               </TableRow>

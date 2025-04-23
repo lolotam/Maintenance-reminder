@@ -174,8 +174,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // New method to count machines by type
   const countMachinesByType = (type: "PPM" | "OCM") => {
-    return machines.filter(machine => machine.frequency === 
-      (type === "PPM" ? "Quarterly" : "Yearly")).length;
+    const storedOCMMachines = JSON.parse(localStorage.getItem("ocmMachines") || "[]");
+    const storedPPMMachines = JSON.parse(localStorage.getItem("ppmMachines") || "[]");
+    
+    if (type === "OCM") {
+      return storedOCMMachines.length;
+    } else if (type === "PPM") {
+      return storedPPMMachines.length;
+    }
+    return 0;
   };
 
   const value = {
