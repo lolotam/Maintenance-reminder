@@ -264,16 +264,20 @@ export const PPMMachinesTable = ({ searchTerm }: PPMMachinesTableProps) => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Machine</TableHead>
-              <TableHead>Model</TableHead>
-              <TableHead>Serial #</TableHead>
+              <TableHead>Equipment_Name</TableHead>
+              <TableHead>Model_Serial Number</TableHead>
               <TableHead>Manufacturer</TableHead>
-              <TableHead>Log No</TableHead>
-              <TableHead>Q1</TableHead>
-              <TableHead>Q2</TableHead>
-              <TableHead>Q3</TableHead>
-              <TableHead>Q4</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead>Log_Number</TableHead>
+              <TableHead>Q1_Date</TableHead>
+              <TableHead>Q1_Engineer</TableHead>
+              <TableHead>Q2_Date</TableHead>
+              <TableHead>Q2_Engineer</TableHead>
+              <TableHead>Q3_Date</TableHead>
+              <TableHead>Q3_Engineer</TableHead>
+              <TableHead>Q4_Date</TableHead>
+              <TableHead>Q4_Engineer</TableHead>
+              <TableHead>ACTION</TableHead>
+              <TableHead>Edit/Delete</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -281,119 +285,45 @@ export const PPMMachinesTable = ({ searchTerm }: PPMMachinesTableProps) => {
               filteredMachines.map((machine) => (
                 <TableRow key={machine.id}>
                   <TableCell>{machine.equipment}</TableCell>
-                  <TableCell>{machine.model}</TableCell>
-                  <TableCell>{machine.serialNumber}</TableCell>
+                  <TableCell>{`${machine.model} - ${machine.serialNumber}`}</TableCell>
                   <TableCell>{machine.manufacturer}</TableCell>
                   <TableCell>{machine.logNo}</TableCell>
-                  
+                  <TableCell className={isDueSoon(machine.q1.date) ? "text-amber-600 font-medium" : ""}>
+                    {formatDate(machine.q1.date)}
+                  </TableCell>
+                  <TableCell>{machine.q1.engineer}</TableCell>
+                  <TableCell className={isDueSoon(machine.q2.date) ? "text-amber-600 font-medium" : ""}>
+                    {formatDate(machine.q2.date)}
+                  </TableCell>
+                  <TableCell>{machine.q2.engineer}</TableCell>
+                  <TableCell className={isDueSoon(machine.q3.date) ? "text-amber-600 font-medium" : ""}>
+                    {formatDate(machine.q3.date)}
+                  </TableCell>
+                  <TableCell>{machine.q3.engineer}</TableCell>
+                  <TableCell className={isDueSoon(machine.q4.date) ? "text-amber-600 font-medium" : ""}>
+                    {formatDate(machine.q4.date)}
+                  </TableCell>
+                  <TableCell>{machine.q4.engineer}</TableCell>
                   <TableCell>
-                    <div className="text-sm">
-                      <div className={`${isDueSoon(machine.q1.date) ? "text-amber-600 font-medium" : ""}`}>
-                        {formatDate(machine.q1.date)}
-                      </div>
-                      <div className="text-xs text-muted-foreground">{machine.q1.engineer}</div>
-                      <div className="flex mt-1 gap-1">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-6 w-6"
-                          onClick={() => setReminder(machine, "Q1")}
-                        >
-                          <Bell className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-6 w-6"
-                          onClick={() => markCompleted(machine, "Q1")}
-                        >
-                          <CheckCircle className="h-3 w-3" />
-                        </Button>
-                      </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setReminder(machine, "Current")}
+                      >
+                        <Bell className="h-4 w-4 mr-1" />
+                        Remind
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => markCompleted(machine, "Current")}
+                      >
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                        Complete
+                      </Button>
                     </div>
                   </TableCell>
-                  
-                  <TableCell>
-                    <div className="text-sm">
-                      <div className={`${isDueSoon(machine.q2.date) ? "text-amber-600 font-medium" : ""}`}>
-                        {formatDate(machine.q2.date)}
-                      </div>
-                      <div className="text-xs text-muted-foreground">{machine.q2.engineer}</div>
-                      <div className="flex mt-1 gap-1">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-6 w-6"
-                          onClick={() => setReminder(machine, "Q2")}
-                        >
-                          <Bell className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-6 w-6"
-                          onClick={() => markCompleted(machine, "Q2")}
-                        >
-                          <CheckCircle className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  </TableCell>
-                  
-                  <TableCell>
-                    <div className="text-sm">
-                      <div className={`${isDueSoon(machine.q3.date) ? "text-amber-600 font-medium" : ""}`}>
-                        {formatDate(machine.q3.date)}
-                      </div>
-                      <div className="text-xs text-muted-foreground">{machine.q3.engineer}</div>
-                      <div className="flex mt-1 gap-1">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-6 w-6"
-                          onClick={() => setReminder(machine, "Q3")}
-                        >
-                          <Bell className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-6 w-6"
-                          onClick={() => markCompleted(machine, "Q3")}
-                        >
-                          <CheckCircle className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  </TableCell>
-                  
-                  <TableCell>
-                    <div className="text-sm">
-                      <div className={`${isDueSoon(machine.q4.date) ? "text-amber-600 font-medium" : ""}`}>
-                        {formatDate(machine.q4.date)}
-                      </div>
-                      <div className="text-xs text-muted-foreground">{machine.q4.engineer}</div>
-                      <div className="flex mt-1 gap-1">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-6 w-6"
-                          onClick={() => setReminder(machine, "Q4")}
-                        >
-                          <Bell className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-6 w-6"
-                          onClick={() => markCompleted(machine, "Q4")}
-                        >
-                          <CheckCircle className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  </TableCell>
-                  
                   <TableCell>
                     <div className="flex gap-2">
                       <Button
@@ -416,7 +346,7 @@ export const PPMMachinesTable = ({ searchTerm }: PPMMachinesTableProps) => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={10} className="text-center py-4">
+                <TableCell colSpan={14} className="text-center py-4">
                   No PPM machines found matching your criteria.
                 </TableCell>
               </TableRow>

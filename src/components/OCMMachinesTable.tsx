@@ -33,6 +33,7 @@ interface OCMMachine {
   manufacturer: string;
   logNo: string;
   maintenanceDate: string;
+  engineer?: string;
 }
 
 const mockOCMMachines: OCMMachine[] = [
@@ -224,13 +225,17 @@ export const OCMMachinesTable = ({ searchTerm }: OCMMachinesTableProps) => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Machine</TableHead>
-              <TableHead>Model</TableHead>
-              <TableHead>Serial #</TableHead>
+              <TableHead>Equipment_Name</TableHead>
+              <TableHead>Model_Serial Number</TableHead>
               <TableHead>Manufacturer</TableHead>
-              <TableHead>Log No</TableHead>
-              <TableHead>OCM Reminder Date</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead>Log_Number</TableHead>
+              <TableHead>2024 Maintenance Date</TableHead>
+              <TableHead>2024 Engineer</TableHead>
+              <TableHead>2025 Maintenance Date</TableHead>
+              <TableHead>2025 Engineer</TableHead>
+              <TableHead>2026 Maintenance Date</TableHead>
+              <TableHead>2026 Engineer</TableHead>
+              <TableHead>ACTION</TableHead>
               <TableHead>Edit/Delete</TableHead>
             </TableRow>
           </TableHeader>
@@ -239,40 +244,41 @@ export const OCMMachinesTable = ({ searchTerm }: OCMMachinesTableProps) => {
               filteredMachines.map((machine) => (
                 <TableRow key={machine.id}>
                   <TableCell>{machine.equipment}</TableCell>
-                  <TableCell>{machine.model}</TableCell>
-                  <TableCell>{machine.serialNumber}</TableCell>
+                  <TableCell>{`${machine.model} - ${machine.serialNumber}`}</TableCell>
                   <TableCell>{machine.manufacturer}</TableCell>
                   <TableCell>{machine.logNo}</TableCell>
-                  
-                  <TableCell>
-                    <div className={`${isDueSoon(machine.maintenanceDate) ? "text-amber-600 font-medium" : ""}`}>
-                      {formatDate(machine.maintenanceDate)}
-                    </div>
+                  <TableCell className={isDueSoon(machine.maintenanceDate) ? "text-amber-600 font-medium" : ""}>
+                    {formatDate("2024-" + machine.maintenanceDate.split("-").slice(1).join("-"))}
                   </TableCell>
-                  
+                  <TableCell>{machine.engineer || "-"}</TableCell>
+                  <TableCell>
+                    {formatDate("2025-" + machine.maintenanceDate.split("-").slice(1).join("-"))}
+                  </TableCell>
+                  <TableCell>-</TableCell>
+                  <TableCell>
+                    {formatDate("2026-" + machine.maintenanceDate.split("-").slice(1).join("-"))}
+                  </TableCell>
+                  <TableCell>-</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       <Button
                         size="sm"
                         variant="outline"
-                        className="flex gap-1"
                         onClick={() => setReminder(machine)}
                       >
-                        <Bell className="h-4 w-4" />
-                        <span>Remind</span>
+                        <Bell className="h-4 w-4 mr-1" />
+                        Remind
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
-                        className="flex gap-1"
                         onClick={() => markCompleted(machine)}
                       >
-                        <CheckCircle className="h-4 w-4" />
-                        <span>Complete</span>
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                        Complete
                       </Button>
                     </div>
                   </TableCell>
-
                   <TableCell>
                     <div className="flex gap-2">
                       <Button
@@ -295,7 +301,7 @@ export const OCMMachinesTable = ({ searchTerm }: OCMMachinesTableProps) => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-4">
+                <TableCell colSpan={12} className="text-center py-4">
                   No OCM machines found matching your criteria.
                 </TableCell>
               </TableRow>
