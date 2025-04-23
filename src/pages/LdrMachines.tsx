@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { MainLayout } from "@/components/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,9 +6,20 @@ import { OCMMachinesTable } from "@/components/OCMMachinesTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { AddMachineDialog } from "@/components/AddMachineDialog";
 
 const LdrMachines = () => {
   const [searchTerm, setSearchTerm] = useState("");
+
+  const handleAddPPMMachine = (data: any) => {
+    console.log("Adding PPM machine:", data);
+    // Add your logic to save the PPM machine
+  };
+
+  const handleAddOCMMachine = (data: any) => {
+    console.log("Adding OCM machine:", data);
+    // Add your logic to save the OCM machine
+  };
 
   return (
     <MainLayout>
@@ -21,18 +31,22 @@ const LdrMachines = () => {
           </p>
         </div>
 
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search machines by name, model, or manufacturer..."
-            className="pl-9 w-full sm:max-w-sm"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className="flex flex-wrap gap-4 items-center">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search machines by name, model, or manufacturer..."
+              className="pl-9 w-full"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="flex gap-2">
+            <AddMachineDialog type="ppm" onAddMachine={handleAddPPMMachine} />
+            <AddMachineDialog type="ocm" onAddMachine={handleAddOCMMachine} />
+          </div>
         </div>
 
-        {/* Tabs for PPM and OCM machines */}
         <Tabs defaultValue="ppm" className="w-full">
           <TabsList className="grid w-full sm:w-[400px] grid-cols-2">
             <TabsTrigger value="ppm">PPM Machines</TabsTrigger>
