@@ -54,6 +54,16 @@ const Dashboard = () => {
           const daysRemaining = differenceInDays(nextDate, today);
           if (daysRemaining <= 7) {
             acc.upcoming += 1;
+          } else if (daysRemaining <= 14) {
+            acc.upcoming14 += 1;
+          } else if (daysRemaining <= 21) {
+            acc.upcoming21 += 1;
+          } else if (daysRemaining <= 30) {
+            acc.upcoming30 += 1;
+          } else if (daysRemaining <= 60) {
+            acc.upcoming60 += 1;
+          } else if (daysRemaining <= 90) {
+            acc.upcoming90 += 1;
           }
         }
       }
@@ -66,7 +76,17 @@ const Dashboard = () => {
       
       return acc;
     },
-    { overdue: 0, upcoming: 0, quarterly: 0, yearly: 0 }
+    { 
+      overdue: 0, 
+      upcoming: 0, 
+      upcoming14: 0, 
+      upcoming21: 0, 
+      upcoming30: 0, 
+      upcoming60: 0, 
+      upcoming90: 0, 
+      quarterly: 0, 
+      yearly: 0 
+    }
   );
 
   const displayedMachines = filteredMachines(searchTerm, filters);
@@ -150,6 +170,71 @@ const Dashboard = () => {
               <div className="text-2xl font-bold">{counters.upcoming}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 Due for maintenance soon
+              </p>
+            </CardContent>
+          </Card>
+          
+          <Card className={isMobile ? "mobile-tab-item w-[85vw] max-w-[300px] mr-3" : ""}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Coming Up (14 days)</CardTitle>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{counters.upcoming14}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Due in 8-14 days
+              </p>
+            </CardContent>
+          </Card>
+          
+          <Card className={isMobile ? "mobile-tab-item w-[85vw] max-w-[300px] mr-3" : ""}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Coming Up (21 days)</CardTitle>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{counters.upcoming21}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Due in 15-21 days
+              </p>
+            </CardContent>
+          </Card>
+          
+          <Card className={isMobile ? "mobile-tab-item w-[85vw] max-w-[300px] mr-3" : ""}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Coming Up (30 days)</CardTitle>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{counters.upcoming30}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Due in 22-30 days
+              </p>
+            </CardContent>
+          </Card>
+          
+          <Card className={isMobile ? "mobile-tab-item w-[85vw] max-w-[300px] mr-3" : ""}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Coming Up (60 days)</CardTitle>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{counters.upcoming60}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Due in 31-60 days
+              </p>
+            </CardContent>
+          </Card>
+          
+          <Card className={isMobile ? "mobile-tab-item w-[85vw] max-w-[300px] mr-3" : ""}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Coming Up (90 days)</CardTitle>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{counters.upcoming90}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Due in 61-90 days
               </p>
             </CardContent>
           </Card>
