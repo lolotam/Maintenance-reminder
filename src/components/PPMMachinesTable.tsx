@@ -124,22 +124,22 @@ export const PPMMachinesTable = ({ searchTerm }: PPMMachinesTableProps) => {
 
   const filteredMachines = storedMachines.filter((machine) => {
     const equipmentMatch = machine.equipment && 
-      machine.equipment.toLowerCase().includes(searchTerm.toLowerCase());
+      machine.equipment.toString().toLowerCase().includes(searchTerm.toLowerCase());
     const modelMatch = machine.model && 
-      machine.model.toLowerCase().includes(searchTerm.toLowerCase());
+      machine.model.toString().toLowerCase().includes(searchTerm.toLowerCase());
     const manufacturerMatch = machine.manufacturer && 
-      machine.manufacturer.toLowerCase().includes(searchTerm.toLowerCase());
+      machine.manufacturer.toString().toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesSearch = equipmentMatch || modelMatch || manufacturerMatch;
 
     const matchesEquipmentFilter = !filters.equipment || 
-      (machine.equipment && machine.equipment.toLowerCase().includes(filters.equipment.toLowerCase()));
+      (machine.equipment && machine.equipment.toString().toLowerCase().includes(filters.equipment.toLowerCase()));
     const matchesModelFilter = !filters.model || 
-      (machine.model && machine.model.toLowerCase().includes(filters.model.toLowerCase()));
+      (machine.model && machine.model.toString().toLowerCase().includes(filters.model.toLowerCase()));
     const matchesSerialFilter = !filters.serialNumber || 
-      (machine.serialNumber && machine.serialNumber.toLowerCase().includes(filters.serialNumber.toLowerCase()));
+      (machine.serialNumber && machine.serialNumber.toString().toLowerCase().includes(filters.serialNumber.toLowerCase()));
     const matchesManufacturerFilter = !filters.manufacturer || 
-      (machine.manufacturer && machine.manufacturer.toLowerCase().includes(filters.manufacturer.toLowerCase()));
+      (machine.manufacturer && machine.manufacturer.toString().toLowerCase().includes(filters.manufacturer.toLowerCase()));
     const matchesLogNoFilter = !filters.logNo || 
       (machine.logNo && machine.logNo.toString().toLowerCase().includes(filters.logNo.toLowerCase()));
 
