@@ -13,7 +13,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const Dashboard = () => {
-  const { machines, markMachineComplete, filteredMachines } = useAppContext();
+  const { markMachineComplete, filteredMachines, getAllMachines } = useAppContext();
+  const [allMachines, setAllMachines] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({
     frequency: "",
@@ -23,7 +24,10 @@ const Dashboard = () => {
   const isMobile = useIsMobile();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Handle horizontal swipe for mobile
+  useEffect(() => {
+    setAllMachines(getAllMachines());
+  }, [getAllMachines]);
+
   useEffect(() => {
     const handleTouchMove = (e: TouchEvent) => {
       if (!scrollContainerRef.current) return;
@@ -38,8 +42,7 @@ const Dashboard = () => {
     }
   }, []);
 
-  // Count machines by status
-  const counters = machines.reduce(
+  const counters = allMachines.reduce(
     (acc, machine) => {
       const today = new Date();
       const nextDate = machine.nextMaintenanceDate ? new Date(machine.nextMaintenanceDate) : null;
@@ -66,8 +69,40 @@ const Dashboard = () => {
     { overdue: 0, upcoming: 0, quarterly: 0, yearly: 0 }
   );
 
-  // Filter machines based on search term and filters
   const displayedMachines = filteredMachines(searchTerm, filters);
+
+  const allDisplayedMachines = [...displayedMachines];
+  const regularMachineIds = new Set(displayedMachines.map(m => m.id));
+  
+  allMachines.forEach(machine => {
+    if (!regularMachineIds.has(machine.id)) {
+      const matchesSearch = !searchTerm || 
+        machine.name.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesFrequency = !filters.frequency || 
+        machine.frequency === filters.frequency;
+        
+      let matchesStatus = true;
+      if (filters.status) {
+        const today = new Date();
+        const nextDate = machine.nextMaintenanceDate ? new Date(machine.nextMaintenanceDate) : null;
+        
+        if (nextDate) {
+          if (filters.status === "overdue") {
+            matchesStatus = nextDate < today;
+          } else if (filters.status === "upcoming") {
+            matchesStatus = nextDate > today;
+          }
+        } else {
+          matchesStatus = false;
+        }
+      }
+      
+      if (matchesSearch && matchesFrequency && matchesStatus) {
+        allDisplayedMachines.push(machine);
+      }
+    }
+  });
 
   return (
     <MainLayout>
@@ -79,7 +114,6 @@ const Dashboard = () => {
           </p>
         </div>
 
-        {/* Stats cards - horizontally scrollable on mobile */}
         <div ref={scrollContainerRef} className={isMobile ? "mobile-tabs" : "grid gap-4 md:grid-cols-2 lg:grid-cols-4"}>
           <Card className={isMobile ? "mobile-tab-item w-[85vw] max-w-[300px] mr-3" : ""}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -87,7 +121,7 @@ const Dashboard = () => {
               <BellRing className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{machines.length}</div>
+              <div className="text-2xl font-bold">{allMachines.length}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 Machines under maintenance
               </p>
@@ -134,7 +168,6 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Search and filters - collapsible on mobile */}
         <div className="space-y-4">
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -253,10 +286,9 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* Machine cards - grid on desktop, stack on mobile */}
-        {displayedMachines.length > 0 ? (
+        {allDisplayedMachines.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {displayedMachines.map((machine) => (
+            {allDisplayedMachines.map((machine) => (
               <MachineCard
                 key={machine.id}
                 machine={machine}
@@ -269,7 +301,7 @@ const Dashboard = () => {
             <BellRing className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium">No machines found</h3>
             <p className="text-muted-foreground mt-1">
-              {machines.length === 0
+              {allMachines.length === 0
                 ? "Upload your machine data to get started"
                 : "Try adjusting your search or filters"}
             </p>

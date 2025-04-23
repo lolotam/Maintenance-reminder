@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Machine, AppSettings, NotificationSettings } from "@/types";
 import { addMonths, addYears } from "date-fns";
@@ -12,6 +13,7 @@ interface AppContextType {
   updateSettings: (newSettings: Partial<AppSettings>) => void;
   filteredMachines: (searchTerm: string, filters: any) => Machine[];
   countMachinesByType: (type: "PPM" | "OCM") => number;
+  getAllMachines: () => Machine[];
 }
 
 const defaultSettings: AppSettings = {
@@ -25,6 +27,8 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 // LocalStorage keys
 const MACHINES_STORAGE_KEY = "maintenance-machines";
 const SETTINGS_STORAGE_KEY = "maintenance-settings";
+const PPM_MACHINES_KEY = "ppmMachines";
+const OCM_MACHINES_KEY = "ocmMachines";
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [machines, setMachines] = useState<Machine[]>([]);
@@ -172,15 +176,114 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  // New method to count machines by type
-  const countMachinesByType = (type: "PPM" | "OCM") => {
-    const storedOCMMachines = JSON.parse(localStorage.getItem("ocmMachines") || "[]");
-    const storedPPMMachines = JSON.parse(localStorage.getItem("ppmMachines") || "[]");
+  // Get all machines, including LDR machines
+  const getAllMachines = (): Machine[] => {
+    const allMachines = [...machines];
     
-    if (type === "OCM") {
-      return storedOCMMachines.length;
-    } else if (type === "PPM") {
-      return storedPPMMachines.length;
+    try {
+      // Get PPM machines from localStorage
+      const storedPPMMachines = JSON.parse(localStorage.getItem(PPM_MACHINES_KEY) || "[]");
+      const ppmMachines = storedPPMMachines.map((machine: any) => {
+        const q1Date = machine.q1_date || "";
+        return {
+          id: machine.id || `ppm-${Math.random().toString(36).substring(2, 9)}`,
+          name: machine.equipment || "Unknown PPM Machine",
+          serialNumber: machine.serialNumber || "",
+          manufacturer: machine.manufacturer || "",
+          model: machine.model || "",
+          logNo: machine.logNo || "",
+          frequency: "Quarterly" as const,
+          lastMaintenanceDate: q1Date,
+          nextMaintenanceDate: q1Date ? addMonths(new Date(q1Date), 3).toISOString() : "",
+          quarters: {
+            q1: { 
+              date: machine.q1_date || "", 
+              engineer: machine.q1_engineer || "" 
+            },
+            q2: { 
+              date: machine.q2_date || "", 
+              engineer: machine.q2_engineer || "" 
+            },
+            q3: { 
+              date: machine.q3_date || "", 
+              engineer: machine.q3_engineer || "" 
+            },
+            q4: { 
+              date: machine.q4_date || "", 
+              engineer: machine.q4_engineer || "" 
+            },
+          },
+          notificationSettings: {
+            email: settings.defaultEmail,
+            enableEmailNotifications: !!settings.defaultEmail,
+            enableDesktopNotifications: true,
+            reminderDays: [...settings.defaultReminderDays],
+          },
+        };
+      });
+      
+      // Get OCM machines from localStorage
+      const storedOCMMachines = JSON.parse(localStorage.getItem(OCM_MACHINES_KEY) || "[]");
+      const ocmMachines = storedOCMMachines.map((machine: any) => {
+        const maintenanceDate = machine.maintenance2025?.date || "";
+        return {
+          id: machine.id || `ocm-${Math.random().toString(36).substring(2, 9)}`,
+          name: machine.equipment || "Unknown OCM Machine",
+          serialNumber: machine.serialNumber || "",
+          manufacturer: machine.manufacturer || "",
+          model: machine.model || "",
+          logNo: machine.logNo || "",
+          frequency: "Yearly" as const,
+          lastMaintenanceDate: maintenanceDate,
+          nextMaintenanceDate: maintenanceDate ? addYears(new Date(maintenanceDate), 1).toISOString() : "",
+          years: {
+            '2025': { 
+              date: machine.maintenance2025?.date || "", 
+              engineer: machine.maintenance2025?.engineer || "" 
+            },
+            '2026': { 
+              date: machine.maintenance2026?.date || "", 
+              engineer: machine.maintenance2026?.engineer || "" 
+            },
+          },
+          notificationSettings: {
+            email: settings.defaultEmail,
+            enableEmailNotifications: !!settings.defaultEmail,
+            enableDesktopNotifications: true,
+            reminderDays: [...settings.defaultReminderDays],
+          },
+        };
+      });
+      
+      // Combine all machines, avoiding duplicates based on id
+      const allIds = new Set(allMachines.map(m => m.id));
+      
+      for (const machine of [...ppmMachines, ...ocmMachines]) {
+        if (!allIds.has(machine.id)) {
+          allMachines.push(machine);
+          allIds.add(machine.id);
+        }
+      }
+    } catch (error) {
+      console.error("Error processing LDR machines:", error);
+    }
+    
+    return allMachines;
+  };
+  
+  // Count machines by type
+  const countMachinesByType = (type: "PPM" | "OCM") => {
+    try {
+      const storedOCMMachines = JSON.parse(localStorage.getItem(OCM_MACHINES_KEY) || "[]");
+      const storedPPMMachines = JSON.parse(localStorage.getItem(PPM_MACHINES_KEY) || "[]");
+      
+      if (type === "OCM") {
+        return storedOCMMachines.length;
+      } else if (type === "PPM") {
+        return storedPPMMachines.length;
+      }
+    } catch (error) {
+      console.error("Error counting machines:", error);
     }
     return 0;
   };
@@ -195,6 +298,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     updateSettings,
     filteredMachines,
     countMachinesByType,
+    getAllMachines,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

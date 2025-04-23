@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/MainLayout";
 import { useAppContext } from "@/contexts/AppContext";
 import { Machine } from "@/types";
@@ -9,11 +8,17 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 const Notifications = () => {
-  const { machines } = useAppContext();
+  const { getAllMachines } = useAppContext();
+  const [allMachines, setAllMachines] = useState<Machine[]>([]);
   const [sentNotifications, setSentNotifications] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    // Get all machines including LDR machines
+    setAllMachines(getAllMachines());
+  }, [getAllMachines]);
 
   // Calculate upcoming and overdue maintenance based on reminder days
   const getMachinesNeedingNotifications = () => {
@@ -21,7 +26,7 @@ const Notifications = () => {
     const upcoming: Machine[] = [];
     const overdue: Machine[] = [];
     
-    machines.forEach(machine => {
+    allMachines.forEach(machine => {
       if (!machine.nextMaintenanceDate) return;
       
       const nextDate = parseISO(machine.nextMaintenanceDate);
@@ -30,7 +35,7 @@ const Notifications = () => {
       if (daysRemaining < 0) {
         overdue.push(machine);
       } else if (
-        machine.notificationSettings?.reminderDays.includes(daysRemaining) ||
+        machine.notificationSettings?.reminderDays?.includes(daysRemaining) ||
         daysRemaining <= 7
       ) {
         upcoming.push(machine);
@@ -48,10 +53,7 @@ const Notifications = () => {
     const key = `${machine.id}-${type}`;
     
     // Show toast for simulation
-    toast({
-      title: `${type === 'email' ? 'Email' : 'Desktop'} Notification Sent`,
-      description: `Maintenance reminder sent for "${machine.name}"`,
-    });
+    toast.success(`${type === 'email' ? 'Email' : 'Desktop'} Notification Sent for "${machine.name}"`);
     
     // Mark as sent
     setSentNotifications(prev => ({

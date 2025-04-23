@@ -5,12 +5,17 @@ import { Link } from "react-router-dom";
 import { Wrench, Settings, Bell } from "lucide-react";
 import { useAppContext } from "@/contexts/AppContext";
 import { toast } from "sonner";
+import { useEffect, useState } from "react";
 
 const LdrMachines = () => {
   const { countMachinesByType } = useAppContext();
+  const [ppmMachinesCount, setPpmMachinesCount] = useState(0);
+  const [ocmMachinesCount, setOcmMachinesCount] = useState(0);
   
-  const ppmMachinesCount = countMachinesByType("PPM");
-  const ocmMachinesCount = countMachinesByType("OCM");
+  useEffect(() => {
+    setPpmMachinesCount(countMachinesByType("PPM"));
+    setOcmMachinesCount(countMachinesByType("OCM"));
+  }, [countMachinesByType]);
 
   const handleDashboardLink = () => {
     // Integration with dashboard will be implemented here
