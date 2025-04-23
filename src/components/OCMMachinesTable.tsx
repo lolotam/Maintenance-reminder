@@ -25,6 +25,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { v4 as uuidv4 } from "uuid";
+import { format, parse } from "date-fns";
 
 interface OCMMachine {
   id: string;
@@ -138,7 +139,27 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
 
   const formatDate = (dateString: string | Date) => {
     if (!dateString) return "";
-    return new Date(dateString).toLocaleDateString();
+    const parsedDate = typeof dateString === 'string' 
+      ? parse(dateString, 'yyyy-MM-dd', new Date()) 
+      : dateString;
+    return format(parsedDate, 'dd/MM/yyyy');
+  };
+
+  const formatYearlyDate = (dateString: string | Date, targetYear: number) => {
+    if (!dateString) return "";
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "";
+      
+      const formattedDate = new Date(date);
+      formattedDate.setFullYear(targetYear);
+      
+      return formatDate(formattedDate);
+    } catch (e) {
+      console.error("Error formatting date:", e);
+      return "";
+    }
   };
 
   const isDueSoon = (dateString: string | Date) => {
@@ -216,23 +237,6 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
     setDialogOpen(false);
     setEditingMachine(null);
     form.reset();
-  };
-
-  const formatYearlyDate = (dateString: string | Date, targetYear: number) => {
-    if (!dateString) return "";
-    
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return "";
-      
-      const formattedDate = new Date(date);
-      formattedDate.setFullYear(targetYear);
-      
-      return formatDate(formattedDate);
-    } catch (e) {
-      console.error("Error formatting date:", e);
-      return "";
-    }
   };
 
   const toggleMachineSelection = (machineId: string) => {

@@ -24,6 +24,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { format, parse } from "date-fns";
 
 interface PPMMachine {
   id: string;
@@ -157,7 +158,9 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+    if (!dateString) return "";
+    const parsedDate = parse(dateString, 'yyyy-MM-dd', new Date());
+    return format(parsedDate, 'dd/MM/yyyy');
   };
 
   const isDueSoon = (dateString: string) => {
