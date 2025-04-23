@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
@@ -22,8 +23,11 @@ const ppmFormSchema = z.object({
   logNo: z.string().min(1, "Log number is required"),
   q1_date: z.string().min(1, "Q1 date is required"),
   q1_engineer: z.string().min(1, "Q1 engineer is required"),
+  q2_date: z.string().optional(),
   q2_engineer: z.string().min(1, "Q2 engineer is required"),
+  q3_date: z.string().optional(),
   q3_engineer: z.string().min(1, "Q3 engineer is required"),
+  q4_date: z.string().optional(),
   q4_engineer: z.string().min(1, "Q4 engineer is required"),
 });
 
@@ -43,7 +47,7 @@ const ocmFormSchema = z.object({
     engineer: z.string().min(1, "2025 engineer is required"),
   }),
   maintenance2026: z.object({
-    date: z.string().min(1, "2026 maintenance date is required"),
+    date: z.string().optional(),
     engineer: z.string().min(1, "2026 engineer is required"),
   }),
 });
@@ -60,8 +64,11 @@ export const AddMachineDialog = ({ type, onAddMachine }: AddMachineDialogProps) 
       logNo: "",
       q1_date: "",
       q1_engineer: "",
+      q2_date: "",
       q2_engineer: "",
+      q3_date: "",
       q3_engineer: "",
+      q4_date: "",
       q4_engineer: "",
     } : {
       equipment: "",
@@ -196,17 +203,31 @@ export const AddMachineDialog = ({ type, onAddMachine }: AddMachineDialogProps) 
                   />
                 </div>
 
-                {[2, 3, 4].map((quarter) => (
+                {[
+                  {quarter: 2, dateName: "q2_date", engineerName: "q2_engineer"},
+                  {quarter: 3, dateName: "q3_date", engineerName: "q3_engineer"},
+                  {quarter: 4, dateName: "q4_date", engineerName: "q4_engineer"}
+                ].map(({quarter, dateName, engineerName}) => (
                   <div key={quarter} className="grid gap-4 md:grid-cols-2 border-t pt-4">
-                    <FormItem>
-                      <FormLabel>Q{quarter} Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" disabled placeholder="Auto-calculated" />
-                      </FormControl>
-                    </FormItem>
                     <FormField
                       control={form.control}
-                      name={`q${quarter}_engineer` as any}
+                      name={dateName as any}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Q{quarter} Date</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="date" 
+                              {...field} 
+                              placeholder={`Q${quarter} Date`}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={engineerName as any}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Q{quarter} Engineer</FormLabel>
@@ -221,7 +242,7 @@ export const AddMachineDialog = ({ type, onAddMachine }: AddMachineDialogProps) 
               </div>
             ) : (
               <div className="space-y-4">
-                {[2024, 2025, 2026].map((year) => (
+                {[2024, 2025].map((year) => (
                   <div key={year} className="grid gap-4 md:grid-cols-2 border-t pt-4">
                     <FormField
                       control={form.control}
@@ -249,6 +270,32 @@ export const AddMachineDialog = ({ type, onAddMachine }: AddMachineDialogProps) 
                     />
                   </div>
                 ))}
+                <div className="grid gap-4 md:grid-cols-2 border-t pt-4">
+                  <FormField
+                    control={form.control}
+                    name="maintenance2026.date" as any
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>2026 Maintenance Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="maintenance2026.engineer" as any
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>2026 Engineer</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter engineer name" {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
             )}
 

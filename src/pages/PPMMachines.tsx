@@ -1,3 +1,4 @@
+
 import { MainLayout } from "@/components/MainLayout";
 import { PPMMachinesTable } from "@/components/PPMMachinesTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,11 +22,14 @@ const PPMMachines = () => {
   const handleAddMachine = (machineData: any) => {
     try {
       console.log("Adding new PPM machine:", machineData);
+      
+      // Calculate other quarterly dates if not provided
       const q1Date = new Date(machineData.q1_date || new Date());
       
-      const q2Date = addMonths(q1Date, 3);
-      const q3Date = addMonths(q1Date, 6);
-      const q4Date = addMonths(q1Date, 9);
+      // Use provided dates or calculate them if not available
+      const q2Date = machineData.q2_date ? new Date(machineData.q2_date) : addMonths(q1Date, 3);
+      const q3Date = machineData.q3_date ? new Date(machineData.q3_date) : addMonths(q1Date, 6);
+      const q4Date = machineData.q4_date ? new Date(machineData.q4_date) : addMonths(q1Date, 9);
       
       const newMachine = {
         id: machineData.id,

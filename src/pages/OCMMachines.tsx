@@ -1,4 +1,3 @@
-
 import { MainLayout } from "@/components/MainLayout";
 import { OCMMachinesTable } from "@/components/OCMMachinesTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useAppContext } from "@/contexts/AppContext";
+import { addYears } from "date-fns";
 
 const OCMMachines = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -19,7 +19,45 @@ const OCMMachines = () => {
   const ocmMachinesCount = countMachinesByType("OCM");
 
   const handleAddMachine = (machineData: any) => {
-    console.log("Adding new OCM machine:", machineData);
+    try {
+      console.log("Adding new OCM machine:", machineData);
+      
+      // Calculate 2026 date based on 2025 date if not provided
+      let maintenance2026Date = machineData.maintenance2026?.date;
+      if (!maintenance2026Date && machineData.maintenance2025?.date) {
+        const date2025 = new Date(machineData.maintenance2025.date);
+        maintenance2026Date = addYears(date2025, 1).toISOString().split('T')[0];
+      }
+      
+      const newMachine = {
+        id: machineData.id,
+        equipment: machineData.equipment,
+        model: machineData.model,
+        serialNumber: machineData.serialNumber,
+        manufacturer: machineData.manufacturer,
+        logNo: machineData.logNo,
+        maintenance2024: {
+          date: machineData.maintenance2024.date,
+          engineer: machineData.maintenance2024.engineer,
+        },
+        maintenance2025: {
+          date: machineData.maintenance2025.date,
+          engineer: machineData.maintenance2025.engineer,
+        },
+        maintenance2026: {
+          date: maintenance2026Date || "",
+          engineer: machineData.maintenance2026?.engineer || "",
+        },
+      };
+      
+      const storedMachines = JSON.parse(localStorage.getItem("ocmMachines") || "[]");
+      localStorage.setItem("ocmMachines", JSON.stringify([...storedMachines, newMachine]));
+      toast.success(`${machineData.equipment} has been added`);
+      window.location.reload();
+    } catch (error) {
+      console.error("Error adding machine:", error);
+      toast.error("Failed to add machine");
+    }
   };
 
   const handleSelectAll = () => {
