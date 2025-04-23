@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import * as XLSX from "xlsx";
@@ -93,35 +94,60 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
 
       validateHeaders(headers, expectedHeaders);
 
-      const machines = data.map(row => {
-        const baseFields = {
-          id: uuidv4(),
-          name: row.Equipment_Name,
-          manufacturer: row.Manufacturer,
-          model: row.Model,
-          serialNumber: row.Serial_Number,
-          logNo: row.Log_Number,
-        };
-
+      const machines: Machine[] = data.map(row => {
+        // Determine the last maintenance date based on the machine type
+        let lastMaintenanceDate: string;
+        
         if (type === 'PPM') {
+          // For PPM, use the most recent quarter date that has a value
+          const dates = [row.Q1_Date, row.Q2_Date, row.Q3_Date, row.Q4_Date].filter(Boolean);
+          lastMaintenanceDate = dates.length > 0 ? 
+            new Date(Math.max(...dates.map(d => new Date(d).getTime()))).toISOString() :
+            new Date().toISOString();
+
           return {
-            ...baseFields,
+            id: uuidv4(),
+            name: row.Equipment_Name,
+            manufacturer: row.Manufacturer,
+            model: row.Model,
+            serialNumber: row.Serial_Number,
+            logNo: row.Log_Number,
             frequency: 'Quarterly',
+            lastMaintenanceDate,
+            nextMaintenanceDate: calculateNextDate(lastMaintenanceDate, 'Quarterly'),
             quarters: {
-              q1: { date: row.Q1_Date, engineer: row.Q1_Engineer },
-              q2: { date: row.Q2_Date, engineer: row.Q2_Engineer },
-              q3: { date: row.Q3_Date, engineer: row.Q3_Engineer },
-              q4: { date: row.Q4_Date, engineer: row.Q4_Engineer },
+              q1: { date: row.Q1_Date || '', engineer: row.Q1_Engineer || '' },
+              q2: { date: row.Q2_Date || '', engineer: row.Q2_Engineer || '' },
+              q3: { date: row.Q3_Date || '', engineer: row.Q3_Engineer || '' },
+              q4: { date: row.Q4_Date || '', engineer: row.Q4_Engineer || '' },
             }
           };
         } else {
+          // For OCM, use the most recent year date that has a value
+          const dates = [
+            row['2024_Maintenance_Date'], 
+            row['2025_Maintenance_Date'], 
+            row['2026_Maintenance_Date']
+          ].filter(Boolean);
+          
+          lastMaintenanceDate = dates.length > 0 ? 
+            new Date(Math.max(...dates.map(d => new Date(d).getTime()))).toISOString() :
+            new Date().toISOString();
+
           return {
-            ...baseFields,
+            id: uuidv4(),
+            name: row.Equipment_Name,
+            manufacturer: row.Manufacturer,
+            model: row.Model,
+            serialNumber: row.Serial_Number,
+            logNo: row.Log_Number,
             frequency: 'Yearly',
+            lastMaintenanceDate,
+            nextMaintenanceDate: calculateNextDate(lastMaintenanceDate, 'Yearly'),
             years: {
-              '2024': { date: row['2024_Maintenance_Date'], engineer: row['2024_Engineer'] },
-              '2025': { date: row['2025_Maintenance_Date'], engineer: row['2025_Engineer'] },
-              '2026': { date: row['2026_Maintenance_Date'], engineer: row['2026_Engineer'] },
+              '2024': { date: row['2024_Maintenance_Date'] || '', engineer: row['2024_Engineer'] || '' },
+              '2025': { date: row['2025_Maintenance_Date'] || '', engineer: row['2025_Engineer'] || '' },
+              '2026': { date: row['2026_Maintenance_Date'] || '', engineer: row['2026_Engineer'] || '' },
             }
           };
         }
@@ -239,14 +265,19 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {parsedData.map((machine) => (
-                  <TableRow key={machine.id}>
-                    <TableCell className="font-medium">{machine.name}</TableCell>
-                    <TableCell>{format(new Date(machine.lastMaintenanceDate), "MMM d, yyyy")}</TableCell>
-                    <TableCell>{machine.frequency}</TableCell>
-                    <TableCell>{format(new Date(machine.nextMaintenanceDate!), "MMM d, yyyy")}</TableCell>
-                  </TableRow>
-                ))}
+                {parsedData.map((machine) => {
+                  const lastDate = new Date(machine.lastMaintenanceDate);
+                  const nextDate = machine.nextMaintenanceDate ? new Date(machine.nextMaintenanceDate) : null;
+                  
+                  return (
+                    <TableRow key={machine.id}>
+                      <TableCell className="font-medium">{machine.name}</TableCell>
+                      <TableCell>{!isNaN(lastDate.getTime()) ? format(lastDate, "MMM d, yyyy") : "N/A"}</TableCell>
+                      <TableCell>{machine.frequency}</TableCell>
+                      <TableCell>{nextDate && !isNaN(nextDate.getTime()) ? format(nextDate, "MMM d, yyyy") : "N/A"}</TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>

@@ -1,4 +1,3 @@
-
 export interface Machine {
   id: string;
   name: string;
@@ -6,6 +5,21 @@ export interface Machine {
   frequency: 'Quarterly' | 'Yearly';
   nextMaintenanceDate?: string; // ISO date string
   notificationSettings?: NotificationSettings;
+  manufacturer?: string;
+  model?: string;
+  serialNumber?: string;
+  logNo?: string;
+  quarters?: {
+    q1: { date: string; engineer: string };
+    q2: { date: string; engineer: string };
+    q3: { date: string; engineer: string };
+    q4: { date: string; engineer: string };
+  };
+  years?: {
+    '2024': { date: string; engineer: string };
+    '2025': { date: string; engineer: string };
+    '2026': { date: string; engineer: string };
+  };
 }
 
 export interface NotificationSettings {
