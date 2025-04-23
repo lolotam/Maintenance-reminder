@@ -11,6 +11,13 @@ import { AddMachineDialog } from "@/components/AddMachineDialog";
 
 const LdrMachines = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Function to handle adding new machines
+  const handleAddMachine = (machineData: any) => {
+    // This is a placeholder function that would normally handle adding a new machine
+    console.log("Adding new machine:", machineData);
+    // In a real implementation, this would update state or call an API
+  };
 
   return (
     <MainLayout>
@@ -33,8 +40,8 @@ const LdrMachines = () => {
             />
           </div>
           <div className="flex gap-2">
-            <AddMachineDialog type="ppm" />
-            <AddMachineDialog type="ocm" />
+            <AddMachineDialog type="ppm" onAddMachine={handleAddMachine} />
+            <AddMachineDialog type="ocm" onAddMachine={handleAddMachine} />
           </div>
         </div>
 

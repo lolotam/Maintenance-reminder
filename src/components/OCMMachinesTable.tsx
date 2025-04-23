@@ -1,3 +1,4 @@
+
 import {
   Table,
   TableBody,
@@ -32,7 +33,7 @@ interface OCMMachine {
   serialNumber: string;
   manufacturer: string;
   logNo: string;
-  maintenanceDate: string;
+  maintenanceDate: string | Date;
   engineer?: string;
 }
 
@@ -133,11 +134,13 @@ export const OCMMachinesTable = ({ searchTerm }: OCMMachinesTableProps) => {
     localStorage.setItem("ocmMachines", JSON.stringify(machines));
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | Date) => {
+    if (!dateString) return "";
     return new Date(dateString).toLocaleDateString();
   };
 
-  const isDueSoon = (dateString: string) => {
+  const isDueSoon = (dateString: string | Date) => {
+    if (!dateString) return false;
     const today = new Date();
     const dueDate = new Date(dateString);
     const diffTime = dueDate.getTime() - today.getTime();
@@ -170,7 +173,7 @@ export const OCMMachinesTable = ({ searchTerm }: OCMMachinesTableProps) => {
       serialNumber: machine.serialNumber,
       manufacturer: machine.manufacturer,
       logNo: machine.logNo,
-      maintenanceDate: machine.maintenanceDate,
+      maintenanceDate: typeof machine.maintenanceDate === 'string' ? machine.maintenanceDate : '',
     });
     setDialogOpen(true);
   };
@@ -189,6 +192,25 @@ export const OCMMachinesTable = ({ searchTerm }: OCMMachinesTableProps) => {
     setDialogOpen(false);
     setEditingMachine(null);
     form.reset();
+  };
+
+  // Helper function to safely format year-specific maintenance dates
+  const formatYearlyDate = (dateString: string | Date, targetYear: number) => {
+    if (!dateString) return "";
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "";
+      
+      // Create a new date with the target year but same month and day
+      const formattedDate = new Date(date);
+      formattedDate.setFullYear(targetYear);
+      
+      return formatDate(formattedDate);
+    } catch (e) {
+      console.error("Error formatting date:", e);
+      return "";
+    }
   };
 
   return (
@@ -248,15 +270,15 @@ export const OCMMachinesTable = ({ searchTerm }: OCMMachinesTableProps) => {
                   <TableCell>{machine.manufacturer}</TableCell>
                   <TableCell>{machine.logNo}</TableCell>
                   <TableCell className={isDueSoon(machine.maintenanceDate) ? "text-amber-600 font-medium" : ""}>
-                    {formatDate("2024-" + machine.maintenanceDate.split("-").slice(1).join("-"))}
+                    {formatYearlyDate(machine.maintenanceDate, 2024)}
                   </TableCell>
                   <TableCell>{machine.engineer || "-"}</TableCell>
                   <TableCell>
-                    {formatDate("2025-" + machine.maintenanceDate.split("-").slice(1).join("-"))}
+                    {formatYearlyDate(machine.maintenanceDate, 2025)}
                   </TableCell>
                   <TableCell>-</TableCell>
                   <TableCell>
-                    {formatDate("2026-" + machine.maintenanceDate.split("-").slice(1).join("-"))}
+                    {formatYearlyDate(machine.maintenanceDate, 2026)}
                   </TableCell>
                   <TableCell>-</TableCell>
                   <TableCell>
