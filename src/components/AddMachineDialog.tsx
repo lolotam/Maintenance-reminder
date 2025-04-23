@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
@@ -39,14 +38,25 @@ const ppmFormSchema = z.object({
   }),
 });
 
-// Form schema for OCM machines
+// Updated OCM Form schema with multi-year maintenance
 const ocmFormSchema = z.object({
   equipment: z.string().min(1, "Equipment name is required"),
   model: z.string().min(1, "Model is required"),
   serialNumber: z.string().min(1, "Serial number is required"),
   manufacturer: z.string().min(1, "Manufacturer is required"),
   logNo: z.string().min(1, "Log number is required"),
-  maintenanceDate: z.string().min(1, "Maintenance date is required"),
+  maintenance2024: z.object({
+    date: z.string().min(1, "2024 maintenance date is required"),
+    engineer: z.string().min(1, "2024 engineer is required"),
+  }),
+  maintenance2025: z.object({
+    date: z.string().min(1, "2025 maintenance date is required"),
+    engineer: z.string().min(1, "2025 engineer is required"),
+  }),
+  maintenance2026: z.object({
+    date: z.string().min(1, "2026 maintenance date is required"),
+    engineer: z.string().min(1, "2026 engineer is required"),
+  }),
 });
 
 export const AddMachineDialog = ({ type, onAddMachine }: AddMachineDialogProps) => {
@@ -69,7 +79,9 @@ export const AddMachineDialog = ({ type, onAddMachine }: AddMachineDialogProps) 
       serialNumber: "",
       manufacturer: "",
       logNo: "",
-      maintenanceDate: "",
+      maintenance2024: { date: "", engineer: "" },
+      maintenance2025: { date: "", engineer: "" },
+      maintenance2026: { date: "", engineer: "" },
     },
   });
 
@@ -85,7 +97,7 @@ export const AddMachineDialog = ({ type, onAddMachine }: AddMachineDialogProps) 
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="ml-4">
+        <Button>
           <Plus className="mr-2 h-4 w-4" />
           Add {type.toUpperCase()} Machine
         </Button>
@@ -195,18 +207,36 @@ export const AddMachineDialog = ({ type, onAddMachine }: AddMachineDialogProps) 
                 ))}
               </>
             ) : (
-              <FormField
-                control={form.control}
-                name="maintenanceDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Maintenance Date</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-4">
+                {[2024, 2025, 2026].map((year) => (
+                  <div key={year} className="grid gap-4 md:grid-cols-2 border-t pt-4">
+                    <FormField
+                      control={form.control}
+                      name={`maintenance${year}.date` as any}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{year} Maintenance Date</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`maintenance${year}.engineer` as any}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{year} Engineer</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter engineer name" {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                ))}
+              </div>
             )}
 
             <div className="flex justify-end">
