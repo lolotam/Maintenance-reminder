@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { MainLayout } from "@/components/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,18 +8,71 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { AddMachineDialog } from "@/components/AddMachineDialog";
+import { toast } from "sonner";
+import { v4 as uuidv4 } from "uuid";
 
 const LdrMachines = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const handleAddPPMMachine = (data: any) => {
     console.log("Adding PPM machine:", data);
-    // Add your logic to save the PPM machine
+    
+    // Create new machine object with ID
+    const newMachine = {
+      id: uuidv4(),
+      equipment: data.equipment,
+      model: data.model,
+      serialNumber: data.serialNumber,
+      manufacturer: data.manufacturer,
+      logNo: data.logNo,
+      q1: { date: data.q1_date, engineer: data.q1_engineer },
+      q2: { date: data.q2_date, engineer: data.q2_engineer },
+      q3: { date: data.q3_date, engineer: data.q3_engineer },
+      q4: { date: data.q4_date, engineer: data.q4_engineer },
+    };
+    
+    // Get existing machines
+    const existingMachines = JSON.parse(localStorage.getItem("ppmMachines") || "[]");
+    
+    // Add new machine
+    const updatedMachines = [...existingMachines, newMachine];
+    
+    // Save to localStorage
+    localStorage.setItem("ppmMachines", JSON.stringify(updatedMachines));
+    
+    toast.success(`${data.equipment} has been added`);
+    
+    // Force refresh of the component
+    window.location.reload();
   };
 
   const handleAddOCMMachine = (data: any) => {
     console.log("Adding OCM machine:", data);
-    // Add your logic to save the OCM machine
+    
+    // Create new machine object with ID
+    const newMachine = {
+      id: uuidv4(),
+      equipment: data.equipment,
+      model: data.model,
+      serialNumber: data.serialNumber,
+      manufacturer: data.manufacturer,
+      logNo: data.logNo,
+      maintenanceDate: data.maintenanceDate,
+    };
+    
+    // Get existing machines
+    const existingMachines = JSON.parse(localStorage.getItem("ocmMachines") || "[]");
+    
+    // Add new machine
+    const updatedMachines = [...existingMachines, newMachine];
+    
+    // Save to localStorage
+    localStorage.setItem("ocmMachines", JSON.stringify(updatedMachines));
+    
+    toast.success(`${data.equipment} has been added`);
+    
+    // Force refresh of the component
+    window.location.reload();
   };
 
   return (

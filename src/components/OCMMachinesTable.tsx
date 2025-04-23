@@ -1,3 +1,4 @@
+
 import {
   Table,
   TableBody,
@@ -11,6 +12,19 @@ import { Bell, CheckCircle, Edit, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { useAppContext } from "@/contexts/AppContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { v4 as uuidv4 } from "uuid";
 
 interface OCMMachine {
   id: string;
@@ -43,12 +57,28 @@ const mockOCMMachines: OCMMachine[] = [
   },
 ];
 
+const formSchema = z.object({
+  equipment: z.string().min(1, "Equipment name is required"),
+  model: z.string().min(1, "Model is required"),
+  serialNumber: z.string().min(1, "Serial number is required"),
+  manufacturer: z.string().min(1, "Manufacturer is required"),
+  logNo: z.string().min(1, "Log number is required"),
+  maintenanceDate: z.string().min(1, "Maintenance date is required"),
+});
+
+type FormData = z.infer<typeof formSchema>;
+
 interface OCMMachinesTableProps {
   searchTerm: string;
 }
 
 export const OCMMachinesTable = ({ searchTerm }: OCMMachinesTableProps) => {
-  const [machines, setMachines] = useState<OCMMachine[]>(mockOCMMachines);
+  const { machines, addMachines, updateMachine, deleteMachine } = useAppContext();
+  const [storedMachines, setStoredMachines] = useState<OCMMachine[]>(() => {
+    const stored = localStorage.getItem("ocmMachines");
+    return stored ? JSON.parse(stored) : mockOCMMachines;
+  });
+  
   const [filters, setFilters] = useState({
     equipment: "",
     model: "",
@@ -56,8 +86,23 @@ export const OCMMachinesTable = ({ searchTerm }: OCMMachinesTableProps) => {
     manufacturer: "",
     logNo: "",
   });
-
-  const filteredMachines = machines.filter((machine) => {
+  
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingMachine, setEditingMachine] = useState<OCMMachine | null>(null);
+  
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      equipment: "",
+      model: "",
+      serialNumber: "",
+      manufacturer: "",
+      logNo: "",
+      maintenanceDate: "",
+    },
+  });
+  
+  const filteredMachines = storedMachines.filter((machine) => {
     const matchesSearch = 
       machine.equipment.toLowerCase().includes(searchTerm.toLowerCase()) ||
       machine.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -72,6 +117,10 @@ export const OCMMachinesTable = ({ searchTerm }: OCMMachinesTableProps) => {
 
     return matchesSearch && matchesFilters;
   });
+
+  const saveToLocalStorage = (machines: OCMMachine[]) => {
+    localStorage.setItem("ocmMachines", JSON.stringify(machines));
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
@@ -95,13 +144,41 @@ export const OCMMachinesTable = ({ searchTerm }: OCMMachinesTableProps) => {
 
   const handleDelete = (machine: OCMMachine) => {
     if (window.confirm(`Are you sure you want to delete ${machine.equipment}?`)) {
-      setMachines(machines.filter(m => m.id !== machine.id));
+      const newMachines = storedMachines.filter(m => m.id !== machine.id);
+      setStoredMachines(newMachines);
+      saveToLocalStorage(newMachines);
       toast.success(`${machine.equipment} has been deleted`);
     }
   };
 
   const handleEdit = (machine: OCMMachine) => {
-    toast.info(`Edit functionality for ${machine.equipment} will be implemented soon`);
+    setEditingMachine(machine);
+    form.reset({
+      equipment: machine.equipment,
+      model: machine.model,
+      serialNumber: machine.serialNumber,
+      manufacturer: machine.manufacturer,
+      logNo: machine.logNo,
+      maintenanceDate: machine.maintenanceDate,
+    });
+    setDialogOpen(true);
+  };
+
+  const onSubmit = (data: FormData) => {
+    if (editingMachine) {
+      // Update existing machine
+      const updatedMachines = storedMachines.map(machine => 
+        machine.id === editingMachine.id 
+          ? { ...machine, ...data } 
+          : machine
+      );
+      setStoredMachines(updatedMachines);
+      saveToLocalStorage(updatedMachines);
+      toast.success(`${data.equipment} has been updated`);
+    }
+    setDialogOpen(false);
+    setEditingMachine(null);
+    form.reset();
   };
 
   return (
@@ -217,6 +294,103 @@ export const OCMMachinesTable = ({ searchTerm }: OCMMachinesTableProps) => {
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit OCM Machine</DialogTitle>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="equipment"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Equipment</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Equipment name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="model"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Model</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Model" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="serialNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Serial Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Serial number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="manufacturer"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Manufacturer</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Manufacturer" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="logNo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Log No</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Log number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="maintenanceDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Maintenance Date</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <DialogFooter>
+                <Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">Save Changes</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
