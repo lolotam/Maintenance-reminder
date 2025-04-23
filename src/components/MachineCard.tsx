@@ -1,3 +1,4 @@
+
 import { differenceInDays, format, parseISO } from "date-fns";
 import { Calendar, Clock, AlertCircle, Wrench } from "lucide-react";
 import { Machine } from "@/types";
@@ -28,11 +29,39 @@ export function MachineCard({ machine, onMarkComplete }: MachineCardProps) {
   };
   
   const getProgress = () => {
-    const cycleLength = machine.frequency === 'Quarterly' ? 90 : 365;
-    const lastDate = parseISO(machine.lastMaintenanceDate);
-    const daysPassed = differenceInDays(today, lastDate);
-    const progressPercent = Math.min(100, Math.max(0, (daysPassed / cycleLength) * 100));
-    return progressPercent;
+    if (!machine.lastMaintenanceDate) return 0;
+    
+    try {
+      const cycleLength = machine.frequency === 'Quarterly' ? 90 : 365;
+      const lastDate = parseISO(machine.lastMaintenanceDate);
+      if (!isValidDate(lastDate)) return 0;
+      
+      const daysPassed = differenceInDays(today, lastDate);
+      const progressPercent = Math.min(100, Math.max(0, (daysPassed / cycleLength) * 100));
+      return progressPercent;
+    } catch (error) {
+      console.error("Error calculating progress:", error);
+      return 0;
+    }
+  };
+
+  // Helper function to check if a date is valid
+  const isValidDate = (date: Date): boolean => {
+    return date instanceof Date && !isNaN(date.getTime());
+  };
+
+  // Format date safely
+  const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return "Not set";
+    
+    try {
+      const date = parseISO(dateString);
+      if (!isValidDate(date)) return "Invalid date";
+      return format(date, "MMM d, yyyy");
+    } catch (error) {
+      console.error("Error formatting date:", error, dateString);
+      return "Invalid date";
+    }
   };
 
   useEffect(() => {
@@ -63,12 +92,12 @@ export function MachineCard({ machine, onMarkComplete }: MachineCardProps) {
         <div className="space-y-3">
           <div className="flex items-center text-sm text-muted-foreground">
             <Calendar className="mr-2 h-4 w-4" />
-            <span>Last: {format(parseISO(machine.lastMaintenanceDate), "MMM d, yyyy")}</span>
+            <span>Last: {formatDate(machine.lastMaintenanceDate)}</span>
           </div>
           
           <div className="flex items-center text-sm text-muted-foreground">
             <Clock className="mr-2 h-4 w-4" />
-            <span>Next: {nextDate ? format(nextDate, "MMM d, yyyy") : "Not scheduled"}</span>
+            <span>Next: {nextDate ? formatDate(machine.nextMaintenanceDate) : "Not scheduled"}</span>
           </div>
           
           <div className="flex items-center text-sm text-muted-foreground">
