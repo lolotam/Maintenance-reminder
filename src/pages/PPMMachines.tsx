@@ -9,10 +9,14 @@ import { AddMachineDialog } from "@/components/AddMachineDialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { useAppContext } from "@/contexts/AppContext";
 
 const PPMMachines = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMachines, setSelectedMachines] = useState<string[]>([]);
+  const { countMachinesByType } = useAppContext();
+
+  const ppmMachinesCount = countMachinesByType("PPM");
 
   const handleAddMachine = (machineData: any) => {
     console.log("Adding new PPM machine:", machineData);
@@ -47,7 +51,12 @@ const PPMMachines = () => {
     <MainLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-primary">PPM Machines</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-primary">
+            PPM Machines 
+            <span className="ml-2 text-sm text-muted-foreground">
+              ({ppmMachinesCount} Total)
+            </span>
+          </h1>
           <p className="text-lg text-muted-foreground mt-2">
             Quarterly Maintenance Schedule
           </p>

@@ -11,6 +11,7 @@ interface AppContextType {
   markMachineComplete: (id: string) => void;
   updateSettings: (newSettings: Partial<AppSettings>) => void;
   filteredMachines: (searchTerm: string, filters: any) => Machine[];
+  countMachinesByType: (type: "PPM" | "OCM") => number;
 }
 
 const defaultSettings: AppSettings = {
@@ -171,6 +172,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  // New method to count machines by type
+  const countMachinesByType = (type: "PPM" | "OCM") => {
+    return machines.filter(machine => machine.frequency === 
+      (type === "PPM" ? "Quarterly" : "Yearly")).length;
+  };
+
   const value = {
     machines,
     settings,
@@ -180,6 +187,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     markMachineComplete,
     updateSettings,
     filteredMachines,
+    countMachinesByType,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
