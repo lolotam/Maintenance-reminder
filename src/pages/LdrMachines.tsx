@@ -13,8 +13,20 @@ const LdrMachines = () => {
   const [ocmMachinesCount, setOcmMachinesCount] = useState(0);
   
   useEffect(() => {
-    setPpmMachinesCount(countMachinesByType("PPM"));
-    setOcmMachinesCount(countMachinesByType("OCM"));
+    // Update counts whenever the component renders
+    const updateCounts = () => {
+      setPpmMachinesCount(countMachinesByType("PPM"));
+      setOcmMachinesCount(countMachinesByType("OCM"));
+    };
+    
+    updateCounts();
+    
+    // Set up an interval to update counts regularly
+    const intervalId = setInterval(updateCounts, 2000);
+    
+    return () => {
+      clearInterval(intervalId);
+    };
   }, [countMachinesByType]);
 
   const handleDashboardLink = () => {

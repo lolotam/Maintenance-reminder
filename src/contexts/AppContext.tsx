@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Machine, AppSettings, NotificationSettings } from "@/types";
 import { addMonths, addYears } from "date-fns";
@@ -62,11 +61,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Calculate next maintenance date based on last date and frequency
   const calculateNextDate = (lastDate: string, frequency: "Quarterly" | "Yearly"): string => {
-    const date = new Date(lastDate);
-    if (frequency === "Quarterly") {
-      return addMonths(date, 3).toISOString();
-    } else {
-      return addYears(date, 1).toISOString();
+    try {
+      const date = new Date(lastDate);
+      if (isNaN(date.getTime())) {
+        console.error("Invalid date in calculateNextDate:", lastDate);
+        return "";
+      }
+      
+      if (frequency === "Quarterly") {
+        return addMonths(date, 3).toISOString();
+      } else {
+        return addYears(date, 1).toISOString();
+      }
+    } catch (error) {
+      console.error("Error in calculateNextDate:", error);
+      return "";
     }
   };
 
@@ -184,7 +193,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Get PPM machines from localStorage
       const storedPPMMachines = JSON.parse(localStorage.getItem(PPM_MACHINES_KEY) || "[]");
       const ppmMachines = storedPPMMachines.map((machine: any) => {
-        const q1Date = machine.q1_date || "";
+        // Find the most recent maintenance date
+        const dates = [
+          machine.q1?.date, 
+          machine.q2?.date, 
+          machine.q3?.date, 
+          machine.q4?.date
+        ].filter(Boolean);
+        
+        let lastMaintenanceDate = "";
+        
+        if (dates.length > 0) {
+          try {
+            lastMaintenanceDate = new Date(Math.max(...dates.map(d => new Date(d).getTime()))).toISOString();
+          } catch (error) {
+            console.error("Error processing PPM dates:", error, dates);
+            lastMaintenanceDate = machine.lastMaintenanceDate || new Date().toISOString();
+          }
+        } else {
+          lastMaintenanceDate = machine.lastMaintenanceDate || new Date().toISOString();
+        }
+        
+        const nextDate = machine.nextMaintenanceDate || 
+          (lastMaintenanceDate ? calculateNextDate(lastMaintenanceDate, "Quarterly") : "");
+        
         return {
           id: machine.id || `ppm-${Math.random().toString(36).substring(2, 9)}`,
           name: machine.equipment || "Unknown PPM Machine",
@@ -193,24 +225,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
           model: machine.model || "",
           logNo: machine.logNo || "",
           frequency: "Quarterly" as const,
-          lastMaintenanceDate: q1Date,
-          nextMaintenanceDate: q1Date ? addMonths(new Date(q1Date), 3).toISOString() : "",
+          lastMaintenanceDate: lastMaintenanceDate,
+          nextMaintenanceDate: nextDate,
           quarters: {
             q1: { 
-              date: machine.q1_date || "", 
-              engineer: machine.q1_engineer || "" 
+              date: machine.q1?.date || "", 
+              engineer: machine.q1?.engineer || "" 
             },
             q2: { 
-              date: machine.q2_date || "", 
-              engineer: machine.q2_engineer || "" 
+              date: machine.q2?.date || "", 
+              engineer: machine.q2?.engineer || "" 
             },
             q3: { 
-              date: machine.q3_date || "", 
-              engineer: machine.q3_engineer || "" 
+              date: machine.q3?.date || "", 
+              engineer: machine.q3?.engineer || "" 
             },
             q4: { 
-              date: machine.q4_date || "", 
-              engineer: machine.q4_engineer || "" 
+              date: machine.q4?.date || "", 
+              engineer: machine.q4?.engineer || "" 
             },
           },
           notificationSettings: {
@@ -225,7 +257,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Get OCM machines from localStorage
       const storedOCMMachines = JSON.parse(localStorage.getItem(OCM_MACHINES_KEY) || "[]");
       const ocmMachines = storedOCMMachines.map((machine: any) => {
-        const maintenanceDate = machine.maintenance2025?.date || "";
+        let lastMaintenanceDate = machine.lastMaintenanceDate || machine.maintenanceDate || "";
+        const nextDate = machine.nextMaintenanceDate || 
+          (lastMaintenanceDate ? calculateNextDate(lastMaintenanceDate, "Yearly") : "");
+          
         return {
           id: machine.id || `ocm-${Math.random().toString(36).substring(2, 9)}`,
           name: machine.equipment || "Unknown OCM Machine",
@@ -234,16 +269,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
           model: machine.model || "",
           logNo: machine.logNo || "",
           frequency: "Yearly" as const,
-          lastMaintenanceDate: maintenanceDate,
-          nextMaintenanceDate: maintenanceDate ? addYears(new Date(maintenanceDate), 1).toISOString() : "",
+          lastMaintenanceDate: lastMaintenanceDate,
+          nextMaintenanceDate: nextDate,
           years: {
             '2025': { 
-              date: machine.maintenance2025?.date || "", 
-              engineer: machine.maintenance2025?.engineer || "" 
+              date: machine.maintenanceDate || "", 
+              engineer: machine.engineer || "" 
             },
             '2026': { 
-              date: machine.maintenance2026?.date || "", 
-              engineer: machine.maintenance2026?.engineer || "" 
+              date: "", 
+              engineer: "" 
             },
           },
           notificationSettings: {
