@@ -1,6 +1,5 @@
-
 import { differenceInDays, format, parseISO } from "date-fns";
-import { Calendar, Clock, AlertCircle, Tool } from "lucide-react";
+import { Calendar, Clock, AlertCircle, Wrench } from "lucide-react";
 import { Machine } from "@/types";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +20,6 @@ export function MachineCard({ machine, onMarkComplete }: MachineCardProps) {
   const daysRemaining = nextDate ? differenceInDays(nextDate, today) : 0;
   const [progressValue, setProgressValue] = useState(0);
   
-  // Determines urgency based on days remaining
   const getUrgencyColor = () => {
     if (daysRemaining <= 0) return "bg-destructive text-destructive-foreground";
     if (daysRemaining <= 7) return "bg-warning text-warning-foreground";
@@ -29,7 +27,6 @@ export function MachineCard({ machine, onMarkComplete }: MachineCardProps) {
     return "bg-success text-success-foreground";
   };
   
-  // Calculate progress for maintenance cycle
   const getProgress = () => {
     const cycleLength = machine.frequency === 'Quarterly' ? 90 : 365;
     const lastDate = parseISO(machine.lastMaintenanceDate);
@@ -38,7 +35,6 @@ export function MachineCard({ machine, onMarkComplete }: MachineCardProps) {
     return progressPercent;
   };
 
-  // Animate progress bar
   useEffect(() => {
     const progress = getProgress();
     const timer = setTimeout(() => {
@@ -47,7 +43,6 @@ export function MachineCard({ machine, onMarkComplete }: MachineCardProps) {
     return () => clearTimeout(timer);
   }, [machine.lastMaintenanceDate]);
 
-  // Format days remaining text
   const getDaysText = () => {
     if (daysRemaining < 0) return `Overdue by ${Math.abs(daysRemaining)} days`;
     if (daysRemaining === 0) return "Due today";
@@ -86,7 +81,6 @@ export function MachineCard({ machine, onMarkComplete }: MachineCardProps) {
               <span>Maintenance Cycle</span>
               <span>{Math.round(progressValue)}%</span>
             </div>
-            {/* Animated progress bar */}
             <Progress value={progressValue} className="h-2 transition-all duration-1000 ease-out" />
           </div>
         </div>
@@ -96,7 +90,7 @@ export function MachineCard({ machine, onMarkComplete }: MachineCardProps) {
           onClick={() => onMarkComplete(machine.id)}
           className="w-full py-2 flex items-center justify-center gap-2"
         >
-          <Tool className="h-4 w-4" />
+          <Wrench className="h-4 w-4" />
           <span>Mark as Maintained</span>
         </Button>
       </CardFooter>
