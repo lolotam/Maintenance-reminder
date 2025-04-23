@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { MainLayout } from "@/components/MainLayout";
 import { MachineCard } from "@/components/MachineCard";
@@ -137,7 +136,7 @@ const Dashboard = () => {
               <SelectValue placeholder="Frequency" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Frequencies</SelectItem>
+              <SelectItem value="all-frequencies">All Frequencies</SelectItem>
               <SelectItem value="Quarterly">Quarterly</SelectItem>
               <SelectItem value="Yearly">Yearly</SelectItem>
             </SelectContent>
@@ -153,7 +152,7 @@ const Dashboard = () => {
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Status</SelectItem>
+              <SelectItem value="all-statuses">All Status</SelectItem>
               <SelectItem value="overdue">Overdue</SelectItem>
               <SelectItem value="upcoming">Upcoming</SelectItem>
             </SelectContent>
