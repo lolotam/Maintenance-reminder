@@ -1,7 +1,7 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Home, Upload, Settings, BellRing } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { Home, Upload, Settings, BellRing, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface MainLayoutProps {
@@ -10,11 +10,13 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
   
   const navItems = [
     { icon: Home, label: "Dashboard", path: "/" },
     { icon: Upload, label: "Upload Data", path: "/upload" },
     { icon: BellRing, label: "Notifications", path: "/notifications" },
+    { icon: Wrench, label: "LDR Machines", path: "/ldr-machines" },
     { icon: Settings, label: "Settings", path: "/settings" },
   ];
 
@@ -50,7 +52,12 @@ export function MainLayout({ children }: MainLayoutProps) {
               <Link
                 key={item.label}
                 to={item.path}
-                className="flex items-center gap-2 text-gray-600 hover:text-primary transition-colors"
+                className={cn(
+                  "flex items-center gap-2 transition-colors",
+                  location.pathname === item.path
+                    ? "text-primary font-medium"
+                    : "text-gray-600 hover:text-primary"
+                )}
               >
                 <item.icon className="h-4 w-4" />
                 <span>{item.label}</span>
@@ -67,7 +74,12 @@ export function MainLayout({ children }: MainLayoutProps) {
                 <Link
                   key={item.label}
                   to={item.path}
-                  className="flex items-center gap-2 p-3 rounded-md text-gray-600 hover:bg-gray-50 hover:text-primary"
+                  className={cn(
+                    "flex items-center gap-2 p-3 rounded-md",
+                    location.pathname === item.path
+                      ? "bg-gray-100 text-primary font-medium"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-primary"
+                  )}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <item.icon className="h-5 w-5" />
