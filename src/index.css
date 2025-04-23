@@ -1,10 +1,11 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 210 40% 98%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -35,19 +36,12 @@
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -55,13 +49,13 @@
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 222.2 47% 11%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222.2 84% 4.9%;
+    --popover: 222.2 47% 11%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
     --primary-foreground: 222.2 47.4% 11.2%;
 
     --secondary: 217.2 32.6% 17.5%;
@@ -79,6 +73,7 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
+    
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -97,33 +92,127 @@
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 
   h1 {
-    @apply text-3xl font-bold text-primary;
+    @apply text-3xl font-bold text-foreground mb-4;
   }
 
   h2 {
-    @apply text-2xl font-semibold text-primary;
+    @apply text-2xl font-semibold text-foreground mb-3;
   }
 
   h3 {
-    @apply text-xl font-medium text-primary;
+    @apply text-xl font-medium text-foreground mb-2;
   }
 
   th {
-    @apply text-base font-bold text-primary;
+    @apply text-base font-bold text-foreground;
   }
 
   td {
     @apply text-base;
   }
+}
 
+@layer components {
   .engineer-name {
-    @apply text-blue-600 font-medium;
+    @apply text-blue-600 dark:text-blue-400 font-medium;
   }
 
   .menu-item {
     @apply text-lg font-medium;
+  }
+  
+  .responsive-table {
+    @apply w-full;
+  }
+  
+  @media (max-width: 768px) {
+    .responsive-table thead {
+      @apply hidden;
+    }
+    
+    .responsive-table tbody {
+      @apply block w-full;
+    }
+    
+    .responsive-table tr {
+      @apply block mb-4 rounded-lg border shadow-sm;
+    }
+    
+    .responsive-table td {
+      @apply block px-4 py-2 text-right;
+      position: relative;
+      padding-left: 50%;
+    }
+    
+    .responsive-table td::before {
+      @apply content-[attr(data-label)] absolute top-2 left-4 font-medium text-foreground;
+      text-align: left;
+    }
+  }
+  
+  .countdown-timer {
+    @apply relative inline-flex items-center justify-center;
+  }
+  
+  .countdown-timer svg {
+    @apply -rotate-90;
+  }
+  
+  .countdown-timer circle {
+    @apply transition-all duration-1000 ease-linear;
+    stroke-dasharray: 100;
+    stroke-linecap: round;
+  }
+  
+  .countdown-timer text {
+    @apply text-center text-xs font-medium;
+  }
+  
+  .status-badge {
+    @apply px-2 py-1 rounded-full text-xs font-semibold;
+  }
+  
+  .status-badge-overdue {
+    @apply bg-destructive text-destructive-foreground;
+  }
+  
+  .status-badge-warning {
+    @apply bg-warning text-warning-foreground;
+  }
+  
+  .status-badge-ok {
+    @apply bg-success text-success-foreground;
+  }
+
+  .card-hover {
+    @apply transition-all duration-200 hover:shadow-md hover:-translate-y-1;
+  }
+
+  /* Improved mobile tabs */
+  .mobile-tabs {
+    @apply flex overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-2 no-scrollbar;
+  }
+  
+  .mobile-tab-item {
+    @apply snap-start shrink-0;
+  }
+
+  /* Hide scrollbar but allow scrolling */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Mobile card styles */
+  .mobile-card {
+    @apply p-4 border rounded-lg mb-4 bg-card;
   }
 }

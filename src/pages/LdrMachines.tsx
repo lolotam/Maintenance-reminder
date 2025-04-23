@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { MainLayout } from "@/components/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PPMMachinesTable } from "@/components/PPMMachinesTable";
@@ -10,9 +10,13 @@ import { Search } from "lucide-react";
 import { AddMachineDialog } from "@/components/AddMachineDialog";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const LdrMachines = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState("ppm");
+  const isMobile = useIsMobile();
+  const tabsContainerRef = useRef<HTMLDivElement>(null);
 
   const handleAddPPMMachine = (data: any) => {
     console.log("Adding PPM machine:", data);
@@ -75,9 +79,34 @@ const LdrMachines = () => {
     window.location.reload();
   };
 
+  // Setup touch swipe for mobile tabs
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+  
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+  
+  const handleTouchEnd = () => {
+    const difference = touchStartX.current - touchEndX.current;
+    if (Math.abs(difference) < 50) return; // Minimum swipe distance
+    
+    if (difference > 0 && activeTab === 'ppm') {
+      // Swipe left: ppm -> ocm
+      setActiveTab('ocm');
+    } else if (difference < 0 && activeTab === 'ocm') {
+      // Swipe right: ocm -> ppm
+      setActiveTab('ppm');
+    }
+  };
+
   return (
     <MainLayout>
-      <div className="space-y-8">
+      <div className="space-y-8 animate-fade-in">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">LDR Machines</h1>
           <p className="text-muted-foreground mt-2">
@@ -101,35 +130,61 @@ const LdrMachines = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="ppm" className="w-full">
-          <TabsList className="grid w-full sm:w-[400px] grid-cols-2">
-            <TabsTrigger value="ppm">PPM Machines</TabsTrigger>
-            <TabsTrigger value="ocm">OCM Machines</TabsTrigger>
-          </TabsList>
-          <TabsContent value="ppm">
-            <Card>
-              <CardHeader>
-                <CardTitle>PPM Machines (Quarterly Maintenance)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <PPMMachinesTable searchTerm={searchTerm} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="ocm">
-            <Card>
-              <CardHeader>
-                <CardTitle>OCM Machines (Yearly Maintenance)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <OCMMachinesTable searchTerm={searchTerm} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        <div 
+          ref={tabsContainerRef}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          className="touch-pan-y"
+        >
+          <Tabs 
+            value={activeTab} 
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
+            <TabsList className={cn(
+              "grid w-full max-w-md mb-4", 
+              isMobile ? "sticky top-[70px] z-20 bg-background/80 backdrop-blur-sm" : ""
+            )}>
+              <TabsTrigger value="ppm" className="relative">
+                PPM Machines
+                <span className="absolute -bottom-1 h-[2px] left-0 right-0 bg-primary scale-x-0 transition-transform group-data-[state=active]:scale-x-100" />
+              </TabsTrigger>
+              <TabsTrigger value="ocm" className="relative">
+                OCM Machines
+                <span className="absolute -bottom-1 h-[2px] left-0 right-0 bg-primary scale-x-0 transition-transform group-data-[state=active]:scale-x-100" />
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="ppm" className="animate-fade-in">
+              <Card>
+                <CardHeader>
+                  <CardTitle>PPM Machines (Quarterly Maintenance)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <PPMMachinesTable searchTerm={searchTerm} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent value="ocm" className="animate-fade-in">
+              <Card>
+                <CardHeader>
+                  <CardTitle>OCM Machines (Yearly Maintenance)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <OCMMachinesTable searchTerm={searchTerm} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </MainLayout>
   );
 };
 
 export default LdrMachines;
+
+// Helper function for conditional class names
+function cn(...classes: (string | boolean | undefined)[]) {
+  return classes.filter(Boolean).join(' ');
+}

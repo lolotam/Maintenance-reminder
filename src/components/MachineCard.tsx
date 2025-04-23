@@ -1,11 +1,13 @@
 
 import { differenceInDays, format, parseISO } from "date-fns";
-import { Calendar, Clock, AlertCircle } from "lucide-react";
+import { Calendar, Clock, AlertCircle, Tool } from "lucide-react";
 import { Machine } from "@/types";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
 
 interface MachineCardProps {
   machine: Machine;
@@ -17,13 +19,14 @@ export function MachineCard({ machine, onMarkComplete }: MachineCardProps) {
   const today = new Date();
   
   const daysRemaining = nextDate ? differenceInDays(nextDate, today) : 0;
+  const [progressValue, setProgressValue] = useState(0);
   
   // Determines urgency based on days remaining
   const getUrgencyColor = () => {
     if (daysRemaining <= 0) return "bg-destructive text-destructive-foreground";
-    if (daysRemaining <= 7) return "bg-orange-500 text-white";
-    if (daysRemaining <= 30) return "bg-yellow-500 text-black";
-    return "bg-green-500 text-white";
+    if (daysRemaining <= 7) return "bg-warning text-warning-foreground";
+    if (daysRemaining <= 30) return "bg-yellow-500 text-black dark:text-white";
+    return "bg-success text-success-foreground";
   };
   
   // Calculate progress for maintenance cycle
@@ -35,13 +38,29 @@ export function MachineCard({ machine, onMarkComplete }: MachineCardProps) {
     return progressPercent;
   };
 
+  // Animate progress bar
+  useEffect(() => {
+    const progress = getProgress();
+    const timer = setTimeout(() => {
+      setProgressValue(progress);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [machine.lastMaintenanceDate]);
+
+  // Format days remaining text
+  const getDaysText = () => {
+    if (daysRemaining < 0) return `Overdue by ${Math.abs(daysRemaining)} days`;
+    if (daysRemaining === 0) return "Due today";
+    return `${daysRemaining} ${daysRemaining === 1 ? 'day' : 'days'} left`;
+  };
+
   return (
-    <Card className="h-full">
+    <Card className="h-full card-hover transition-all">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <CardTitle className="text-xl font-bold">{machine.name}</CardTitle>
           <Badge variant="outline" className={cn(getUrgencyColor(), "ml-2")}>
-            {daysRemaining <= 0 ? "Overdue" : `${daysRemaining} days left`}
+            {getDaysText()}
           </Badge>
         </div>
       </CardHeader>
@@ -65,19 +84,21 @@ export function MachineCard({ machine, onMarkComplete }: MachineCardProps) {
           <div className="pt-2">
             <div className="flex justify-between text-xs mb-1">
               <span>Maintenance Cycle</span>
-              <span>{Math.round(getProgress())}%</span>
+              <span>{Math.round(progressValue)}%</span>
             </div>
-            <Progress value={getProgress()} className="h-2" />
+            {/* Animated progress bar */}
+            <Progress value={progressValue} className="h-2 transition-all duration-1000 ease-out" />
           </div>
         </div>
       </CardContent>
       <CardFooter className="pt-2">
-        <button
+        <Button
           onClick={() => onMarkComplete(machine.id)}
-          className="w-full py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+          className="w-full py-2 flex items-center justify-center gap-2"
         >
-          Mark as Maintained
-        </button>
+          <Tool className="h-4 w-4" />
+          <span>Mark as Maintained</span>
+        </Button>
       </CardFooter>
     </Card>
   );
