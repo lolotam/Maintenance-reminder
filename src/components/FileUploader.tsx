@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import * as XLSX from "xlsx";
@@ -134,9 +133,9 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
             model: row.Model,
             serialNumber: row.Serial_Number,
             logNo: row.Log_Number,
-            frequency: 'Quarterly',
+            frequency: 'Quarterly' as const,
             lastMaintenanceDate,
-            nextMaintenanceDate: calculateNextDate(lastMaintenanceDate, 'Quarterly'),
+            nextMaintenanceDate: calculateNextDate(lastMaintenanceDate, 'Quarterly') || '',
             quarters: {
               q1: { date: row.Q1_Date || '', engineer: row.Q1_Engineer || '' },
               q2: { date: row.Q2_Date || '', engineer: row.Q2_Engineer || '' },
@@ -162,9 +161,9 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
             model: row.Model,
             serialNumber: row.Serial_Number,
             logNo: row.Log_Number,
-            frequency: 'Yearly',
+            frequency: 'Yearly' as const,
             lastMaintenanceDate,
-            nextMaintenanceDate: calculateNextDate(lastMaintenanceDate, 'Yearly'),
+            nextMaintenanceDate: calculateNextDate(lastMaintenanceDate, 'Yearly') || '',
             years: {
               '2025': { date: row['2025_Maintenance_Date'] || '', engineer: row['2025_Engineer'] || '' },
               '2026': { date: row['2026_Maintenance_Date'] || '', engineer: '' },
@@ -234,7 +233,6 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
     }
   });
 
-  // Update local storage and LDR Machines page
   const saveToApplication = () => {
     try {
       // Save to the app context for the Upload page integration

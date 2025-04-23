@@ -1,3 +1,4 @@
+
 export interface Machine {
   id: string;
   name: string;
@@ -16,9 +17,8 @@ export interface Machine {
     q4: { date: string; engineer: string };
   };
   years?: {
-    '2024': { date: string; engineer: string };
-    '2025': { date: string; engineer: string };
-    '2026': { date: string; engineer: string };
+    '2025'?: { date: string; engineer: string };
+    '2026'?: { date: string; engineer: string };
   };
 }
 
