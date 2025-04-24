@@ -1,16 +1,22 @@
 
 import { Machine } from "@/types";
 
-const API_URL = "http://localhost:3001/api";
+// Use environment-aware API URL
+const API_URL = import.meta.env.DEV 
+  ? "http://localhost:3001/api"  // Development
+  : "/api";                     // Production
 
 export const databaseService = {
   // PPM Machines
   async getPPMMachines(): Promise<Machine[]> {
     try {
       const response = await fetch(`${API_URL}/machines/ppm`);
+      
       if (!response.ok) {
-        throw new Error(`HTTP error ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`HTTP error ${response.status}: ${errorData.error || response.statusText}`);
       }
+      
       const machines = await response.json();
       return machines;
     } catch (error) {
@@ -30,8 +36,10 @@ export const databaseService = {
       });
       
       if (!response.ok) {
-        throw new Error(`HTTP error ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`HTTP error ${response.status}: ${errorData.error || response.statusText}`);
       }
+      
       return await response.json();
     } catch (error) {
       console.error("Error adding PPM machine:", error);
@@ -41,6 +49,8 @@ export const databaseService = {
 
   async bulkAddPPMMachines(machines: any[]): Promise<any> {
     try {
+      console.log("Sending bulk PPM machines to server:", machines.length);
+      
       const response = await fetch(`${API_URL}/machines/ppm/bulk`, {
         method: 'POST',
         headers: {
@@ -50,8 +60,10 @@ export const databaseService = {
       });
       
       if (!response.ok) {
-        throw new Error(`HTTP error ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`HTTP error ${response.status}: ${errorData.error || response.statusText}`);
       }
+      
       return await response.json();
     } catch (error) {
       console.error("Error adding PPM machines in bulk:", error);
@@ -66,8 +78,10 @@ export const databaseService = {
       });
       
       if (!response.ok) {
-        throw new Error(`HTTP error ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`HTTP error ${response.status}: ${errorData.error || response.statusText}`);
       }
+      
       const result = await response.json();
       return result.deleted;
     } catch (error) {
@@ -80,9 +94,12 @@ export const databaseService = {
   async getOCMMachines(): Promise<Machine[]> {
     try {
       const response = await fetch(`${API_URL}/machines/ocm`);
+      
       if (!response.ok) {
-        throw new Error(`HTTP error ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`HTTP error ${response.status}: ${errorData.error || response.statusText}`);
       }
+      
       const machines = await response.json();
       return machines;
     } catch (error) {
@@ -102,8 +119,10 @@ export const databaseService = {
       });
       
       if (!response.ok) {
-        throw new Error(`HTTP error ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`HTTP error ${response.status}: ${errorData.error || response.statusText}`);
       }
+      
       return await response.json();
     } catch (error) {
       console.error("Error adding OCM machine:", error);
@@ -113,6 +132,8 @@ export const databaseService = {
 
   async bulkAddOCMMachines(machines: any[]): Promise<any> {
     try {
+      console.log("Sending bulk OCM machines to server:", machines.length);
+      
       const response = await fetch(`${API_URL}/machines/ocm/bulk`, {
         method: 'POST',
         headers: {
@@ -122,8 +143,10 @@ export const databaseService = {
       });
       
       if (!response.ok) {
-        throw new Error(`HTTP error ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`HTTP error ${response.status}: ${errorData.error || response.statusText}`);
       }
+      
       return await response.json();
     } catch (error) {
       console.error("Error adding OCM machines in bulk:", error);
@@ -138,8 +161,10 @@ export const databaseService = {
       });
       
       if (!response.ok) {
-        throw new Error(`HTTP error ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`HTTP error ${response.status}: ${errorData.error || response.statusText}`);
       }
+      
       const result = await response.json();
       return result.deleted;
     } catch (error) {

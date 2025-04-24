@@ -2,7 +2,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const { MongoClient } = require('mongodb');
+const { MongoClient, ObjectId } = require('mongodb');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -11,30 +11,43 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// MongoDB Connection URI
-const uri = process.env.MONGO_URI || "mongodb+srv://lolotam:<password>@cluster1000.4zvov8d.mongodb.net/?retryWrites=true&w=majority&appName=Cluster1000";
-// Important: Replace <password> with your actual password in a .env file, not in code
-
+// MongoDB Connection URI - use the URI directly from .env
+const uri = process.env.MONGO_URI;
 let client;
 let db;
 
-// Connect to MongoDB
+// Connect to MongoDB with better error handling
 async function connectToMongo() {
   try {
     client = new MongoClient(uri);
     await client.connect();
-    db = client.db("maintenance_app");
     console.log("Connected to MongoDB Atlas");
+    db = client.db("maintenance_app");
+    
+    // Create collections if they don't exist
+    if (!await db.listCollections({ name: 'ppm_machines' }).hasNext()) {
+      await db.createCollection('ppm_machines');
+      console.log("Created ppm_machines collection");
+    }
+    
+    if (!await db.listCollections({ name: 'ocm_machines' }).hasNext()) {
+      await db.createCollection('ocm_machines');
+      console.log("Created ocm_machines collection");
+    }
+
     return db;
   } catch (error) {
     console.error("Error connecting to MongoDB:", error);
-    process.exit(1);
+    return null;
   }
 }
 
 // API Routes
 app.get('/api/machines/ppm', async (req, res) => {
   try {
+    if (!db) {
+      return res.status(500).json({ error: "Database connection not established" });
+    }
     const ppmMachines = await db.collection('ppm_machines').find({}).toArray();
     res.json(ppmMachines);
   } catch (error) {
@@ -45,6 +58,9 @@ app.get('/api/machines/ppm', async (req, res) => {
 
 app.get('/api/machines/ocm', async (req, res) => {
   try {
+    if (!db) {
+      return res.status(500).json({ error: "Database connection not established" });
+    }
     const ocmMachines = await db.collection('ocm_machines').find({}).toArray();
     res.json(ocmMachines);
   } catch (error) {
@@ -55,6 +71,9 @@ app.get('/api/machines/ocm', async (req, res) => {
 
 app.post('/api/machines/ppm', async (req, res) => {
   try {
+    if (!db) {
+      return res.status(500).json({ error: "Database connection not established" });
+    }
     const result = await db.collection('ppm_machines').insertOne(req.body);
     res.status(201).json({ id: result.insertedId, ...req.body });
   } catch (error) {
@@ -65,6 +84,9 @@ app.post('/api/machines/ppm', async (req, res) => {
 
 app.post('/api/machines/ocm', async (req, res) => {
   try {
+    if (!db) {
+      return res.status(500).json({ error: "Database connection not established" });
+    }
     const result = await db.collection('ocm_machines').insertOne(req.body);
     res.status(201).json({ id: result.insertedId, ...req.body });
   } catch (error) {
@@ -75,28 +97,52 @@ app.post('/api/machines/ocm', async (req, res) => {
 
 app.post('/api/machines/ppm/bulk', async (req, res) => {
   try {
+    if (!db) {
+      return res.status(500).json({ error: "Database connection not established" });
+    }
+    if (!Array.isArray(req.body) || req.body.length === 0) {
+      return res.status(400).json({ error: "Invalid data format. Expected non-empty array." });
+    }
+    
     const result = await db.collection('ppm_machines').insertMany(req.body);
     res.status(201).json({ insertedCount: result.insertedCount });
   } catch (error) {
     console.error("Error adding PPM machines in bulk:", error);
-    res.status(500).json({ error: "Failed to add PPM machines" });
+    res.status(500).json({ error: "Failed to add PPM machines: " + error.message });
   }
 });
 
 app.post('/api/machines/ocm/bulk', async (req, res) => {
   try {
+    if (!db) {
+      return res.status(500).json({ error: "Database connection not established" });
+    }
+    if (!Array.isArray(req.body) || req.body.length === 0) {
+      return res.status(400).json({ error: "Invalid data format. Expected non-empty array." });
+    }
+    
     const result = await db.collection('ocm_machines').insertMany(req.body);
     res.status(201).json({ insertedCount: result.insertedCount });
   } catch (error) {
     console.error("Error adding OCM machines in bulk:", error);
-    res.status(500).json({ error: "Failed to add OCM machines" });
+    res.status(500).json({ error: "Failed to add OCM machines: " + error.message });
   }
 });
 
 app.delete('/api/machines/ppm/:id', async (req, res) => {
   try {
+    if (!db) {
+      return res.status(500).json({ error: "Database connection not established" });
+    }
     const { id } = req.params;
-    const result = await db.collection('ppm_machines').deleteOne({ id });
+    // Try to delete by MongoDB ObjectId first
+    let result;
+    try {
+      result = await db.collection('ppm_machines').deleteOne({ _id: new ObjectId(id) });
+    } catch (e) {
+      // If error (likely invalid ObjectId format), try with string id
+      result = await db.collection('ppm_machines').deleteOne({ id: id });
+    }
     res.json({ deleted: result.deletedCount > 0 });
   } catch (error) {
     console.error("Error deleting PPM machine:", error);
@@ -106,8 +152,18 @@ app.delete('/api/machines/ppm/:id', async (req, res) => {
 
 app.delete('/api/machines/ocm/:id', async (req, res) => {
   try {
+    if (!db) {
+      return res.status(500).json({ error: "Database connection not established" });
+    }
     const { id } = req.params;
-    const result = await db.collection('ocm_machines').deleteOne({ id });
+    // Try to delete by MongoDB ObjectId first
+    let result;
+    try {
+      result = await db.collection('ocm_machines').deleteOne({ _id: new ObjectId(id) });
+    } catch (e) {
+      // If error (likely invalid ObjectId format), try with string id
+      result = await db.collection('ocm_machines').deleteOne({ id: id });
+    }
     res.json({ deleted: result.deletedCount > 0 });
   } catch (error) {
     console.error("Error deleting OCM machine:", error);
@@ -115,11 +171,21 @@ app.delete('/api/machines/ocm/:id', async (req, res) => {
   }
 });
 
-// Start server
+// Update the databaseService.ts API_URL to use environment variable
+let API_URL;
+
+// Start server with better error handling
 (async () => {
-  await connectToMongo();
+  db = await connectToMongo();
+  
+  if (!db) {
+    console.error("Failed to connect to MongoDB. Server will not start.");
+    process.exit(1);
+  }
+
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+    console.log(`API available at http://localhost:${PORT}/api`);
   });
 })();
 
