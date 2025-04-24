@@ -1,7 +1,9 @@
+
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ObjectId } = require('mongodb');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -13,6 +15,12 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json({ limit: '50mb' })); // Increased limit for large data uploads
+
+// Ensure all API responses have JSON content type
+app.use('/api', (req, res, next) => {
+  res.header('Content-Type', 'application/json');
+  next();
+});
 
 // MongoDB Connection URI from .env
 const uri = process.env.MONGO_URI;
@@ -196,6 +204,18 @@ app.delete('/api/machines/ocm/:id', async (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
 });
+
+// Serve static files from the React app in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, 'dist')));
+  
+  // Handle any requests that don't match the API routes
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api')) {
+      res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+    }
+  });
+}
 
 // Start server with connection retry logic
 (async function startServer() {

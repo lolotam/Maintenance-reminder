@@ -23,8 +23,16 @@ export const databaseService = {
       const response = await fetch(`${API_URL}/machines/ppm`);
       
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(`HTTP error ${response.status}: ${errorData.error || response.statusText}`);
+        const errorText = await response.text();
+        console.error("Server response:", errorText);
+        throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
+      }
+      
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        console.error("Non-JSON response received:", text.substring(0, 200) + "...");
+        throw new Error("Server returned non-JSON response");
       }
       
       const machines = await response.json();
@@ -71,9 +79,12 @@ export const databaseService = {
         body: JSON.stringify(machines),
       });
       
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(`HTTP error ${response.status}: ${errorData.error || response.statusText}`);
+      // Check for HTML response which indicates server issue
+      const contentType = response.headers.get("content-type");
+      if (!response.ok || !contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        console.error("Server error response:", text.substring(0, 200) + "...");
+        throw new Error(`Server error: Received non-JSON response. Check server logs.`);
       }
       
       return await response.json();
@@ -155,9 +166,12 @@ export const databaseService = {
         body: JSON.stringify(machines),
       });
       
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(`HTTP error ${response.status}: ${errorData.error || response.statusText}`);
+      // Check for HTML response which indicates server issue
+      const contentType = response.headers.get("content-type");
+      if (!response.ok || !contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        console.error("Server error response:", text.substring(0, 200) + "...");
+        throw new Error(`Server error: Received non-JSON response. Check server logs.`);
       }
       
       return await response.json();

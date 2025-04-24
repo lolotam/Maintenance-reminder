@@ -1,9 +1,10 @@
+
 import { useState } from "react";
 import { MainLayout } from "@/components/MainLayout";
 import { FileUploader } from "@/components/FileUploader";
 import { useAppContext } from "@/contexts/AppContext";
 import { Machine } from "@/types";
-import { Check, AlertCircle, Download, RefreshCcw } from "lucide-react";
+import { Check, AlertCircle, Download, RefreshCcw, ServerCrash } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -42,12 +43,18 @@ const Upload = () => {
       const response = await fetch(`${API_URL}/health`);
       
       if (response.ok) {
-        setServerStatus({
-          checking: false,
-          online: true,
-          message: "Server is online and ready"
-        });
-        toast.success("Connected to server successfully");
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          await response.json(); // Test parsing JSON
+          setServerStatus({
+            checking: false,
+            online: true,
+            message: "Server is online and ready"
+          });
+          toast.success("Connected to server successfully");
+        } else {
+          throw new Error("Server did not return proper JSON response");
+        }
       } else {
         throw new Error("Server responded with an error");
       }
@@ -56,10 +63,10 @@ const Upload = () => {
       setServerStatus({
         checking: false,
         online: false,
-        message: "Cannot connect to server. Please ensure the server is running."
+        message: "Cannot connect to server. Please ensure the server is running and MongoDB is configured."
       });
       toast.error("Failed to connect to server", {
-        description: "Make sure the server is running with 'node server.js'"
+        description: "Make sure the server is running with 'node server.js' and MongoDB connection is correct"
       });
     }
   };
@@ -86,12 +93,18 @@ const Upload = () => {
       }, 5000);
     },
     onError: (error: any) => {
+      let errorMessage = error.message || "Unknown error occurred";
+      // Check for specific HTML response error
+      if (errorMessage.includes("non-JSON response")) {
+        errorMessage = "Server returned HTML instead of JSON. Check server configuration and MongoDB connection.";
+      }
+      
       setUploadStatus({
         success: false,
-        message: `Error: ${error.message || "Unknown error occurred"}`,
+        message: `Error: ${errorMessage}`,
       });
       toast.error("Failed to upload PPM machines", {
-        description: error.message || "Connection to server failed"
+        description: errorMessage
       });
     }
   });
@@ -118,9 +131,19 @@ const Upload = () => {
       }, 5000);
     },
     onError: (error: any) => {
+      let errorMessage = error.message || "Unknown error occurred";
+      // Check for specific HTML response error
+      if (errorMessage.includes("non-JSON response")) {
+        errorMessage = "Server returned HTML instead of JSON. Check server configuration and MongoDB connection.";
+      }
+      
       setUploadStatus({
         success: false,
-        message: `Error: ${error.message || "Unknown error occurred"}`,
+        message: `Error: ${errorMessage}`,
+      });
+      
+      toast.error("Failed to upload OCM machines", {
+        description: errorMessage
       });
     }
   });
@@ -178,7 +201,7 @@ const Upload = () => {
 
         {!serverStatus.online && serverStatus.message && (
           <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
+            <ServerCrash className="h-4 w-4" />
             <AlertTitle>Server Connection Issue</AlertTitle>
             <AlertDescription>
               {serverStatus.message}
@@ -186,7 +209,9 @@ const Upload = () => {
                 <p className="text-sm font-medium">Troubleshooting:</p>
                 <ol className="text-sm list-decimal list-inside ml-2 mt-1">
                   <li>Ensure MongoDB connection string is correct in .env file</li>
+                  <li>Make sure special characters in password are URL-encoded</li>
                   <li>Run the server with: <code className="bg-muted p-1 rounded">node server.js</code></li>
+                  <li>Check server logs for MongoDB connection errors</li>
                   <li>Check that the server is running on port 3001</li>
                 </ol>
               </div>
