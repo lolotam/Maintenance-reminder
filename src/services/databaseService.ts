@@ -1,15 +1,25 @@
 
 import { Machine } from "@/types";
 
-// Use environment-aware API URL
-const API_URL = import.meta.env.DEV 
-  ? "http://localhost:3001/api"  // Development
-  : "/api";                     // Production
+// Use environment-aware API URL with better fallback mechanism
+const API_URL = (() => {
+  // Check if we're in development mode (Vite sets this)
+  if (import.meta.env.DEV) {
+    return "http://localhost:3001/api";
+  }
+  
+  // In production, use relative path
+  return "/api";
+})();
+
+// Add logging to help with debugging
+console.log("API URL configured as:", API_URL);
 
 export const databaseService = {
   // PPM Machines
   async getPPMMachines(): Promise<Machine[]> {
     try {
+      console.log("Fetching PPM machines from:", `${API_URL}/machines/ppm`);
       const response = await fetch(`${API_URL}/machines/ppm`);
       
       if (!response.ok) {
@@ -18,6 +28,7 @@ export const databaseService = {
       }
       
       const machines = await response.json();
+      console.log(`Retrieved ${machines.length} PPM machines`);
       return machines;
     } catch (error) {
       console.error("Error fetching PPM machines:", error);
@@ -50,6 +61,7 @@ export const databaseService = {
   async bulkAddPPMMachines(machines: any[]): Promise<any> {
     try {
       console.log("Sending bulk PPM machines to server:", machines.length);
+      console.log("Using API URL:", `${API_URL}/machines/ppm/bulk`);
       
       const response = await fetch(`${API_URL}/machines/ppm/bulk`, {
         method: 'POST',
@@ -133,6 +145,7 @@ export const databaseService = {
   async bulkAddOCMMachines(machines: any[]): Promise<any> {
     try {
       console.log("Sending bulk OCM machines to server:", machines.length);
+      console.log("Using API URL:", `${API_URL}/machines/ocm/bulk`);
       
       const response = await fetch(`${API_URL}/machines/ocm/bulk`, {
         method: 'POST',

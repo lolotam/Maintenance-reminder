@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -8,20 +7,37 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
-app.use(cors());
-app.use(express.json());
+app.use(cors({
+  // Allow requests from any origin in development
+  origin: true,
+  credentials: true
+}));
+app.use(express.json({ limit: '50mb' })); // Increased limit for large data uploads
 
-// MongoDB Connection URI - use the URI directly from .env
+// MongoDB Connection URI from .env
 const uri = process.env.MONGO_URI;
+if (!uri) {
+  console.error("FATAL ERROR: MongoDB URI is not defined in environment variables");
+  process.exit(1);
+}
+
 let client;
 let db;
 
-// Connect to MongoDB with better error handling
+// Connect to MongoDB with better error handling and retry logic
 async function connectToMongo() {
   try {
-    client = new MongoClient(uri);
+    console.log("Attempting to connect to MongoDB Atlas...");
+    
+    client = new MongoClient(uri, {
+      // Added options to improve connection reliability
+      connectTimeoutMS: 30000,
+      socketTimeoutMS: 45000
+    });
+    
     await client.connect();
-    console.log("Connected to MongoDB Atlas");
+    console.log("✅ Successfully connected to MongoDB Atlas");
+    
     db = client.db("maintenance_app");
     
     // Create collections if they don't exist
@@ -37,22 +53,23 @@ async function connectToMongo() {
 
     return db;
   } catch (error) {
-    console.error("Error connecting to MongoDB:", error);
+    console.error("❌ Error connecting to MongoDB:", error);
     return null;
   }
 }
 
-// API Routes
+// API Routes - add better error handling
 app.get('/api/machines/ppm', async (req, res) => {
   try {
     if (!db) {
       return res.status(500).json({ error: "Database connection not established" });
     }
     const ppmMachines = await db.collection('ppm_machines').find({}).toArray();
+    console.log(`Retrieved ${ppmMachines.length} PPM machines`);
     res.json(ppmMachines);
   } catch (error) {
     console.error("Error fetching PPM machines:", error);
-    res.status(500).json({ error: "Failed to fetch PPM machines" });
+    res.status(500).json({ error: "Failed to fetch PPM machines: " + error.message });
   }
 });
 
@@ -104,7 +121,9 @@ app.post('/api/machines/ppm/bulk', async (req, res) => {
       return res.status(400).json({ error: "Invalid data format. Expected non-empty array." });
     }
     
+    console.log(`Received bulk upload request for ${req.body.length} PPM machines`);
     const result = await db.collection('ppm_machines').insertMany(req.body);
+    console.log(`Successfully inserted ${result.insertedCount} PPM machines`);
     res.status(201).json({ insertedCount: result.insertedCount });
   } catch (error) {
     console.error("Error adding PPM machines in bulk:", error);
@@ -121,7 +140,9 @@ app.post('/api/machines/ocm/bulk', async (req, res) => {
       return res.status(400).json({ error: "Invalid data format. Expected non-empty array." });
     }
     
+    console.log(`Received bulk upload request for ${req.body.length} OCM machines`);
     const result = await db.collection('ocm_machines').insertMany(req.body);
+    console.log(`Successfully inserted ${result.insertedCount} OCM machines`);
     res.status(201).json({ insertedCount: result.insertedCount });
   } catch (error) {
     console.error("Error adding OCM machines in bulk:", error);
@@ -171,20 +192,39 @@ app.delete('/api/machines/ocm/:id', async (req, res) => {
   }
 });
 
-// Update the databaseService.ts API_URL to use environment variable
-let API_URL;
+// Add a simple health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', message: 'Server is running' });
+});
 
-// Start server with better error handling
-(async () => {
-  db = await connectToMongo();
+// Start server with connection retry logic
+(async function startServer() {
+  console.log("Starting server...");
   
-  if (!db) {
-    console.error("Failed to connect to MongoDB. Server will not start.");
-    process.exit(1);
+  let connected = false;
+  let attempts = 0;
+  const maxAttempts = 5;
+  
+  while (!connected && attempts < maxAttempts) {
+    attempts++;
+    console.log(`Connection attempt ${attempts}/${maxAttempts}`);
+    
+    db = await connectToMongo();
+    
+    if (db) {
+      connected = true;
+    } else {
+      console.log("Will retry connecting in 5 seconds...");
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    }
+  }
+  
+  if (!connected) {
+    console.error("Failed to connect to MongoDB after multiple attempts. Server will start but database operations will fail.");
   }
 
   app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`🚀 Server running on port ${PORT}`);
     console.log(`API available at http://localhost:${PORT}/api`);
   });
 })();
