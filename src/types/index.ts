@@ -33,4 +33,6 @@ export interface AppSettings {
   defaultEmail: string;
   enableDarkMode: boolean;
   defaultReminderDays: number[];
+  whatsappEnabled?: boolean;
+  whatsappNumber?: string;
 }

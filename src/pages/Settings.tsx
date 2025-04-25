@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/MainLayout";
 import { useAppContext } from "@/contexts/AppContext";
@@ -26,9 +27,11 @@ const Settings = () => {
 
   const { requestPermission } = useNotifications();
 
+  // Load notification permission status on component mount only
   useEffect(() => {
     if ("Notification" in window) {
       setNotificationPermission(Notification.permission);
+      setDesktopNotifications(Notification.permission === "granted");
     }
   }, []);
 
@@ -41,10 +44,11 @@ const Settings = () => {
   };
 
   const handleSaveSettings = () => {
+    // Save all settings at once to prevent multiple state updates
     updateSettings({
       defaultEmail: email,
       enableDarkMode: isDarkMode,
-      defaultReminderDays: reminderDays.sort((a, b) => b - a),
+      defaultReminderDays: reminderDays.sort((a, b) => a - b),
       whatsappEnabled,
       whatsappNumber,
     });

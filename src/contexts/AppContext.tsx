@@ -23,10 +23,12 @@ interface AppContextType {
   getAllMachines: () => Machine[];
 }
 
-const defaultSettings: AppSettings = {
+const defaultSettings: Settings = {
   defaultEmail: "",
   enableDarkMode: false,
   defaultReminderDays: [7, 3, 1],
+  whatsappEnabled: false,
+  whatsappNumber: "",
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -39,13 +41,8 @@ const OCM_MACHINES_KEY = "ocmMachines";
 
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [machines, setMachines] = useState<Machine[]>([]);
-  const [settings, setSettings] = useState<Settings>({
-    defaultEmail: "",
-    enableDarkMode: true,
-    defaultReminderDays: [7, 3, 1],
-    whatsappEnabled: false,
-    whatsappNumber: "",
-  });
+  const [settings, setSettings] = useState<Settings>(defaultSettings);
+  const [initialized, setInitialized] = useState(false);
 
   // Load data from localStorage on initial load
   useEffect(() => {
@@ -57,21 +54,31 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
       const storedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
       if (storedSettings) {
-        setSettings(JSON.parse(storedSettings));
+        setSettings(prevSettings => ({
+          ...defaultSettings,
+          ...JSON.parse(storedSettings)
+        }));
       }
+      setInitialized(true);
     } catch (error) {
       console.error("Error loading data from localStorage:", error);
+      setInitialized(true);
     }
   }, []);
 
-  // Save data to localStorage whenever it changes
+  // Save machines to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem(MACHINES_STORAGE_KEY, JSON.stringify(machines));
-  }, [machines]);
+    if (initialized) {
+      localStorage.setItem(MACHINES_STORAGE_KEY, JSON.stringify(machines));
+    }
+  }, [machines, initialized]);
 
+  // Save settings to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
-  }, [settings]);
+    if (initialized) {
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+    }
+  }, [settings, initialized]);
 
   // Calculate next maintenance date based on last date and frequency
   const calculateNextDate = (lastDate: string, frequency: "Quarterly" | "Yearly"): string => {
