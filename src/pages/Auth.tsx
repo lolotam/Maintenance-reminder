@@ -12,7 +12,6 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -20,20 +19,16 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
-        if (error) throw error;
-        toast.success("Sign up successful! Please check your email for verification.");
-      } else {
+      // Check for fixed credentials
+      if (email === "orf" && password === "123456789") {
         const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
+          email: "orf@example.com", // Use a valid email format for Supabase
+          password: "123456789",
         });
         if (error) throw error;
         navigate("/");
+      } else {
+        throw new Error("Invalid credentials");
       }
     } catch (error: any) {
       toast.error(error.message);
@@ -46,21 +41,19 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>{isSignUp ? "Create an account" : "Welcome back"}</CardTitle>
+          <CardTitle>Welcome back</CardTitle>
           <CardDescription>
-            {isSignUp
-              ? "Enter your email and password to create an account"
-              : "Enter your email and password to login"}
+            Please enter your credentials to login
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Username</Label>
               <Input
                 id="email"
-                type="email"
-                placeholder="you@example.com"
+                type="text"
+                placeholder="Enter username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -77,17 +70,9 @@ export default function Auth() {
               />
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-2">
+          <CardFooter>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Loading..." : isSignUp ? "Sign Up" : "Sign In"}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full"
-              onClick={() => setIsSignUp(!isSignUp)}
-            >
-              {isSignUp ? "Already have an account? Sign In" : "Need an account? Sign Up"}
+              {loading ? "Loading..." : "Sign In"}
             </Button>
           </CardFooter>
         </form>
