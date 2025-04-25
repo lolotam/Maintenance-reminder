@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/MainLayout";
 import { useAppContext } from "@/contexts/AppContext";
@@ -11,6 +10,7 @@ import { WhatsAppNotificationCard } from "@/components/settings/WhatsAppNotifica
 import { DesktopNotificationCard } from "@/components/settings/DesktopNotificationCard";
 import { ReminderDaysCard } from "@/components/settings/ReminderDaysCard";
 import { AppearanceCard } from "@/components/settings/AppearanceCard";
+import { useNotifications } from "@/hooks/useNotifications";
 
 const Settings = () => {
   const { settings, updateSettings } = useAppContext();
@@ -24,33 +24,13 @@ const Settings = () => {
   const [whatsappNumber, setWhatsappNumber] = useState(settings.whatsappNumber || "");
   const [whatsappVerificationStatus, setWhatsappVerificationStatus] = useState<string | null>(null);
 
+  const { requestPermission } = useNotifications();
+
   useEffect(() => {
     if ("Notification" in window) {
       setNotificationPermission(Notification.permission);
     }
   }, []);
-
-  const requestNotificationPermission = async () => {
-    if ("Notification" in window) {
-      try {
-        const permission = await Notification.requestPermission();
-        setNotificationPermission(permission);
-        if (permission === "granted") {
-          setDesktopNotifications(true);
-          new Notification("Maintenance Reminder", {
-            body: "Desktop notifications are now enabled!",
-            icon: "/favicon.ico"
-          });
-          toast.success("Desktop notifications enabled successfully");
-        }
-      } catch (error) {
-        console.error("Error requesting notification permission:", error);
-        toast.error("Could not enable desktop notifications");
-      }
-    } else {
-      toast.error("Your browser doesn't support desktop notifications");
-    }
-  };
 
   const handleReminderDayChange = (day: number) => {
     if (reminderDays.includes(day)) {
@@ -85,7 +65,14 @@ const Settings = () => {
     }
 
     if (desktopNotifications && notificationPermission !== "granted") {
-      requestNotificationPermission();
+      requestPermission();
+    }
+  };
+
+  const handleEnableNotifications = async () => {
+    const success = await requestPermission();
+    if (success) {
+      setDesktopNotifications(true);
     }
   };
 
@@ -123,8 +110,7 @@ const Settings = () => {
 
             <DesktopNotificationCard
               desktopNotifications={desktopNotifications}
-              notificationPermission={notificationPermission}
-              onEnableNotifications={requestNotificationPermission}
+              onEnableNotifications={handleEnableNotifications}
             />
 
             <ReminderDaysCard
