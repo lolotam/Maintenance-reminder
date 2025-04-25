@@ -1,15 +1,16 @@
+
 import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/MainLayout";
 import { useAppContext } from "@/contexts/AppContext";
-import { Check, Mail, Bell, Moon, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+
+import { EmailNotificationCard } from "@/components/settings/EmailNotificationCard";
+import { WhatsAppNotificationCard } from "@/components/settings/WhatsAppNotificationCard";
+import { DesktopNotificationCard } from "@/components/settings/DesktopNotificationCard";
+import { ReminderDaysCard } from "@/components/settings/ReminderDaysCard";
+import { AppearanceCard } from "@/components/settings/AppearanceCard";
 
 const Settings = () => {
   const { settings, updateSettings } = useAppContext();
@@ -19,7 +20,6 @@ const Settings = () => {
   const [emailVerificationStatus, setEmailVerificationStatus] = useState<string | null>(null);
   const [desktopNotifications, setDesktopNotifications] = useState(false);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default");
-  
   const [whatsappEnabled, setWhatsappEnabled] = useState(settings.whatsappEnabled || false);
   const [whatsappNumber, setWhatsappNumber] = useState(settings.whatsappNumber || "");
   const [whatsappVerificationStatus, setWhatsappVerificationStatus] = useState<string | null>(null);
@@ -52,6 +52,14 @@ const Settings = () => {
     }
   };
 
+  const handleReminderDayChange = (day: number) => {
+    if (reminderDays.includes(day)) {
+      setReminderDays(reminderDays.filter((d) => d !== day));
+    } else {
+      setReminderDays([...reminderDays, day]);
+    }
+  };
+
   const handleSaveSettings = () => {
     updateSettings({
       defaultEmail: email,
@@ -81,14 +89,6 @@ const Settings = () => {
     }
   };
 
-  const handleReminderDayChange = (day: number) => {
-    if (reminderDays.includes(day)) {
-      setReminderDays(reminderDays.filter((d) => d !== day));
-    } else {
-      setReminderDays([...reminderDays, day]);
-    }
-  };
-
   return (
     <MainLayout>
       <div className="space-y-6">
@@ -107,175 +107,43 @@ const Settings = () => {
           </TabsList>
 
           <TabsContent value="notifications" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Email Notifications</CardTitle>
-                <CardDescription>
-                  Configure your email settings for maintenance reminders
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="email"
-                      placeholder="your@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="flex-1"
-                    />
-                    {emailVerificationStatus === "verifying" && (
-                      <Badge variant="outline" className="bg-yellow-50 text-yellow-800 border-yellow-200">
-                        Verifying...
-                      </Badge>
-                    )}
-                    {emailVerificationStatus === "success" && (
-                      <Badge variant="outline" className="bg-green-50 text-green-800 border-green-200">
-                        <Check className="w-3 h-3 mr-1" /> Verified
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-2">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="email-notifications">Email Notifications</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receive maintenance reminders via email
-                    </p>
-                  </div>
-                  <Switch
-                    id="email-notifications"
-                    checked={!!email}
-                    disabled={!email}
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            <EmailNotificationCard
+              email={email}
+              setEmail={setEmail}
+              emailVerificationStatus={emailVerificationStatus}
+            />
             
-            <Card>
-              <CardHeader>
-                <CardTitle>WhatsApp Notifications</CardTitle>
-                <CardDescription>
-                  Receive maintenance reminders via WhatsApp
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="whatsapp-enabled">Enable WhatsApp</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receive automated reminders via WhatsApp
-                    </p>
-                  </div>
-                  <Switch
-                    id="whatsapp-enabled"
-                    checked={whatsappEnabled}
-                    onCheckedChange={setWhatsappEnabled}
-                  />
-                </div>
-                
-                {whatsappEnabled && (
-                  <div className="space-y-2 pt-2">
-                    <Label htmlFor="whatsapp">WhatsApp Number</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="whatsapp"
-                        placeholder="+1 234 567 8900"
-                        value={whatsappNumber}
-                        onChange={(e) => setWhatsappNumber(e.target.value)}
-                        className="flex-1"
-                      />
-                      {whatsappVerificationStatus === "verifying" && (
-                        <Badge variant="outline" className="bg-yellow-50 text-yellow-800 border-yellow-200">
-                          Verifying...
-                        </Badge>
-                      )}
-                      {whatsappVerificationStatus === "success" && (
-                        <Badge variant="outline" className="bg-green-50 text-green-800 border-green-200">
-                          <Check className="w-3 h-3 mr-1" /> Verified
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Enter your number with country code (e.g., +1 for US)
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <WhatsAppNotificationCard
+              whatsappEnabled={whatsappEnabled}
+              setWhatsappEnabled={setWhatsappEnabled}
+              whatsappNumber={whatsappNumber}
+              setWhatsappNumber={setWhatsappNumber}
+              whatsappVerificationStatus={whatsappVerificationStatus}
+            />
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Reminder Settings</CardTitle>
-                <CardDescription>
-                  Choose when you want to receive maintenance reminders
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label>Days before due date</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Select when you want to receive reminders before maintenance is due
-                  </p>
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    {[30, 14, 7, 3, 1].map((day) => (
-                      <Button
-                        key={day}
-                        variant={reminderDays.includes(day) ? "default" : "outline"}
-                        onClick={() => handleReminderDayChange(day)}
-                        className={reminderDays.includes(day) ? "bg-primary" : ""}
-                      >
-                        {day} {day === 1 ? "day" : "days"}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <DesktopNotificationCard
+              desktopNotifications={desktopNotifications}
+              notificationPermission={notificationPermission}
+              onEnableNotifications={requestNotificationPermission}
+            />
+
+            <ReminderDaysCard
+              reminderDays={reminderDays}
+              onReminderDayChange={handleReminderDayChange}
+            />
           </TabsContent>
 
           <TabsContent value="appearance">
-            <Card>
-              <CardHeader>
-                <CardTitle>Appearance</CardTitle>
-                <CardDescription>
-                  Customize the appearance of the application
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="dark-mode">Dark Mode</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Enable dark mode for the application
-                    </p>
-                  </div>
-                  <Switch
-                    id="dark-mode"
-                    checked={isDarkMode}
-                    onCheckedChange={setIsDarkMode}
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            <AppearanceCard
+              isDarkMode={isDarkMode}
+              setIsDarkMode={setIsDarkMode}
+            />
           </TabsContent>
 
           <TabsContent value="account">
-            <Card>
-              <CardHeader>
-                <CardTitle>Account Settings</CardTitle>
-                <CardDescription>
-                  Manage your account settings and preferences
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Account management features will be available in a future update.
-                </p>
-              </CardContent>
-            </Card>
+            <div className="text-sm text-muted-foreground">
+              Account management features will be available in a future update.
+            </div>
           </TabsContent>
         </Tabs>
 
