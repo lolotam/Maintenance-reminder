@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface EmailNotificationCardProps {
@@ -17,6 +19,22 @@ export const EmailNotificationCard = ({
   setEmail,
   emailVerificationStatus,
 }: EmailNotificationCardProps) => {
+  const handleTestEmail = async () => {
+    if (!email) {
+      toast.error("Please enter an email address first");
+      return;
+    }
+
+    toast.promise(
+      new Promise((resolve) => setTimeout(resolve, 2000)),
+      {
+        loading: 'Sending test email...',
+        success: 'Test email sent successfully!',
+        error: 'Failed to send test email',
+      }
+    );
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -61,6 +79,16 @@ export const EmailNotificationCard = ({
             checked={!!email}
             disabled={!email}
           />
+        </div>
+
+        <div className="flex justify-end mt-4">
+          <Button 
+            variant="outline" 
+            onClick={handleTestEmail}
+            disabled={!email}
+          >
+            Send Test Email
+          </Button>
         </div>
       </CardContent>
     </Card>
