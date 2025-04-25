@@ -11,14 +11,12 @@ import { EmailNotificationCard } from "@/components/settings/EmailNotificationCa
 import { WhatsAppNotificationCard } from "@/components/settings/WhatsAppNotificationCard";
 import { DesktopNotificationCard } from "@/components/settings/DesktopNotificationCard";
 import { ReminderDaysCard } from "@/components/settings/ReminderDaysCard";
-import { AppearanceCard } from "@/components/settings/AppearanceCard";
 import { useNotifications } from "@/hooks/useNotifications";
 
 const Settings = () => {
   const { settings, updateSettings } = useAppContext();
   const { user } = useAuth();
   const [email, setEmail] = useState(settings.defaultEmail || "");
-  const [isDarkMode, setIsDarkMode] = useState(settings.enableDarkMode);
   const [reminderDays, setReminderDays] = useState<number[]>(settings.defaultReminderDays || []);
   const [emailVerificationStatus, setEmailVerificationStatus] = useState<string | null>(null);
   const [desktopNotifications, setDesktopNotifications] = useState(false);
@@ -133,7 +131,6 @@ const Settings = () => {
         <Tabs defaultValue="notifications" className="space-y-4">
           <TabsList>
             <TabsTrigger value="notifications">Notification Settings</TabsTrigger>
-            <TabsTrigger value="appearance">Appearance</TabsTrigger>
             <TabsTrigger value="account">Account</TabsTrigger>
           </TabsList>
 
@@ -160,13 +157,6 @@ const Settings = () => {
             <ReminderDaysCard
               reminderDays={reminderDays}
               onReminderDayChange={handleReminderDayChange}
-            />
-          </TabsContent>
-
-          <TabsContent value="appearance">
-            <AppearanceCard
-              isDarkMode={isDarkMode}
-              setIsDarkMode={setIsDarkMode}
             />
           </TabsContent>
 

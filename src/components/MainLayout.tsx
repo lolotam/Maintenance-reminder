@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, Settings, BellRing, Wrench, Moon, Sun, Menu, X, LogOut } from "lucide-react";
+import { Home, Settings, BellRing, Wrench, Menu, X, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -17,8 +17,6 @@ export function MainLayout({ children }: MainLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const isMobile = useIsMobile();
-  const { settings, updateSettings } = useAppContext();
-  const [isDarkMode, setIsDarkMode] = useState(true);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -44,24 +42,8 @@ export function MainLayout({ children }: MainLayoutProps) {
     { icon: Settings, label: "Settings", path: "/settings" },
   ];
 
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    updateSettings({
-      ...settings,
-      enableDarkMode: isDarkMode
-    });
-  }, [isDarkMode, settings, updateSettings]);
-
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-  };
-
   return (
-    <div className="flex flex-col min-h-screen bg-background transition-colors duration-300">
+    <div className="flex flex-col min-h-screen bg-background">
       <header className="bg-card shadow-sm sticky top-0 z-40">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -83,20 +65,6 @@ export function MainLayout({ children }: MainLayoutProps) {
                 <LogOut className="h-5 w-5" />
               </Button>
             )}
-            
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={toggleDarkMode}
-              className="rounded-full"
-              aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
-            >
-              {isDarkMode ? (
-                <Sun className="h-5 w-5" />
-              ) : (
-                <Moon className="h-5 w-5" />
-              )}
-            </Button>
             
             <Button
               variant="ghost"
