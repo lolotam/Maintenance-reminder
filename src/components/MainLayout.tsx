@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Upload, Settings, BellRing, Wrench, Moon, Sun, Menu, X } from "lucide-react";
+import { Home, Settings, BellRing, Wrench, Moon, Sun, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -16,24 +15,21 @@ export function MainLayout({ children }: MainLayoutProps) {
   const location = useLocation();
   const isMobile = useIsMobile();
   const { settings, updateSettings } = useAppContext();
-  const [isDarkMode, setIsDarkMode] = useState(true); // Set default to true for dark mode
+  const [isDarkMode, setIsDarkMode] = useState(true);
   
   const navItems = [
     { icon: Home, label: "Dashboard", path: "/" },
-    { icon: Upload, label: "Upload Data", path: "/upload" },
     { icon: BellRing, label: "Notifications", path: "/notifications" },
     { icon: Wrench, label: "LDR Machines", path: "/ldr-machines" },
     { icon: Settings, label: "Settings", path: "/settings" },
   ];
 
-  // Apply dark mode class
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
-    // Update settings in context
     updateSettings({
       ...settings,
       enableDarkMode: isDarkMode
@@ -46,7 +42,6 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   return (
     <div className="flex flex-col min-h-screen bg-background transition-colors duration-300">
-      {/* Header */}
       <header className="bg-card shadow-sm sticky top-0 z-40">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -57,7 +52,6 @@ export function MainLayout({ children }: MainLayoutProps) {
           </div>
           
           <div className="flex items-center gap-2">
-            {/* Dark mode toggle */}
             <Button 
               variant="ghost" 
               size="icon" 
@@ -72,7 +66,6 @@ export function MainLayout({ children }: MainLayoutProps) {
               )}
             </Button>
             
-            {/* Mobile menu button */}
             <Button
               variant="ghost"
               size="icon"
@@ -88,7 +81,6 @@ export function MainLayout({ children }: MainLayoutProps) {
             </Button>
           </div>
           
-          {/* Desktop navigation */}
           <nav className="hidden lg:flex gap-6 absolute left-1/2 transform -translate-x-1/2">
             {navItems.map((item) => (
               <Link
@@ -108,7 +100,6 @@ export function MainLayout({ children }: MainLayoutProps) {
           </nav>
         </div>
         
-        {/* Mobile navigation - slide down animation */}
         <div 
           className={cn(
             "lg:hidden bg-card border-t overflow-hidden transition-all duration-300 ease-in-out",
@@ -136,12 +127,10 @@ export function MainLayout({ children }: MainLayoutProps) {
         </div>
       </header>
       
-      {/* Main content */}
       <main className="flex-1 container mx-auto px-4 py-8 animate-fade-in">
         {children}
       </main>
       
-      {/* Footer */}
       <footer className="bg-card border-t py-6">
         <div className="container mx-auto px-4 text-center text-muted-foreground text-sm">
           &copy; {new Date().getFullYear()} MaintenanceReminder - Smart Machine Maintenance App
