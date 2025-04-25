@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/MainLayout";
 import { useAppContext } from "@/contexts/AppContext";
 import { Check, Mail, Bell, Moon, Phone } from "lucide-react";
@@ -18,23 +17,51 @@ const Settings = () => {
   const [isDarkMode, setIsDarkMode] = useState(settings.enableDarkMode);
   const [reminderDays, setReminderDays] = useState<number[]>(settings.defaultReminderDays || []);
   const [emailVerificationStatus, setEmailVerificationStatus] = useState<string | null>(null);
+  const [desktopNotifications, setDesktopNotifications] = useState(false);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default");
   
-  // WhatsApp notification settings
   const [whatsappEnabled, setWhatsappEnabled] = useState(settings.whatsappEnabled || false);
   const [whatsappNumber, setWhatsappNumber] = useState(settings.whatsappNumber || "");
   const [whatsappVerificationStatus, setWhatsappVerificationStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    if ("Notification" in window) {
+      setNotificationPermission(Notification.permission);
+    }
+  }, []);
+
+  const requestNotificationPermission = async () => {
+    if ("Notification" in window) {
+      try {
+        const permission = await Notification.requestPermission();
+        setNotificationPermission(permission);
+        if (permission === "granted") {
+          setDesktopNotifications(true);
+          new Notification("Maintenance Reminder", {
+            body: "Desktop notifications are now enabled!",
+            icon: "/favicon.ico"
+          });
+          toast.success("Desktop notifications enabled successfully");
+        }
+      } catch (error) {
+        console.error("Error requesting notification permission:", error);
+        toast.error("Could not enable desktop notifications");
+      }
+    } else {
+      toast.error("Your browser doesn't support desktop notifications");
+    }
+  };
 
   const handleSaveSettings = () => {
     updateSettings({
       defaultEmail: email,
       enableDarkMode: isDarkMode,
-      defaultReminderDays: reminderDays.sort((a, b) => b - a), // Sort descending
+      defaultReminderDays: reminderDays.sort((a, b) => b - a),
       whatsappEnabled,
       whatsappNumber,
     });
 
     if (email) {
-      // Simulate email verification - in a real app, this would be an API call
       setEmailVerificationStatus("verifying");
       setTimeout(() => {
         setEmailVerificationStatus("success");
@@ -43,11 +70,14 @@ const Settings = () => {
     }
     
     if (whatsappEnabled && whatsappNumber) {
-      // Simulate WhatsApp verification - in a real app, this would be an API call
       setWhatsappVerificationStatus("verifying");
       setTimeout(() => {
         setWhatsappVerificationStatus("success");
       }, 1800);
+    }
+
+    if (desktopNotifications && notificationPermission !== "granted") {
+      requestNotificationPermission();
     }
   };
 
