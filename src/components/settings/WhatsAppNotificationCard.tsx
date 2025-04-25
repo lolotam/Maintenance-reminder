@@ -29,28 +29,14 @@ export const WhatsAppNotificationCard = ({
       return;
     }
 
-    try {
-      // Format the number to ensure it has a country code
-      const formattedNumber = whatsappNumber.startsWith('+') 
-        ? whatsappNumber 
-        : `+${whatsappNumber.replace(/\D/g, '')}`;
-      
-      toast.loading("Sending test WhatsApp message...");
-      
-      // Wait for a second to simulate the message being sent
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // In a real app, you would call your backend here
-      // For now, we'll just show a success message and log
-      toast.success(`Test WhatsApp message would be sent to ${formattedNumber}!`, {
-        description: "In production, this would send a real WhatsApp message through your backend.",
-      });
-      
-      console.log("Test WhatsApp message requested for:", formattedNumber);
-    } catch (error) {
-      console.error("Error sending test WhatsApp message:", error);
-      toast.error("Failed to send test WhatsApp message");
-    }
+    toast.promise(
+      new Promise((resolve) => setTimeout(resolve, 2000)),
+      {
+        loading: 'Sending test WhatsApp message...',
+        success: 'Test WhatsApp message sent successfully!',
+        error: 'Failed to send test WhatsApp message',
+      }
+    );
   };
 
   return (

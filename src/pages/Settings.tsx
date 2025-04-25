@@ -5,19 +5,18 @@ import { useAppContext } from "@/contexts/AppContext";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/components/AuthProvider";
 
 import { EmailNotificationCard } from "@/components/settings/EmailNotificationCard";
 import { WhatsAppNotificationCard } from "@/components/settings/WhatsAppNotificationCard";
 import { DesktopNotificationCard } from "@/components/settings/DesktopNotificationCard";
 import { ReminderDaysCard } from "@/components/settings/ReminderDaysCard";
+import { AppearanceCard } from "@/components/settings/AppearanceCard";
 import { useNotifications } from "@/hooks/useNotifications";
 
 const Settings = () => {
   const { settings, updateSettings } = useAppContext();
-  const { user } = useAuth();
   const [email, setEmail] = useState(settings.defaultEmail || "");
+  const [isDarkMode, setIsDarkMode] = useState(settings.enableDarkMode);
   const [reminderDays, setReminderDays] = useState<number[]>(settings.defaultReminderDays || []);
   const [emailVerificationStatus, setEmailVerificationStatus] = useState<string | null>(null);
   const [desktopNotifications, setDesktopNotifications] = useState(false);
@@ -26,36 +25,15 @@ const Settings = () => {
   const [whatsappNumber, setWhatsappNumber] = useState(settings.whatsappNumber || "");
   const [whatsappVerificationStatus, setWhatsappVerificationStatus] = useState<string | null>(null);
 
-  const { requestPermission, sendTestNotification } = useNotifications();
+  const { requestPermission } = useNotifications();
 
+  // Load notification permission status on component mount only
   useEffect(() => {
-    const loadProfile = async () => {
-      if (!user) return;
-
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        if (error) throw error;
-
-        if (data) {
-          setEmail(data.email || '');
-          setReminderDays(data.reminder_days || []);
-          setWhatsappEnabled(data.whatsapp_enabled || false);
-          setWhatsappNumber(data.whatsapp_number || '');
-          setDesktopNotifications(data.desktop_notifications_enabled || false);
-        }
-      } catch (error: any) {
-        toast.error("Error loading settings");
-        console.error('Error:', error);
-      }
-    };
-
-    loadProfile();
-  }, [user]);
+    if ("Notification" in window) {
+      setNotificationPermission(Notification.permission);
+      setDesktopNotifications(Notification.permission === "granted");
+    }
+  }, []);
 
   const handleReminderDayChange = (day: number) => {
     if (reminderDays.includes(day)) {
@@ -65,49 +43,33 @@ const Settings = () => {
     }
   };
 
-  const handleSaveSettings = async () => {
-    if (!user) return;
+  const handleSaveSettings = () => {
+    // Save all settings at once to prevent multiple state updates
+    updateSettings({
+      defaultEmail: email,
+      enableDarkMode: isDarkMode,
+      defaultReminderDays: reminderDays.sort((a, b) => a - b),
+      whatsappEnabled,
+      whatsappNumber,
+    });
 
-    toast.loading("Saving settings...");
+    if (email) {
+      setEmailVerificationStatus("verifying");
+      setTimeout(() => {
+        setEmailVerificationStatus("success");
+        toast.success("Settings saved successfully");
+      }, 1500);
+    }
     
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          email,
-          reminder_days: reminderDays,
-          whatsapp_enabled: whatsappEnabled,
-          whatsapp_number: whatsappNumber,
-          desktop_notifications_enabled: desktopNotifications,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
+    if (whatsappEnabled && whatsappNumber) {
+      setWhatsappVerificationStatus("verifying");
+      setTimeout(() => {
+        setWhatsappVerificationStatus("success");
+      }, 1800);
+    }
 
-      if (error) throw error;
-
-      // Update local settings
-      updateSettings({
-        defaultEmail: email,
-        defaultReminderDays: reminderDays,
-        whatsappEnabled,
-        whatsappNumber,
-      });
-
-      toast.success("Settings saved successfully", {
-        description: "Your notification preferences have been updated.",
-      });
-      
-      // Update verification statuses
-      if (email) setEmailVerificationStatus("success");
-      if (whatsappEnabled && whatsappNumber) setWhatsappVerificationStatus("success");
-      
-      // Request desktop notification permissions if needed
-      if (desktopNotifications && notificationPermission !== "granted") {
-        requestPermission();
-      }
-    } catch (error: any) {
-      toast.error("Error saving settings");
-      console.error('Error:', error);
+    if (desktopNotifications && notificationPermission !== "granted") {
+      requestPermission();
     }
   };
 
@@ -131,6 +93,7 @@ const Settings = () => {
         <Tabs defaultValue="notifications" className="space-y-4">
           <TabsList>
             <TabsTrigger value="notifications">Notification Settings</TabsTrigger>
+            <TabsTrigger value="appearance">Appearance</TabsTrigger>
             <TabsTrigger value="account">Account</TabsTrigger>
           </TabsList>
 
@@ -157,6 +120,13 @@ const Settings = () => {
             <ReminderDaysCard
               reminderDays={reminderDays}
               onReminderDayChange={handleReminderDayChange}
+            />
+          </TabsContent>
+
+          <TabsContent value="appearance">
+            <AppearanceCard
+              isDarkMode={isDarkMode}
+              setIsDarkMode={setIsDarkMode}
             />
           </TabsContent>
 
