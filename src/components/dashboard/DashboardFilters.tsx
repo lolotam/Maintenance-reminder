@@ -10,7 +10,7 @@ interface FiltersProps {
   searchTerm: string;
   setSearchTerm: (value: string) => void;
   filters: { frequency: string; status: string };
-  setFilters: (filters: { frequency: string; status: string }) => void;
+  setFilters: React.Dispatch<React.SetStateAction<{ frequency: string; status: string }>>;
   isMobile: boolean;
   isFiltersOpen: boolean;
   setIsFiltersOpen: (value: boolean) => void;
@@ -59,7 +59,7 @@ export const DashboardFilters = ({
             <Select
               value={filters.frequency}
               onValueChange={(value) =>
-                setFilters((prev) => ({ ...prev, frequency: value }))
+                setFilters({ ...filters, frequency: value })
               }
             >
               <SelectTrigger>
@@ -75,7 +75,7 @@ export const DashboardFilters = ({
             <Select
               value={filters.status}
               onValueChange={(value) =>
-                setFilters((prev) => ({ ...prev, status: value }))
+                setFilters({ ...filters, status: value })
               }
             >
               <SelectTrigger>
@@ -103,7 +103,7 @@ export const DashboardFilters = ({
           <Select
             value={filters.frequency}
             onValueChange={(value) =>
-              setFilters((prev) => ({ ...prev, frequency: value }))
+              setFilters({ ...filters, frequency: value })
             }
           >
             <SelectTrigger className="w-[180px]">
@@ -119,7 +119,7 @@ export const DashboardFilters = ({
           <Select
             value={filters.status}
             onValueChange={(value) =>
-              setFilters((prev) => ({ ...prev, status: value }))
+              setFilters({ ...filters, status: value })
             }
           >
             <SelectTrigger className="w-[180px]">

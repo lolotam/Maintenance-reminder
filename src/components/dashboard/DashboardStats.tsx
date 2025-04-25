@@ -2,7 +2,6 @@
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BellRing, Calendar, ArrowRightLeft } from "lucide-react";
-import { Machine } from "@/types";
 
 interface StatsProps {
   counters: {
@@ -17,9 +16,10 @@ interface StatsProps {
     yearly: number;
   };
   isMobile: boolean;
+  totalMachines: number;
 }
 
-export const DashboardStats = ({ counters, isMobile }: StatsProps) => {
+export const DashboardStats = ({ counters, isMobile, totalMachines }: StatsProps) => {
   return (
     <div ref={null} className={isMobile ? "mobile-tabs" : "grid gap-4 md:grid-cols-2 lg:grid-cols-4"}>
       <Card className={isMobile ? "mobile-tab-item w-[85vw] max-w-[300px] mr-3" : ""}>
@@ -28,7 +28,7 @@ export const DashboardStats = ({ counters, isMobile }: StatsProps) => {
           <BellRing className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{counters.quarterly + counters.yearly}</div>
+          <div className="text-2xl font-bold">{totalMachines}</div>
           <p className="text-xs text-muted-foreground mt-1">
             Machines under maintenance
           </p>

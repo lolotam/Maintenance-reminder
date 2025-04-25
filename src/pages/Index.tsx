@@ -9,7 +9,7 @@ import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { MachinesList } from "@/components/dashboard/MachinesList";
 
 const Dashboard = () => {
-  const { markMachineComplete, filteredMachines, getAllMachines } = useAppContext();
+  const { markMachineComplete, filteredMachines, getAllMachines, countMachinesByType } = useAppContext();
   const [allMachines, setAllMachines] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({
@@ -57,15 +57,20 @@ const Dashboard = () => {
         } else {
           if (daysRemaining <= 7) {
             acc.upcoming += 1;
-          } else if (daysRemaining <= 14) {
+          }
+          if (daysRemaining <= 14) {
             acc.upcoming14 += 1;
-          } else if (daysRemaining <= 21) {
+          }
+          if (daysRemaining <= 21) {
             acc.upcoming21 += 1;
-          } else if (daysRemaining <= 30) {
+          }
+          if (daysRemaining <= 30) {
             acc.upcoming30 += 1;
-          } else if (daysRemaining <= 60) {
+          }
+          if (daysRemaining <= 60) {
             acc.upcoming60 += 1;
-          } else if (daysRemaining <= 90) {
+          }
+          if (daysRemaining <= 90) {
             acc.upcoming90 += 1;
           }
         }
@@ -73,7 +78,7 @@ const Dashboard = () => {
       
       if (machine.frequency === "Quarterly") {
         acc.quarterly += 1;
-      } else {
+      } else if (machine.frequency === "Yearly") {
         acc.yearly += 1;
       }
       
@@ -92,6 +97,19 @@ const Dashboard = () => {
     }
   );
 
+  // Get accurate total machine count from context
+  const ppmCount = countMachinesByType("PPM");
+  const ocmCount = countMachinesByType("OCM");
+  const totalMachines = ppmCount + ocmCount;
+
+  // Update quarterly and yearly counts if they don't match the PPM/OCM counts
+  if (counters.quarterly !== ppmCount) {
+    counters.quarterly = ppmCount;
+  }
+  if (counters.yearly !== ocmCount) {
+    counters.yearly = ocmCount;
+  }
+
   const displayedMachines = filteredMachines(searchTerm, filters);
 
   return (
@@ -104,7 +122,11 @@ const Dashboard = () => {
           </p>
         </div>
 
-        <DashboardStats counters={counters} isMobile={isMobile} />
+        <DashboardStats 
+          counters={counters} 
+          isMobile={isMobile} 
+          totalMachines={totalMachines}
+        />
 
         <DashboardFilters
           searchTerm={searchTerm}

@@ -57,6 +57,10 @@ export function MachineCard({ machine, onMarkComplete }: MachineCardProps) {
       
       const cycleLength = machine.frequency === 'Quarterly' ? 90 : 365;
       const daysPassed = differenceInDays(today, lastDate);
+      
+      // Ensure we have valid daysPassed value
+      if (isNaN(daysPassed) || daysPassed < 0) return 0;
+      
       const progressPercent = Math.min(100, Math.max(0, (daysPassed / cycleLength) * 100));
       return progressPercent;
     } catch (error) {
