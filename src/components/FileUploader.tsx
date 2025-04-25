@@ -1,22 +1,12 @@
-import { useState, useCallback } from "react";
-import { useDropzone } from "react-dropzone";
+
+import React, { useCallback } from "react";
 import * as XLSX from "xlsx";
-import { v4 as uuidv4 } from "uuid";
-import { addDays, addMonths, addYears, format, isValid, parseISO } from "date-fns";
 import { Machine } from "@/types";
-import { Upload, FileCheck, AlertCircle } from "lucide-react";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { PPM_HEADERS, OCM_HEADERS } from "@/utils/excelTemplates";
+import { useFileProcessor } from "@/hooks/useFileProcessor";
+import { DropZone } from "./upload/DropZone";
+import { ParsedDataTable } from "./upload/ParsedDataTable";
 
 interface FileUploaderProps {
   onDataReady: (machines: Machine[]) => void;
@@ -24,211 +14,7 @@ interface FileUploaderProps {
 }
 
 export function FileUploader({ onDataReady, type }: FileUploaderProps) {
-  const [parsedData, setParsedData] = useState<Machine[]>([]);
-  const [processingError, setProcessingError] = useState<string | null>(null);
-
-  const parseExcelDate = (value: any): string => {
-    if (!value) return '';
-    
-    try {
-      if (typeof value === 'number') {
-        const excelEpoch = new Date(1900, 0, 1);
-        const date = new Date(excelEpoch);
-        date.setDate(excelEpoch.getDate() + value - 1);
-        return date.toISOString();
-      }
-      
-      if (typeof value === 'string') {
-        const isoDate = new Date(value);
-        if (isValid(isoDate)) {
-          return isoDate.toISOString();
-        }
-        
-        const parts = value.split(/[-\/]/);
-        if (parts.length === 3) {
-          const month = parseInt(parts[0]) - 1;
-          const day = parseInt(parts[1]);
-          const year = parseInt(parts[2]);
-          const date = new Date(year, month, day);
-          if (isValid(date)) {
-            return date.toISOString();
-          }
-        }
-      }
-      
-      console.warn("Could not parse date value:", value);
-      return '';
-    } catch (error) {
-      console.error("Error parsing date:", error, value);
-      return '';
-    }
-  };
-
-  const calculateNextDate = (lastDate: string, frequency: string) => {
-    try {
-      if (!lastDate) return '';
-      
-      const date = parseISO(lastDate);
-      if (!isValid(date)) {
-        throw new Error("Invalid date");
-      }
-      
-      if (frequency.toLowerCase() === "quarterly") {
-        return addMonths(date, 3).toISOString();
-      } else if (frequency.toLowerCase() === "yearly") {
-        return addYears(date, 1).toISOString();
-      } else {
-        throw new Error(`Unknown frequency: ${frequency}`);
-      }
-    } catch (error) {
-      console.error("Error calculating next date:", error);
-      return '';
-    }
-  };
-
-  const validateHeaders = (headers: string[], expectedHeaders: string[]) => {
-    const missingColumns = expectedHeaders.filter(expected => 
-      !headers.some(header => header.toLowerCase() === expected.toLowerCase())
-    );
-    
-    if (missingColumns.length) {
-      throw new Error(`Missing required columns: ${missingColumns.join(", ")}`);
-    }
-  };
-
-  const checkDuplicates = (data: any[], existingMachines: Machine[]) => {
-    const uniqueCombinations = new Map<string, boolean>();
-    const duplicates = new Set<string>();
-    
-    data.forEach(row => {
-      const serialNumber = row.Serial_Number || '';
-      const equipmentName = row.Equipment_Name || '';
-      const uniqueKey = `${serialNumber}|${equipmentName}`;
-      
-      if (uniqueCombinations.has(uniqueKey)) {
-        duplicates.add(`${equipmentName} (${serialNumber})`);
-      } else {
-        uniqueCombinations.set(uniqueKey, true);
-      }
-    });
-    
-    existingMachines.forEach(machine => {
-      const serialNumber = machine.serialNumber || '';
-      const equipmentName = machine.name || '';
-      const uniqueKey = `${serialNumber}|${equipmentName}`;
-      
-      if (uniqueCombinations.has(uniqueKey)) {
-        duplicates.add(`${equipmentName} (${serialNumber})`);
-      }
-    });
-    
-    if (duplicates.size > 0) {
-      throw new Error(`Duplicate machines found: ${Array.from(duplicates).join(", ")}`);
-    }
-  };
-
-  const getExistingMachines = () => {
-    try {
-      if (type === 'PPM') {
-        const stored = localStorage.getItem("ppmMachines");
-        return stored ? JSON.parse(stored) : [];
-      } else {
-        const stored = localStorage.getItem("ocmMachines");
-        return stored ? JSON.parse(stored) : [];
-      }
-    } catch (error) {
-      console.error("Error getting existing machines:", error);
-      return [];
-    }
-  };
-
-  const processFileData = (data: any[]) => {
-    try {
-      if (!data || !data.length) {
-        throw new Error("No data found in file");
-      }
-
-      const headers = Object.keys(data[0]);
-      const expectedHeaders = type === 'PPM' ? PPM_HEADERS : OCM_HEADERS;
-
-      validateHeaders(headers, expectedHeaders);
-      
-      const existingMachines = getExistingMachines();
-      
-      checkDuplicates(data, existingMachines);
-
-      const machines: Machine[] = data.map(row => {
-        let lastMaintenanceDate: string = '';
-        
-        if (type === 'PPM') {
-          const q1Date = parseExcelDate(row.Q1_Date);
-          const q2Date = parseExcelDate(row.Q2_Date);
-          const q3Date = parseExcelDate(row.Q3_Date);
-          const q4Date = parseExcelDate(row.Q4_Date);
-          
-          const dates = [q1Date, q2Date, q3Date, q4Date].filter(date => date);
-          
-          lastMaintenanceDate = dates.length > 0 ? 
-            dates.reduce((latest, current) => {
-              return new Date(current) > new Date(latest) ? current : latest;
-            }) : 
-            new Date().toISOString();
-
-          return {
-            id: uuidv4(),
-            name: row.Equipment_Name,
-            manufacturer: row.Manufacturer,
-            model: row.Model,
-            serialNumber: row.Serial_Number,
-            logNo: row.Log_Number,
-            frequency: 'Quarterly' as const,
-            lastMaintenanceDate,
-            nextMaintenanceDate: calculateNextDate(lastMaintenanceDate, 'Quarterly'),
-            quarters: {
-              q1: { date: q1Date, engineer: row.Q1_Engineer || '' },
-              q2: { date: q2Date, engineer: row.Q2_Engineer || '' },
-              q3: { date: q3Date, engineer: row.Q3_Engineer || '' },
-              q4: { date: q4Date, engineer: row.Q4_Engineer || '' },
-            }
-          };
-        } else {
-          const date2025 = parseExcelDate(row['2025_Maintenance_Date']);
-          const date2026 = parseExcelDate(row['2026_Maintenance_Date']);
-          
-          const dates = [date2025, date2026].filter(date => date);
-          
-          lastMaintenanceDate = dates.length > 0 ? 
-            dates.reduce((latest, current) => {
-              return new Date(current) > new Date(latest) ? current : latest;
-            }) : 
-            new Date().toISOString();
-
-          return {
-            id: uuidv4(),
-            name: row.Equipment_Name,
-            manufacturer: row.Manufacturer,
-            model: row.Model,
-            serialNumber: row.Serial_Number,
-            logNo: row.Log_Number,
-            frequency: 'Yearly' as const,
-            lastMaintenanceDate,
-            nextMaintenanceDate: calculateNextDate(lastMaintenanceDate, 'Yearly'),
-            years: {
-              '2025': { date: date2025, engineer: row['2025_Engineer'] || '' },
-              '2026': { date: date2026, engineer: row['2026_Engineer'] || '' },
-            }
-          };
-        }
-      });
-
-      setParsedData(machines);
-      setProcessingError(null);
-    } catch (error: any) {
-      console.error("Error processing file:", error);
-      setProcessingError(error.message || "Unknown error processing file");
-      setParsedData([]);
-    }
-  };
+  const { parsedData, processingError, processFileData, setProcessingError } = useFileProcessor(type);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setProcessingError(null);
@@ -241,9 +27,9 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
     const file = acceptedFiles[0];
     
     const validTypes = [
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // xlsx
-      "application/vnd.ms-excel", // xls
-      "text/csv" // csv
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-excel",
+      "text/csv"
     ];
     
     if (!validTypes.includes(file.type)) {
@@ -273,84 +59,9 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
     reader.readAsBinaryString(file);
   }, []);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
-    onDrop,
-    accept: {
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
-      'application/vnd.ms-excel': ['.xls'],
-      'text/csv': ['.csv']
-    }
-  });
-
   const saveToApplication = () => {
     try {
       onDataReady(parsedData);
-      
-      if (type === 'PPM') {
-        const ppmMachines = parsedData.map(machine => ({
-          id: machine.id,
-          equipment: machine.name,
-          model: machine.model,
-          serialNumber: machine.serialNumber,
-          manufacturer: machine.manufacturer,
-          logNo: machine.logNo,
-          frequency: 'Quarterly',
-          lastMaintenanceDate: machine.lastMaintenanceDate,
-          nextMaintenanceDate: machine.nextMaintenanceDate,
-          q1: machine.quarters?.q1 || { date: '', engineer: '' },
-          q2: machine.quarters?.q2 || { date: '', engineer: '' },
-          q3: machine.quarters?.q3 || { date: '', engineer: '' },
-          q4: machine.quarters?.q4 || { date: '', engineer: '' },
-        }));
-        
-        const existingMachines = JSON.parse(localStorage.getItem("ppmMachines") || "[]");
-        const mergedMachines = [...existingMachines];
-        
-        ppmMachines.forEach(newMachine => {
-          const existingIndex = mergedMachines.findIndex(m => 
-            m.serialNumber === newMachine.serialNumber && 
-            m.equipment === newMachine.equipment
-          );
-          if (existingIndex >= 0) {
-            mergedMachines[existingIndex] = newMachine;
-          } else {
-            mergedMachines.push(newMachine);
-          }
-        });
-        
-        localStorage.setItem("ppmMachines", JSON.stringify(mergedMachines));
-      } else {
-        const ocmMachines = parsedData.map(machine => ({
-          id: machine.id,
-          equipment: machine.name,
-          model: machine.model,
-          serialNumber: machine.serialNumber,
-          manufacturer: machine.manufacturer,
-          logNo: machine.logNo,
-          frequency: 'Yearly',
-          lastMaintenanceDate: machine.lastMaintenanceDate,
-          nextMaintenanceDate: machine.nextMaintenanceDate,
-          maintenanceDate: machine.years?.['2025']?.date || '',
-          engineer: machine.years?.['2025']?.engineer || '',
-        }));
-        
-        const existingMachines = JSON.parse(localStorage.getItem("ocmMachines") || "[]");
-        const mergedMachines = [...existingMachines];
-        
-        ocmMachines.forEach(newMachine => {
-          const existingIndex = mergedMachines.findIndex(m => 
-            m.serialNumber === newMachine.serialNumber && 
-            m.equipment === newMachine.equipment
-          );
-          if (existingIndex >= 0) {
-            mergedMachines[existingIndex] = newMachine;
-          } else {
-            mergedMachines.push(newMachine);
-          }
-        });
-        
-        localStorage.setItem("ocmMachines", JSON.stringify(mergedMachines));
-      }
     } catch (error: any) {
       console.error("Error saving data:", error);
       setProcessingError(error.message || "Error saving data");
@@ -359,23 +70,7 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
 
   return (
     <div className="space-y-6">
-      <div
-        {...getRootProps()}
-        className={`border-2 border-dashed rounded-lg p-10 text-center cursor-pointer transition-colors ${
-          isDragActive ? "border-primary bg-primary/5" : "border-gray-300 hover:border-primary/50"
-        }`}
-      >
-        <input {...getInputProps()} />
-        <div className="flex flex-col items-center justify-center space-y-2">
-          <Upload className="h-10 w-10 text-gray-400" />
-          <p className="text-lg font-medium">
-            Drag & drop your {type} Excel file here
-          </p>
-          <p className="text-sm text-gray-500">
-            or click to select a file (xlsx, xls, csv)
-          </p>
-        </div>
-      </div>
+      <DropZone onDrop={onDrop} type={type} />
 
       {processingError && (
         <Alert variant="destructive">
@@ -385,47 +80,7 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
         </Alert>
       )}
 
-      {parsedData.length > 0 && (
-        <Card className="overflow-hidden">
-          <div className="p-4 bg-muted flex items-center justify-between">
-            <div className="flex items-center">
-              <FileCheck className="h-5 w-5 mr-2 text-green-500" />
-              <h3 className="font-medium">File Processed Successfully</h3>
-            </div>
-            <Button onClick={saveToApplication}>
-              Save Data
-            </Button>
-          </div>
-
-          <div className="p-0 overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Machine Name</TableHead>
-                  <TableHead>Last Maintenance</TableHead>
-                  <TableHead>Frequency</TableHead>
-                  <TableHead>Next Maintenance</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {parsedData.map((machine) => {
-                  const lastDate = new Date(machine.lastMaintenanceDate);
-                  const nextDate = machine.nextMaintenanceDate ? new Date(machine.nextMaintenanceDate) : null;
-                  
-                  return (
-                    <TableRow key={machine.id}>
-                      <TableCell className="font-medium">{machine.name}</TableCell>
-                      <TableCell>{isValid(lastDate) ? format(lastDate, "MMM d, yyyy") : "N/A"}</TableCell>
-                      <TableCell>{machine.frequency}</TableCell>
-                      <TableCell>{nextDate && isValid(nextDate) ? format(nextDate, "MMM d, yyyy") : "N/A"}</TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        </Card>
-      )}
+      <ParsedDataTable data={parsedData} onSave={saveToApplication} />
     </div>
   );
 }
