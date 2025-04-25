@@ -6,38 +6,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Bell, CheckCircle, Edit, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { format } from "date-fns";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Input } from "@/components/ui/input";
-import { useAppContext } from "@/contexts/AppContext";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import { format } from "date-fns";
-
-interface PPMMachine {
-  id: string;
-  equipment: string;
-  model: string;
-  serialNumber: string;
-  manufacturer: string;
-  logNo: string;
-  q1: { date: string; engineer: string };
-  q2: { date: string; engineer: string };
-  q3: { date: string; engineer: string };
-  q4: { date: string; engineer: string };
-}
+import { PPMMachine, MachineTableProps } from "@/types/machines";
+import { useMachineTable } from "@/hooks/useMachineTable";
+import { MachineFilters } from "@/components/machines/MachineFilters";
+import { MachineActions } from "@/components/machines/MachineActions";
+import { EditPPMMachineForm } from "@/components/machines/EditPPMMachineForm";
 
 const mockPPMMachines: PPMMachine[] = [
   {
@@ -66,84 +44,36 @@ const mockPPMMachines: PPMMachine[] = [
   },
 ];
 
-const formSchema = z.object({
-  equipment: z.string().min(1, "Equipment name is required"),
-  model: z.string().min(1, "Model is required"),
-  serialNumber: z.string().min(1, "Serial number is required"),
-  manufacturer: z.string().min(1, "Manufacturer is required"),
-  logNo: z.string().min(1, "Log number is required"),
-  q1_date: z.string().min(1, "Q1 date is required"),
-  q1_engineer: z.string().min(1, "Q1 engineer is required"),
-  q2_date: z.string().min(1, "Q2 date is required"),
-  q2_engineer: z.string().min(1, "Q2 engineer is required"),
-  q3_date: z.string().min(1, "Q3 date is required"),
-  q3_engineer: z.string().min(1, "Q3 engineer is required"),
-  q4_date: z.string().min(1, "Q4 date is required"),
-  q4_engineer: z.string().min(1, "Q4 engineer is required"),
-});
-
-type FormData = z.infer<typeof formSchema>;
-
-interface PPMMachinesTableProps {
-  searchTerm: string;
-  selectedMachines: string[];
-  setSelectedMachines: (machines: string[]) => void;
-}
-
-export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMachines }: PPMMachinesTableProps) => {
-  const [storedMachines, setStoredMachines] = useState<PPMMachine[]>(() => {
-    const stored = localStorage.getItem("ppmMachines");
-    return stored ? JSON.parse(stored) : mockPPMMachines;
-  });
-  
-  const [filters, setFilters] = useState({
-    equipment: "",
-    model: "",
-    serialNumber: "",
-    manufacturer: "",
-    logNo: "",
-  });
+export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMachines }: MachineTableProps) => {
+  const {
+    machines: storedMachines,
+    setMachines,
+    filters,
+    setFilters,
+    handleDelete,
+  } = useMachineTable<PPMMachine>("ppm", mockPPMMachines);
   
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingMachine, setEditingMachine] = useState<PPMMachine | null>(null);
-  
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      equipment: "",
-      model: "",
-      serialNumber: "",
-      manufacturer: "",
-      logNo: "",
-      q1_date: "",
-      q1_engineer: "",
-      q2_date: "",
-      q2_engineer: "",
-      q3_date: "",
-      q3_engineer: "",
-      q4_date: "",
-      q4_engineer: "",
-    },
-  });
 
   const filteredMachines = storedMachines.filter((machine) => {
     const equipmentMatch = machine.equipment && 
-      machine.equipment.toString().toLowerCase().includes(searchTerm.toLowerCase());
+      machine.equipment.toLowerCase().includes(searchTerm.toLowerCase());
     const modelMatch = machine.model && 
-      machine.model.toString().toLowerCase().includes(searchTerm.toLowerCase());
+      machine.model.toLowerCase().includes(searchTerm.toLowerCase());
     const manufacturerMatch = machine.manufacturer && 
-      machine.manufacturer.toString().toLowerCase().includes(searchTerm.toLowerCase());
+      machine.manufacturer.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesSearch = equipmentMatch || modelMatch || manufacturerMatch;
 
     const matchesEquipmentFilter = !filters.equipment || 
-      (machine.equipment && machine.equipment.toString().toLowerCase().includes(filters.equipment.toLowerCase()));
+      (machine.equipment && machine.equipment.toLowerCase().includes(filters.equipment.toLowerCase()));
     const matchesModelFilter = !filters.model || 
-      (machine.model && machine.model.toString().toLowerCase().includes(filters.model.toLowerCase()));
+      (machine.model && machine.model.toLowerCase().includes(filters.model.toLowerCase()));
     const matchesSerialFilter = !filters.serialNumber || 
-      (machine.serialNumber && machine.serialNumber.toString().toLowerCase().includes(filters.serialNumber.toLowerCase()));
+      (machine.serialNumber && machine.serialNumber.toLowerCase().includes(filters.serialNumber.toLowerCase()));
     const matchesManufacturerFilter = !filters.manufacturer || 
-      (machine.manufacturer && machine.manufacturer.toString().toLowerCase().includes(filters.manufacturer.toLowerCase()));
+      (machine.manufacturer && machine.manufacturer.toLowerCase().includes(filters.manufacturer.toLowerCase()));
     const matchesLogNoFilter = !filters.logNo || 
       (machine.logNo && machine.logNo.toString().toLowerCase().includes(filters.logNo.toLowerCase()));
 
@@ -153,20 +83,10 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
     return matchesSearch && matchesFilters;
   });
 
-  const saveToLocalStorage = (machines: PPMMachine[]) => {
-    localStorage.setItem("ppmMachines", JSON.stringify(machines));
-  };
-
-  const formatDate = (dateString: string | any) => {
+  const formatDate = (dateString: string) => {
     if (!dateString) return "";
-    try {
-      const dateObj = new Date(dateString);
-      if (isNaN(dateObj.getTime())) return "";
-      return format(dateObj, 'dd/MM/yyyy');
-    } catch (error) {
-      console.error("Error formatting date:", error);
-      return "";
-    }
+    const parsedDate = new Date(dateString);
+    return format(parsedDate, 'dd/MM/yyyy');
   };
 
   const isDueSoon = (dateString: string) => {
@@ -191,35 +111,6 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
     toast.success(`${quarter} maintenance for ${machine.equipment} marked as completed`);
   };
 
-  const handleDelete = (machine: PPMMachine) => {
-    if (window.confirm(`Are you sure you want to delete ${machine.equipment}?`)) {
-      const newMachines = storedMachines.filter(m => m.id !== machine.id);
-      setStoredMachines(newMachines);
-      saveToLocalStorage(newMachines);
-      toast.success(`${machine.equipment} has been deleted`);
-    }
-  };
-
-  const handleEdit = (machine: PPMMachine) => {
-    setEditingMachine(machine);
-    form.reset({
-      equipment: machine.equipment,
-      model: machine.model,
-      serialNumber: machine.serialNumber,
-      manufacturer: machine.manufacturer,
-      logNo: machine.logNo,
-      q1_date: machine.q1.date,
-      q1_engineer: machine.q1.engineer,
-      q2_date: machine.q2.date,
-      q2_engineer: machine.q2.engineer,
-      q3_date: machine.q3.date,
-      q3_engineer: machine.q3.engineer,
-      q4_date: machine.q4.date,
-      q4_engineer: machine.q4.engineer,
-    });
-    setDialogOpen(true);
-  };
-
   const toggleMachineSelection = (machineId: string) => {
     setSelectedMachines(
       selectedMachines.includes(machineId)
@@ -228,82 +119,9 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
     );
   };
 
-  const calculateQuarterlyDates = (q1Date: string) => {
-    const q1 = new Date(q1Date);
-    const q2 = new Date(q1);
-    const q3 = new Date(q1);
-    const q4 = new Date(q1);
-    
-    q2.setDate(q2.getDate() + 90); // Add 90 days for Q2
-    q3.setDate(q3.getDate() + 180); // Add 180 days for Q3
-    q4.setDate(q4.getDate() + 270); // Add 270 days for Q4
-    
-    return {
-      q1: q1.toISOString().split('T')[0],
-      q2: q2.toISOString().split('T')[0],
-      q3: q3.toISOString().split('T')[0],
-      q4: q4.toISOString().split('T')[0]
-    };
-  };
-
-  const onSubmit = (data: FormData) => {
-    if (editingMachine) {
-      const dates = calculateQuarterlyDates(data.q1_date);
-      const updatedMachine = {
-        ...editingMachine,
-        equipment: data.equipment,
-        model: data.model,
-        serialNumber: data.serialNumber,
-        manufacturer: data.manufacturer,
-        logNo: data.logNo,
-        q1: { date: dates.q1, engineer: data.q1_engineer },
-        q2: { date: dates.q2, engineer: data.q2_engineer },
-        q3: { date: dates.q3, engineer: data.q3_engineer },
-        q4: { date: dates.q4, engineer: data.q4_engineer },
-      };
-      
-      const updatedMachines = storedMachines.map(machine => 
-        machine.id === editingMachine.id ? updatedMachine : machine
-      );
-      
-      setStoredMachines(updatedMachines);
-      saveToLocalStorage(updatedMachines);
-      toast.success(`${data.equipment} has been updated`);
-    }
-    setDialogOpen(false);
-    setEditingMachine(null);
-    form.reset();
-  };
-
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-5 gap-4">
-        <Input
-          placeholder="Filter by equipment"
-          value={filters.equipment}
-          onChange={(e) => setFilters({ ...filters, equipment: e.target.value })}
-        />
-        <Input
-          placeholder="Filter by model"
-          value={filters.model}
-          onChange={(e) => setFilters({ ...filters, model: e.target.value })}
-        />
-        <Input
-          placeholder="Filter by serial number"
-          value={filters.serialNumber}
-          onChange={(e) => setFilters({ ...filters, serialNumber: e.target.value })}
-        />
-        <Input
-          placeholder="Filter by manufacturer"
-          value={filters.manufacturer}
-          onChange={(e) => setFilters({ ...filters, manufacturer: e.target.value })}
-        />
-        <Input
-          placeholder="Filter by log no"
-          value={filters.logNo}
-          onChange={(e) => setFilters({ ...filters, logNo: e.target.value })}
-        />
-      </div>
+      <MachineFilters filters={filters} onFilterChange={setFilters} />
       
       <div className="overflow-x-auto">
         <Table>
@@ -323,7 +141,6 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
               <TableHead>Q4_Date</TableHead>
               <TableHead>Q4_Engineer</TableHead>
               <TableHead>ACTION</TableHead>
-              <TableHead>Edit/Delete</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -357,42 +174,15 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
                   </TableCell>
                   <TableCell>{machine.q4.engineer}</TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setReminder(machine, "Current")}
-                      >
-                        <Bell className="h-4 w-4 mr-1" />
-                        Remind
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => markCompleted(machine, "Current")}
-                      >
-                        <CheckCircle className="h-4 w-4 mr-1" />
-                        Complete
-                      </Button>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleEdit(machine)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleDelete(machine)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    <MachineActions
+                      onReminder={() => setReminder(machine, "Current")}
+                      onComplete={() => markCompleted(machine, "Current")}
+                      onEdit={() => {
+                        setEditingMachine(machine);
+                        setDialogOpen(true);
+                      }}
+                      onDelete={() => handleDelete(machine)}
+                    />
                   </TableCell>
                 </TableRow>
               ))
@@ -412,206 +202,23 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
           <DialogHeader>
             <DialogTitle>Edit PPM Machine</DialogTitle>
           </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="equipment"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Equipment</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Equipment name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="model"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Model</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Model" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="serialNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Serial Number</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Serial number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="manufacturer"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Manufacturer</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Manufacturer" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="logNo"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Log No</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Log number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-4 gap-4">
-                <div className="space-y-4">
-                  <h3 className="font-medium">Q1</h3>
-                  <FormField
-                    control={form.control}
-                    name="q1_date"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Date</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="q1_engineer"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Engineer</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Engineer name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="font-medium">Q2</h3>
-                  <FormField
-                    control={form.control}
-                    name="q2_date"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Date</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="q2_engineer"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Engineer</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Engineer name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="font-medium">Q3</h3>
-                  <FormField
-                    control={form.control}
-                    name="q3_date"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Date</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="q3_engineer"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Engineer</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Engineer name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="font-medium">Q4</h3>
-                  <FormField
-                    control={form.control}
-                    name="q4_date"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Date</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="q4_engineer"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Engineer</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Engineer name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
-              <DialogFooter>
-                <Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit">Save Changes</Button>
-              </DialogFooter>
-            </form>
-          </Form>
+          <EditPPMMachineForm
+            machine={editingMachine}
+            onSave={(updatedMachine) => {
+              const updatedMachines = storedMachines.map(m =>
+                m.id === updatedMachine.id ? updatedMachine : m
+              );
+              setMachines(updatedMachines);
+              localStorage.setItem("ppmMachines", JSON.stringify(updatedMachines));
+              setDialogOpen(false);
+              setEditingMachine(null);
+              toast.success(`${updatedMachine.equipment} has been updated`);
+            }}
+            onCancel={() => {
+              setDialogOpen(false);
+              setEditingMachine(null);
+            }}
+          />
         </DialogContent>
       </Dialog>
     </div>

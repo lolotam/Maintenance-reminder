@@ -1,10 +1,10 @@
 
 import { Input } from "@/components/ui/input";
-import { MachineFilters } from "@/types/machines";
+import type { MachineFilters as MachineFiltersType } from "@/types/machines";
 
 interface MachineFiltersProps {
-  filters: MachineFilters;
-  onFilterChange: (filters: MachineFilters) => void;
+  filters: MachineFiltersType;
+  onFilterChange: (filters: MachineFiltersType) => void;
 }
 
 export function MachineFilters({ filters, onFilterChange }: MachineFiltersProps) {
