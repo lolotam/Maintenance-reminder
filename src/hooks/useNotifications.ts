@@ -60,19 +60,16 @@ export const useNotifications = () => {
 
     try {
       const registration = await navigator.serviceWorker.ready;
-      await registration.showNotification("Test Notification", {
-        body: "This is a test notification from your maintenance app!",
+      
+      // Remove the problematic 'vibrate' property and use standard Notification options
+      const notificationOptions: NotificationOptions = {
+        body: "Test notification from your maintenance app!",
         icon: "/favicon.ico",
         badge: "/favicon.ico",
-        vibrate: [100, 50, 100],
-        requireInteraction: true,
-        actions: [
-          {
-            action: 'explore',
-            title: 'View Details'
-          }
-        ]
-      });
+        requireInteraction: true
+      };
+
+      await registration.showNotification("Test Notification", notificationOptions);
       
       toast.success("Test notification sent!");
     } catch (error) {
@@ -88,3 +85,4 @@ export const useNotifications = () => {
     sendTestNotification
   };
 };
+
