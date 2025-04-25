@@ -6,37 +6,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Bell, CheckCircle, Edit, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Input } from "@/components/ui/input";
-import { useAppContext } from "@/contexts/AppContext";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import { v4 as uuidv4 } from "uuid";
-import { format, parse } from "date-fns";
-
-interface OCMMachine {
-  id: string;
-  equipment: string;
-  model: string;
-  serialNumber: string;
-  manufacturer: string;
-  logNo: string;
-  maintenanceDate: string | Date;
-  engineer?: string;
-}
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { OCMMachine, MachineTableProps } from "@/types/machines";
+import { useMachineTable } from "@/hooks/useMachineTable";
+import { MachineFilters } from "@/components/machines/MachineFilters";
+import { MachineActions } from "@/components/machines/MachineActions";
+import { format } from "date-fns";
+import { EditOCMMachineForm } from "@/components/machines/EditOCMMachineForm";
 
 const mockOCMMachines: OCMMachine[] = [
   {
@@ -59,53 +38,18 @@ const mockOCMMachines: OCMMachine[] = [
   },
 ];
 
-const formSchema = z.object({
-  equipment: z.string().min(1, "Equipment name is required"),
-  model: z.string().min(1, "Model is required"),
-  serialNumber: z.string().min(1, "Serial number is required"),
-  manufacturer: z.string().min(1, "Manufacturer is required"),
-  logNo: z.string().min(1, "Log number is required"),
-  maintenanceDate: z.string().min(1, "Maintenance date is required"),
-});
-
-type FormData = z.infer<typeof formSchema>;
-
-interface OCMMachinesTableProps {
-  searchTerm: string;
-  selectedMachines: string[];
-  setSelectedMachines: (machines: string[]) => void;
-}
-
-export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMachines }: OCMMachinesTableProps) => {
-  const { machines, addMachines, updateMachine, deleteMachine } = useAppContext();
-  const [storedMachines, setStoredMachines] = useState<OCMMachine[]>(() => {
-    const stored = localStorage.getItem("ocmMachines");
-    return stored ? JSON.parse(stored) : mockOCMMachines;
-  });
-  
-  const [filters, setFilters] = useState({
-    equipment: "",
-    model: "",
-    serialNumber: "",
-    manufacturer: "",
-    logNo: "",
-  });
+export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMachines }: MachineTableProps) => {
+  const {
+    machines: storedMachines,
+    setMachines,
+    filters,
+    setFilters,
+    handleDelete,
+  } = useMachineTable<OCMMachine>("ocm", mockOCMMachines);
   
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingMachine, setEditingMachine] = useState<OCMMachine | null>(null);
-  
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      equipment: "",
-      model: "",
-      serialNumber: "",
-      manufacturer: "",
-      logNo: "",
-      maintenanceDate: "",
-    },
-  });
-  
+
   const filteredMachines = storedMachines.filter((machine) => {
     const equipmentMatch = machine.equipment && 
       machine.equipment.toLowerCase().includes(searchTerm.toLowerCase());
@@ -133,50 +77,10 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
     return matchesSearch && matchesFilters;
   });
 
-  const saveToLocalStorage = (machines: OCMMachine[]) => {
-    localStorage.setItem("ocmMachines", JSON.stringify(machines));
-  };
-
   const formatDate = (dateString: string | Date) => {
     if (!dateString) return "";
-    const parsedDate = typeof dateString === 'string' 
-      ? parse(dateString, 'yyyy-MM-dd', new Date()) 
-      : dateString;
+    const parsedDate = new Date(dateString);
     return format(parsedDate, 'dd/MM/yyyy');
-  };
-
-  const formatYearlyDate = (dateString: string | Date, targetYear: number) => {
-    if (!dateString) return "";
-    
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return "";
-      
-      if (targetYear === 2026 && dateString) {
-        const date2025 = new Date(dateString);
-        date2025.setFullYear(2025);
-        const date2026 = new Date(date2025);
-        date2026.setFullYear(2026);
-        return formatDate(date2026);
-      }
-      
-      const formattedDate = new Date(date);
-      formattedDate.setFullYear(targetYear);
-      
-      return formatDate(formattedDate);
-    } catch (e) {
-      console.error("Error formatting date:", e);
-      return "";
-    }
-  };
-
-  const isDueSoon = (dateString: string | Date) => {
-    if (!dateString) return false;
-    const today = new Date();
-    const dueDate = new Date(dateString);
-    const diffTime = dueDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays >= 0 && diffDays <= 7;
   };
 
   const setReminder = (machine: OCMMachine) => {
@@ -185,66 +89,6 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
 
   const markCompleted = (machine: OCMMachine) => {
     toast.success(`Annual maintenance for ${machine.equipment} marked as completed`);
-  };
-
-  const handleDelete = (machine: OCMMachine) => {
-    if (window.confirm(`Are you sure you want to delete ${machine.equipment}?`)) {
-      const newMachines = storedMachines.filter(m => m.id !== machine.id);
-      setStoredMachines(newMachines);
-      saveToLocalStorage(newMachines);
-      toast.success(`${machine.equipment} has been deleted`);
-    }
-  };
-
-  const handleEdit = (machine: OCMMachine) => {
-    setEditingMachine(machine);
-    form.reset({
-      equipment: machine.equipment,
-      model: machine.model,
-      serialNumber: machine.serialNumber,
-      manufacturer: machine.manufacturer,
-      logNo: machine.logNo,
-      maintenanceDate: typeof machine.maintenanceDate === 'string' ? machine.maintenanceDate : '',
-    });
-    setDialogOpen(true);
-  };
-
-  const calculateYearlyDate = (maintenanceDate: string) => {
-    const currentDate = new Date(maintenanceDate);
-    const nextYear = new Date(currentDate);
-    nextYear.setDate(nextYear.getDate() + 365); // Add 365 days for next year
-    
-    return {
-      currentYear: currentDate.toISOString().split('T')[0],
-      nextYear: nextYear.toISOString().split('T')[0]
-    };
-  };
-
-  const onSubmit = (data: FormData) => {
-    if (editingMachine) {
-      const dates = calculateYearlyDate(data.maintenanceDate);
-      const updatedMachine = {
-        ...editingMachine,
-        equipment: data.equipment,
-        model: data.model,
-        serialNumber: data.serialNumber,
-        manufacturer: data.manufacturer,
-        logNo: data.logNo,
-        maintenanceDate: dates.currentYear,
-        nextYearDate: dates.nextYear
-      };
-      
-      const updatedMachines = storedMachines.map(machine => 
-        machine.id === editingMachine.id ? updatedMachine : machine
-      );
-      
-      setStoredMachines(updatedMachines);
-      saveToLocalStorage(updatedMachines);
-      toast.success(`${data.equipment} has been updated`);
-    }
-    setDialogOpen(false);
-    setEditingMachine(null);
-    form.reset();
   };
 
   const toggleMachineSelection = (machineId: string) => {
@@ -257,34 +101,8 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-5 gap-4">
-        <Input
-          placeholder="Filter by equipment"
-          value={filters.equipment}
-          onChange={(e) => setFilters({ ...filters, equipment: e.target.value })}
-        />
-        <Input
-          placeholder="Filter by model"
-          value={filters.model}
-          onChange={(e) => setFilters({ ...filters, model: e.target.value })}
-        />
-        <Input
-          placeholder="Filter by serial number"
-          value={filters.serialNumber}
-          onChange={(e) => setFilters({ ...filters, serialNumber: e.target.value })}
-        />
-        <Input
-          placeholder="Filter by manufacturer"
-          value={filters.manufacturer}
-          onChange={(e) => setFilters({ ...filters, manufacturer: e.target.value })}
-        />
-        <Input
-          placeholder="Filter by log no"
-          value={filters.logNo}
-          onChange={(e) => setFilters({ ...filters, logNo: e.target.value })}
-        />
-      </div>
-
+      <MachineFilters filters={filters} onFilterChange={setFilters} />
+      
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
@@ -316,49 +134,22 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
                   <TableCell>{machine.manufacturer}</TableCell>
                   <TableCell>{machine.logNo}</TableCell>
                   <TableCell>
-                    {formatYearlyDate(machine.maintenanceDate, 2025)}
+                    {formatDate(machine.maintenanceDate)}
                   </TableCell>
                   <TableCell>{machine.engineer || "-"}</TableCell>
                   <TableCell>
-                    {formatYearlyDate(machine.maintenanceDate, 2026)}
+                    {formatDate(new Date(machine.maintenanceDate).setFullYear(2026))}
                   </TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setReminder(machine)}
-                      >
-                        <Bell className="h-4 w-4 mr-1" />
-                        Remind
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => markCompleted(machine)}
-                      >
-                        <CheckCircle className="h-4 w-4 mr-1" />
-                        Complete
-                      </Button>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleEdit(machine)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleDelete(machine)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    <MachineActions
+                      onReminder={() => setReminder(machine)}
+                      onComplete={() => markCompleted(machine)}
+                      onEdit={() => {
+                        setEditingMachine(machine);
+                        setDialogOpen(true);
+                      }}
+                      onDelete={() => handleDelete(machine)}
+                    />
                   </TableCell>
                 </TableRow>
               ))
@@ -378,95 +169,23 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
           <DialogHeader>
             <DialogTitle>Edit OCM Machine</DialogTitle>
           </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="equipment"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Equipment</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Equipment name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="model"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Model</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Model" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="serialNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Serial Number</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Serial number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="manufacturer"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Manufacturer</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Manufacturer" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="logNo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Log No</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Log number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="maintenanceDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Maintenance Date</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <DialogFooter>
-                <Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit">Save Changes</Button>
-              </DialogFooter>
-            </form>
-          </Form>
+          <EditOCMMachineForm
+            machine={editingMachine}
+            onSave={(updatedMachine) => {
+              const updatedMachines = storedMachines.map(m =>
+                m.id === updatedMachine.id ? updatedMachine : m
+              );
+              setMachines(updatedMachines);
+              localStorage.setItem("ocmMachines", JSON.stringify(updatedMachines));
+              setDialogOpen(false);
+              setEditingMachine(null);
+              toast.success(`${updatedMachine.equipment} has been updated`);
+            }}
+            onCancel={() => {
+              setDialogOpen(false);
+              setEditingMachine(null);
+            }}
+          />
         </DialogContent>
       </Dialog>
     </div>
