@@ -1,119 +1,26 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { Machine, AppSettings, NotificationSettings } from "@/types";
-import { addMonths, addYears } from "date-fns";
 
-interface Settings {
-  defaultEmail: string;
-  enableDarkMode: boolean;
-  defaultReminderDays: number[];
-  whatsappEnabled: boolean;
-  whatsappNumber: string;
-}
-
-interface AppContextType {
-  machines: Machine[];
-  settings: Settings;
-  addMachines: (newMachines: Machine[]) => void;
-  updateMachine: (id: string, data: Partial<Machine>) => void;
-  deleteMachine: (id: string) => void;
-  markMachineComplete: (id: string) => void;
-  updateSettings: (newSettings: Partial<Settings>) => void;
-  filteredMachines: (searchTerm: string, filters: any) => Machine[];
-  countMachinesByType: (type: "PPM" | "OCM") => number;
-  getAllMachines: () => Machine[];
-}
-
-const defaultSettings: Settings = {
-  defaultEmail: "",
-  enableDarkMode: false,
-  defaultReminderDays: [7, 3, 1],
-  whatsappEnabled: false,
-  whatsappNumber: "",
-};
+import { createContext, useContext, ReactNode } from "react";
+import { Machine } from "@/types";
+import { AppContextType, Settings } from "./types";
+import { calculateNextDate, filterMachines } from "./machineUtils";
+import { useLocalStorage, PPM_MACHINES_KEY, OCM_MACHINES_KEY } from "./useLocalStorage";
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-// LocalStorage keys
-const MACHINES_STORAGE_KEY = "maintenance-machines";
-const SETTINGS_STORAGE_KEY = "maintenance-settings";
-const PPM_MACHINES_KEY = "ppmMachines";
-const OCM_MACHINES_KEY = "ocmMachines";
-
-export const AppProvider = ({ children }: { children: React.ReactNode }) => {
-  const [machines, setMachines] = useState<Machine[]>([]);
-  const [settings, setSettings] = useState<Settings>(defaultSettings);
-  const [initialized, setInitialized] = useState(false);
-
-  // Load data from localStorage on initial load
-  useEffect(() => {
-    try {
-      const storedMachines = localStorage.getItem(MACHINES_STORAGE_KEY);
-      if (storedMachines) {
-        setMachines(JSON.parse(storedMachines));
-      }
-
-      const storedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
-      if (storedSettings) {
-        setSettings(prevSettings => ({
-          ...defaultSettings,
-          ...JSON.parse(storedSettings)
-        }));
-      }
-      setInitialized(true);
-    } catch (error) {
-      console.error("Error loading data from localStorage:", error);
-      setInitialized(true);
-    }
-  }, []);
-
-  // Save machines to localStorage whenever they change
-  useEffect(() => {
-    if (initialized) {
-      localStorage.setItem(MACHINES_STORAGE_KEY, JSON.stringify(machines));
-    }
-  }, [machines, initialized]);
-
-  // Save settings to localStorage whenever they change
-  useEffect(() => {
-    if (initialized) {
-      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
-    }
-  }, [settings, initialized]);
-
-  // Calculate next maintenance date based on last date and frequency
-  const calculateNextDate = (lastDate: string, frequency: "Quarterly" | "Yearly"): string => {
-    try {
-      const date = new Date(lastDate);
-      if (isNaN(date.getTime())) {
-        console.error("Invalid date in calculateNextDate:", lastDate);
-        return "";
-      }
-      
-      if (frequency === "Quarterly") {
-        return addMonths(date, 3).toISOString();
-      } else {
-        return addYears(date, 1).toISOString();
-      }
-    } catch (error) {
-      console.error("Error in calculateNextDate:", error);
-      return "";
-    }
-  };
+export const AppProvider = ({ children }: { children: ReactNode }) => {
+  const { machines, setMachines, settings, setSettings } = useLocalStorage();
 
   // Add new machines
   const addMachines = (newMachines: Machine[]) => {
     setMachines((prevMachines) => {
-      // Process new machines - update existing or add new
       const updatedMachines = [...prevMachines];
       
       newMachines.forEach(newMachine => {
-        // Check for duplicates based on both name AND serial number
         const existingIndex = updatedMachines.findIndex(
           m => m.name === newMachine.name && m.serialNumber === newMachine.serialNumber
         );
         
         if (existingIndex >= 0) {
-          // Update existing machine
           updatedMachines[existingIndex] = {
             ...updatedMachines[existingIndex],
             lastMaintenanceDate: newMachine.lastMaintenanceDate,
@@ -121,7 +28,6 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
             nextMaintenanceDate: newMachine.nextMaintenanceDate
           };
         } else {
-          // Add new machine
           updatedMachines.push({
             ...newMachine,
             notificationSettings: {
@@ -149,10 +55,12 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Delete a machine
   const deleteMachine = (id: string) => {
-    setMachines((prevMachines) => prevMachines.filter((machine) => machine.id !== id));
+    setMachines((prevMachines) => 
+      prevMachines.filter((machine) => machine.id !== id)
+    );
   };
 
-  // Mark a machine as maintained (reset its maintenance cycle)
+  // Mark a machine as maintained
   const markMachineComplete = (id: string) => {
     setMachines((prevMachines) =>
       prevMachines.map((machine) => {
@@ -178,34 +86,6 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     setSettings((prevSettings) => ({ ...prevSettings, ...newSettings }));
   };
 
-  // Filter and search machines
-  const filteredMachines = (searchTerm: string, filters: any) => {
-    return machines.filter((machine) => {
-      // Search term filtering (case insensitive)
-      const matchesSearch = !searchTerm ||
-        machine.name.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      // Frequency filtering
-      const matchesFrequency = !filters.frequency || 
-        machine.frequency === filters.frequency;
-        
-      // Status filtering (overdue, upcoming, all)
-      let matchesStatus = true;
-      if (filters.status) {
-        const today = new Date();
-        const nextDate = new Date(machine.nextMaintenanceDate || "");
-        
-        if (filters.status === "overdue") {
-          matchesStatus = nextDate < today;
-        } else if (filters.status === "upcoming") {
-          matchesStatus = nextDate > today;
-        }
-      }
-      
-      return matchesSearch && matchesFrequency && matchesStatus;
-    });
-  };
-
   // Get all machines, including LDR machines
   const getAllMachines = (): Machine[] => {
     const allMachines = [...machines];
@@ -214,7 +94,6 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       // Get PPM machines from localStorage
       const storedPPMMachines = JSON.parse(localStorage.getItem(PPM_MACHINES_KEY) || "[]");
       const ppmMachines = storedPPMMachines.map((machine: any) => {
-        // Find the most recent maintenance date
         const dates = [
           machine.q1?.date, 
           machine.q2?.date, 
@@ -249,22 +128,10 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
           lastMaintenanceDate: lastMaintenanceDate,
           nextMaintenanceDate: nextDate,
           quarters: {
-            q1: { 
-              date: machine.q1?.date || "", 
-              engineer: machine.q1?.engineer || "" 
-            },
-            q2: { 
-              date: machine.q2?.date || "", 
-              engineer: machine.q2?.engineer || "" 
-            },
-            q3: { 
-              date: machine.q3?.date || "", 
-              engineer: machine.q3?.engineer || "" 
-            },
-            q4: { 
-              date: machine.q4?.date || "", 
-              engineer: machine.q4?.engineer || "" 
-            },
+            q1: { date: machine.q1?.date || "", engineer: machine.q1?.engineer || "" },
+            q2: { date: machine.q2?.date || "", engineer: machine.q2?.engineer || "" },
+            q3: { date: machine.q3?.date || "", engineer: machine.q3?.engineer || "" },
+            q4: { date: machine.q4?.date || "", engineer: machine.q4?.engineer || "" },
           },
           notificationSettings: {
             email: settings.defaultEmail,
@@ -293,14 +160,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
           lastMaintenanceDate: lastMaintenanceDate,
           nextMaintenanceDate: nextDate,
           years: {
-            '2025': { 
-              date: machine.maintenanceDate || "", 
-              engineer: machine.engineer || "" 
-            },
-            '2026': { 
-              date: "", 
-              engineer: "" 
-            },
+            '2025': { date: machine.maintenanceDate || "", engineer: machine.engineer || "" },
+            '2026': { date: "", engineer: "" },
           },
           notificationSettings: {
             email: settings.defaultEmail,
@@ -352,13 +213,14 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     deleteMachine,
     markMachineComplete,
     updateSettings,
-    filteredMachines,
+    filteredMachines: (searchTerm: string, filters: any) => 
+      filterMachines(machines, searchTerm, filters),
     countMachinesByType,
     getAllMachines,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
-}
+};
 
 export function useAppContext() {
   const context = useContext(AppContext);
