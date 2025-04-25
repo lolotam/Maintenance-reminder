@@ -2,14 +2,22 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { Machine, AppSettings, NotificationSettings } from "@/types";
 import { addMonths, addYears } from "date-fns";
 
+interface Settings {
+  defaultEmail: string;
+  enableDarkMode: boolean;
+  defaultReminderDays: number[];
+  whatsappEnabled: boolean;
+  whatsappNumber: string;
+}
+
 interface AppContextType {
   machines: Machine[];
-  settings: AppSettings;
+  settings: Settings;
   addMachines: (newMachines: Machine[]) => void;
   updateMachine: (id: string, data: Partial<Machine>) => void;
   deleteMachine: (id: string) => void;
   markMachineComplete: (id: string) => void;
-  updateSettings: (newSettings: Partial<AppSettings>) => void;
+  updateSettings: (newSettings: Partial<Settings>) => void;
   filteredMachines: (searchTerm: string, filters: any) => Machine[];
   countMachinesByType: (type: "PPM" | "OCM") => number;
   getAllMachines: () => Machine[];
@@ -29,9 +37,15 @@ const SETTINGS_STORAGE_KEY = "maintenance-settings";
 const PPM_MACHINES_KEY = "ppmMachines";
 const OCM_MACHINES_KEY = "ocmMachines";
 
-export function AppProvider({ children }: { children: ReactNode }) {
+export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [machines, setMachines] = useState<Machine[]>([]);
-  const [settings, setSettings] = useState<AppSettings>(defaultSettings);
+  const [settings, setSettings] = useState<Settings>({
+    defaultEmail: "",
+    enableDarkMode: true,
+    defaultReminderDays: [7, 3, 1],
+    whatsappEnabled: false,
+    whatsappNumber: "",
+  });
 
   // Load data from localStorage on initial load
   useEffect(() => {
@@ -153,7 +167,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   // Update app settings
-  const updateSettings = (newSettings: Partial<AppSettings>) => {
+  const updateSettings = (newSettings: Partial<Settings>) => {
     setSettings((prevSettings) => ({ ...prevSettings, ...newSettings }));
   };
 

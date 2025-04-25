@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { MainLayout } from "@/components/MainLayout";
 import { useAppContext } from "@/contexts/AppContext";
-import { Check, Mail, Bell, Moon } from "lucide-react";
+import { Check, Mail, Bell, Moon, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,19 +10,27 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 const Settings = () => {
   const { settings, updateSettings } = useAppContext();
-  const [email, setEmail] = useState(settings.defaultEmail);
+  const [email, setEmail] = useState(settings.defaultEmail || "");
   const [isDarkMode, setIsDarkMode] = useState(settings.enableDarkMode);
-  const [reminderDays, setReminderDays] = useState<number[]>(settings.defaultReminderDays);
+  const [reminderDays, setReminderDays] = useState<number[]>(settings.defaultReminderDays || []);
   const [emailVerificationStatus, setEmailVerificationStatus] = useState<string | null>(null);
+  
+  // WhatsApp notification settings
+  const [whatsappEnabled, setWhatsappEnabled] = useState(settings.whatsappEnabled || false);
+  const [whatsappNumber, setWhatsappNumber] = useState(settings.whatsappNumber || "");
+  const [whatsappVerificationStatus, setWhatsappVerificationStatus] = useState<string | null>(null);
 
   const handleSaveSettings = () => {
     updateSettings({
       defaultEmail: email,
       enableDarkMode: isDarkMode,
       defaultReminderDays: reminderDays.sort((a, b) => b - a), // Sort descending
+      whatsappEnabled,
+      whatsappNumber,
     });
 
     if (email) {
@@ -30,7 +38,16 @@ const Settings = () => {
       setEmailVerificationStatus("verifying");
       setTimeout(() => {
         setEmailVerificationStatus("success");
+        toast.success("Settings saved successfully");
       }, 1500);
+    }
+    
+    if (whatsappEnabled && whatsappNumber) {
+      // Simulate WhatsApp verification - in a real app, this would be an API call
+      setWhatsappVerificationStatus("verifying");
+      setTimeout(() => {
+        setWhatsappVerificationStatus("success");
+      }, 1800);
     }
   };
 
@@ -90,6 +107,72 @@ const Settings = () => {
                     )}
                   </div>
                 </div>
+
+                <div className="flex items-center justify-between pt-2">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="email-notifications">Email Notifications</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Receive maintenance reminders via email
+                    </p>
+                  </div>
+                  <Switch
+                    id="email-notifications"
+                    checked={!!email}
+                    disabled={!email}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>WhatsApp Notifications</CardTitle>
+                <CardDescription>
+                  Receive maintenance reminders via WhatsApp
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="whatsapp-enabled">Enable WhatsApp</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Receive automated reminders via WhatsApp
+                    </p>
+                  </div>
+                  <Switch
+                    id="whatsapp-enabled"
+                    checked={whatsappEnabled}
+                    onCheckedChange={setWhatsappEnabled}
+                  />
+                </div>
+                
+                {whatsappEnabled && (
+                  <div className="space-y-2 pt-2">
+                    <Label htmlFor="whatsapp">WhatsApp Number</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="whatsapp"
+                        placeholder="+1 234 567 8900"
+                        value={whatsappNumber}
+                        onChange={(e) => setWhatsappNumber(e.target.value)}
+                        className="flex-1"
+                      />
+                      {whatsappVerificationStatus === "verifying" && (
+                        <Badge variant="outline" className="bg-yellow-50 text-yellow-800 border-yellow-200">
+                          Verifying...
+                        </Badge>
+                      )}
+                      {whatsappVerificationStatus === "success" && (
+                        <Badge variant="outline" className="bg-green-50 text-green-800 border-green-200">
+                          <Check className="w-3 h-3 mr-1" /> Verified
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Enter your number with country code (e.g., +1 for US)
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
