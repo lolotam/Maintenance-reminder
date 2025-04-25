@@ -1,7 +1,8 @@
-import { Table, TableBody } from "@/components/ui/table";
+
+import { Table, TableBody, TableRow, TableCell } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { OCMMachine, MachineTableProps } from "@/types/machines";
 import { useMachineTable } from "@/hooks/useMachineTable";
 import { MachineFilters } from "@/components/machines/MachineFilters";

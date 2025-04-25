@@ -62,7 +62,10 @@ export function MachineTableRow({
         <TableCell>{formatDate(ocmMachine.maintenanceDate)}</TableCell>
         <TableCell>{ocmMachine.engineer || "-"}</TableCell>
         <TableCell>
-          {formatDate(new Date(ocmMachine.maintenanceDate).setFullYear(2026))}
+          {formatDate(new Date(
+            // Create a new Date object from the maintenance date string before using setFullYear
+            new Date(ocmMachine.maintenanceDate).setFullYear(2026)
+          ))}
         </TableCell>
         <TableCell>
           <MachineActions
