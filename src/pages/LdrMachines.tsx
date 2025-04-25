@@ -5,29 +5,30 @@ import { Link } from "react-router-dom";
 import { Wrench, Settings, Bell } from "lucide-react";
 import { useAppContext } from "@/contexts/AppContext";
 import { toast } from "sonner";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 const LdrMachines = () => {
   const { countMachinesByType } = useAppContext();
   const [ppmMachinesCount, setPpmMachinesCount] = useState(0);
   const [ocmMachinesCount, setOcmMachinesCount] = useState(0);
   
+  // Use useCallback to memoize the update function to avoid infinite re-renders
+  const updateCounts = useCallback(() => {
+    setPpmMachinesCount(countMachinesByType("PPM"));
+    setOcmMachinesCount(countMachinesByType("OCM"));
+  }, [countMachinesByType]);
+  
   useEffect(() => {
-    // Update counts whenever the component renders
-    const updateCounts = () => {
-      setPpmMachinesCount(countMachinesByType("PPM"));
-      setOcmMachinesCount(countMachinesByType("OCM"));
-    };
-    
+    // Update counts when the component mounts
     updateCounts();
     
     // Set up an interval to update counts regularly
-    const intervalId = setInterval(updateCounts, 2000);
+    const intervalId = setInterval(updateCounts, 5000);
     
     return () => {
       clearInterval(intervalId);
     };
-  }, [countMachinesByType]);
+  }, [updateCounts]); // Add updateCounts to dependency array
 
   const handleDashboardLink = () => {
     // Integration with dashboard will be implemented here

@@ -1,3 +1,4 @@
+
 import { Table, TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
@@ -49,25 +50,29 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
   const [editingMachine, setEditingMachine] = useState<PPMMachine | null>(null);
 
   const filteredMachines = storedMachines.filter((machine) => {
-    const equipmentMatch = machine.equipment && 
-      machine.equipment.toLowerCase().includes(searchTerm.toLowerCase());
-    const modelMatch = machine.model && 
-      machine.model.toLowerCase().includes(searchTerm.toLowerCase());
-    const manufacturerMatch = machine.manufacturer && 
-      machine.manufacturer.toLowerCase().includes(searchTerm.toLowerCase());
+    // Safe string lowercase comparison helper
+    const safeIncludes = (value: string | null | undefined, term: string) => {
+      return value && typeof value === 'string' 
+        ? value.toLowerCase().includes(term.toLowerCase()) 
+        : false;
+    };
+    
+    const equipmentMatch = safeIncludes(machine.equipment, searchTerm);
+    const modelMatch = safeIncludes(machine.model, searchTerm);
+    const manufacturerMatch = safeIncludes(machine.manufacturer, searchTerm);
     
     const matchesSearch = equipmentMatch || modelMatch || manufacturerMatch;
 
     const matchesEquipmentFilter = !filters.equipment || 
-      (machine.equipment && machine.equipment.toLowerCase().includes(filters.equipment.toLowerCase()));
+      safeIncludes(machine.equipment, filters.equipment);
     const matchesModelFilter = !filters.model || 
-      (machine.model && machine.model.toLowerCase().includes(filters.model.toLowerCase()));
+      safeIncludes(machine.model, filters.model);
     const matchesSerialFilter = !filters.serialNumber || 
-      (machine.serialNumber && machine.serialNumber.toLowerCase().includes(filters.serialNumber.toLowerCase()));
+      safeIncludes(machine.serialNumber, filters.serialNumber);
     const matchesManufacturerFilter = !filters.manufacturer || 
-      (machine.manufacturer && machine.manufacturer.toLowerCase().includes(filters.manufacturer.toLowerCase()));
+      safeIncludes(machine.manufacturer, filters.manufacturer);
     const matchesLogNoFilter = !filters.logNo || 
-      (machine.logNo && machine.logNo.toString().toLowerCase().includes(filters.logNo.toLowerCase()));
+      (machine.logNo && safeIncludes(machine.logNo.toString(), filters.logNo));
 
     const matchesFilters = matchesEquipmentFilter && matchesModelFilter && 
       matchesSerialFilter && matchesManufacturerFilter && matchesLogNoFilter;
