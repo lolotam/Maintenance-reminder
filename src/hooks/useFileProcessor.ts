@@ -68,6 +68,7 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
         throw new Error("No data found in file");
       }
 
+      console.log("Processing file data:", data);
       const headers = Object.keys(data[0]);
       const expectedHeaders = type === 'PPM' ? PPM_HEADERS : OCM_HEADERS;
 
@@ -76,14 +77,20 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
       const existingMachines = getExistingMachines();
       checkDuplicates(data, existingMachines);
 
-      const machines: Machine[] = data.map(row => {
-        if (type === 'PPM') {
-          return processPPMRow(row);
-        } else {
-          return processOCMRow(row);
-        }
-      });
+      let machines: Machine[] = [];
+      if (type === 'PPM') {
+        machines = data.map(row => processPPMRow(row));
+      } else {
+        machines = data.map(row => processOCMRow(row));
+      }
 
+      // Now store the processed machines directly in localStorage
+      const storageKey = type === 'PPM' ? "ppmMachines" : "ocmMachines";
+      const existingData = JSON.parse(localStorage.getItem(storageKey) || "[]");
+      const combinedData = [...existingData, ...machines];
+      localStorage.setItem(storageKey, JSON.stringify(combinedData));
+      
+      console.log(`Processed ${machines.length} ${type} machines`, machines);
       setParsedData(machines);
       setProcessingError(null);
     } catch (error: any) {
@@ -93,65 +100,51 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
     }
   };
 
-  const processPPMRow = (row: any): Machine => {
+  const processPPMRow = (row: any): any => {
     const q1Date = parseExcelDate(row.Q1_Date);
     const q2Date = parseExcelDate(row.Q2_Date);
     const q3Date = parseExcelDate(row.Q3_Date);
     const q4Date = parseExcelDate(row.Q4_Date);
     
-    const dates = [q1Date, q2Date, q3Date, q4Date].filter(date => date);
-    
-    const lastMaintenanceDate = dates.length > 0 ? 
-      dates.reduce((latest, current) => {
-        return new Date(current) > new Date(latest) ? current : latest;
-      }) : 
-      new Date().toISOString();
-
     return {
       id: uuidv4(),
-      name: row.Equipment_Name,
+      equipment: row.Equipment_Name,
       manufacturer: row.Manufacturer,
       model: row.Model,
       serialNumber: row.Serial_Number,
       logNo: row.Log_Number,
-      frequency: 'Quarterly' as const,
-      lastMaintenanceDate,
-      nextMaintenanceDate: calculateNextDate(lastMaintenanceDate, 'Quarterly'),
-      quarters: {
-        q1: { date: q1Date, engineer: row.Q1_Engineer || '' },
-        q2: { date: q2Date, engineer: row.Q2_Engineer || '' },
-        q3: { date: q3Date, engineer: row.Q3_Engineer || '' },
-        q4: { date: q4Date, engineer: row.Q4_Engineer || '' },
+      q1: { 
+        date: q1Date || "", 
+        engineer: row.Q1_Engineer || "" 
+      },
+      q2: { 
+        date: q2Date || "", 
+        engineer: row.Q2_Engineer || "" 
+      },
+      q3: { 
+        date: q3Date || "", 
+        engineer: row.Q3_Engineer || "" 
+      },
+      q4: { 
+        date: q4Date || "", 
+        engineer: row.Q4_Engineer || "" 
       }
     };
   };
 
-  const processOCMRow = (row: any): Machine => {
-    const date2025 = parseExcelDate(row['2025_Maintenance_Date']);
-    const date2026 = parseExcelDate(row['2026_Maintenance_Date']);
+  const processOCMRow = (row: any): any => {
+    const maintenance2025 = parseExcelDate(row['2025_Maintenance_Date']);
+    const maintenance2026 = parseExcelDate(row['2026_Maintenance_Date']);
     
-    const dates = [date2025, date2026].filter(date => date);
-    
-    const lastMaintenanceDate = dates.length > 0 ? 
-      dates.reduce((latest, current) => {
-        return new Date(current) > new Date(latest) ? current : latest;
-      }) : 
-      new Date().toISOString();
-
     return {
       id: uuidv4(),
-      name: row.Equipment_Name,
+      equipment: row.Equipment_Name,
       manufacturer: row.Manufacturer,
       model: row.Model,
       serialNumber: row.Serial_Number,
       logNo: row.Log_Number,
-      frequency: 'Yearly' as const,
-      lastMaintenanceDate,
-      nextMaintenanceDate: calculateNextDate(lastMaintenanceDate, 'Yearly'),
-      years: {
-        '2025': { date: date2025, engineer: row['2025_Engineer'] || '' },
-        '2026': { date: date2026, engineer: row['2026_Engineer'] || '' },
-      }
+      maintenanceDate: maintenance2025 || "",
+      nextMaintenanceDate: maintenance2026 || ""
     };
   };
 

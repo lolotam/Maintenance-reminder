@@ -49,6 +49,7 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
         const worksheet = workbook.Sheets[sheetName];
         
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
+        console.log("Raw imported data:", jsonData);
         processFileData(jsonData);
       } catch (error: any) {
         console.error("Error reading file:", error);
@@ -61,6 +62,7 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
 
   const saveToApplication = () => {
     try {
+      console.log("Saving data to application:", parsedData);
       onDataReady(parsedData);
     } catch (error: any) {
       console.error("Error saving data:", error);

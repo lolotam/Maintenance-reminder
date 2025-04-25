@@ -49,14 +49,14 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingMachine, setEditingMachine] = useState<PPMMachine | null>(null);
 
+  // Safe string lowercase comparison helper
+  const safeIncludes = (value: string | null | undefined, term: string) => {
+    return value && typeof value === 'string' 
+      ? value.toLowerCase().includes(term.toLowerCase()) 
+      : false;
+  };
+  
   const filteredMachines = storedMachines.filter((machine) => {
-    // Safe string lowercase comparison helper
-    const safeIncludes = (value: string | null | undefined, term: string) => {
-      return value && typeof value === 'string' 
-        ? value.toLowerCase().includes(term.toLowerCase()) 
-        : false;
-    };
-    
     const equipmentMatch = safeIncludes(machine.equipment, searchTerm);
     const modelMatch = safeIncludes(machine.model, searchTerm);
     const manufacturerMatch = safeIncludes(machine.manufacturer, searchTerm);
