@@ -21,24 +21,29 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      // Check for fixed credentials
+      // For demonstration purposes, we're using hardcoded credentials
+      // In a real app, you would validate against Supabase Auth directly
       if (email === "orf" && password === "123456789") {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: "orf@example.com", // Use a valid email format for Supabase
+        // Since we're using a fixed test account, let's directly sign in
+        // with an account that already exists in Supabase
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: "demo@example.com", // Use a preregistered test account
           password: "123456789",
         });
+
         if (error) {
-          toast.error("Authentication error. Please try again.");
-          console.error("Supabase auth error:", error);
-        } else {
+          console.error("Auth error details:", error);
+          toast.error("Authentication error: " + error.message);
+        } else if (data?.session) {
+          toast.success("Login successful!");
           navigate("/");
         }
       } else {
         toast.error("Invalid credentials. Please use username: orf and password: 123456789");
       }
     } catch (error: any) {
-      toast.error(error.message || "An error occurred during login");
       console.error("Login error:", error);
+      toast.error(error.message || "An unexpected error occurred during login");
     } finally {
       setLoading(false);
     }
