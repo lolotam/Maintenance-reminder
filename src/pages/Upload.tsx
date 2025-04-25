@@ -4,7 +4,7 @@ import { MainLayout } from "@/components/MainLayout";
 import { FileUploader } from "@/components/FileUploader";
 import { useAppContext } from "@/contexts/AppContext";
 import { Machine } from "@/types";
-import { Check, AlertCircle, Download, RefreshCcw, ServerCrash } from "lucide-react";
+import { Check, AlertCircle, Download } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,164 +12,40 @@ import { downloadTemplate } from "@/utils/excelTemplates";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { databaseService } from "@/services/databaseService";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const Upload = () => {
   const navigate = useNavigate();
   const { addMachines } = useAppContext();
-  const queryClient = useQueryClient();
   const [uploadStatus, setUploadStatus] = useState<{
     success: boolean;
     message: string;
   } | null>(null);
-  const [serverStatus, setServerStatus] = useState<{
-    checking: boolean;
-    online: boolean;
-    message: string;
-  }>({
-    checking: false,
-    online: false,
-    message: ""
-  });
-
-  const checkServerStatus = async () => {
-    setServerStatus(prev => ({ ...prev, checking: true }));
-    try {
-      const API_URL = import.meta.env.DEV 
-        ? "http://localhost:3001/api" 
-        : "/api";
-      
-      const response = await fetch(`${API_URL}/health`);
-      
-      if (response.ok) {
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.includes("application/json")) {
-          await response.json(); // Test parsing JSON
-          setServerStatus({
-            checking: false,
-            online: true,
-            message: "Server is online and ready"
-          });
-          toast.success("Connected to server successfully");
-        } else {
-          throw new Error("Server did not return proper JSON response");
-        }
-      } else {
-        throw new Error("Server responded with an error");
-      }
-    } catch (error) {
-      console.error("Server connectivity error:", error);
-      setServerStatus({
-        checking: false,
-        online: false,
-        message: "Cannot connect to server. Please ensure the server is running and MongoDB is configured."
-      });
-      toast.error("Failed to connect to server", {
-        description: "Make sure the server is running with 'node server.js' and MongoDB connection is correct"
-      });
-    }
-  };
-
-  const bulkAddPPMMachinesMutation = useMutation({
-    mutationFn: databaseService.bulkAddPPMMachines,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['ppmMachines'] });
-      setUploadStatus({
-        success: true,
-        message: `Successfully imported ${data.insertedCount} PPM machines.`,
-      });
-      
-      toast.success(`${data.insertedCount} PPM machines imported successfully!`, {
-        description: "The data is now available in the PPM Machines page.",
-        action: {
-          label: "View Machines",
-          onClick: () => navigate("/ldr-machines/ppm"),
-        },
-      });
-      
-      setTimeout(() => {
-        setUploadStatus(null);
-      }, 5000);
-    },
-    onError: (error: any) => {
-      let errorMessage = error.message || "Unknown error occurred";
-      // Check for specific HTML response error
-      if (errorMessage.includes("non-JSON response")) {
-        errorMessage = "Server returned HTML instead of JSON. Check server configuration and MongoDB connection.";
-      }
-      
-      setUploadStatus({
-        success: false,
-        message: `Error: ${errorMessage}`,
-      });
-      toast.error("Failed to upload PPM machines", {
-        description: errorMessage
-      });
-    }
-  });
-
-  const bulkAddOCMMachinesMutation = useMutation({
-    mutationFn: databaseService.bulkAddOCMMachines,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['ocmMachines'] });
-      setUploadStatus({
-        success: true,
-        message: `Successfully imported ${data.insertedCount} OCM machines.`,
-      });
-      
-      toast.success(`${data.insertedCount} OCM machines imported successfully!`, {
-        description: "The data is now available in the OCM Machines page.",
-        action: {
-          label: "View Machines",
-          onClick: () => navigate("/ldr-machines/ocm"),
-        },
-      });
-      
-      setTimeout(() => {
-        setUploadStatus(null);
-      }, 5000);
-    },
-    onError: (error: any) => {
-      let errorMessage = error.message || "Unknown error occurred";
-      // Check for specific HTML response error
-      if (errorMessage.includes("non-JSON response")) {
-        errorMessage = "Server returned HTML instead of JSON. Check server configuration and MongoDB connection.";
-      }
-      
-      setUploadStatus({
-        success: false,
-        message: `Error: ${errorMessage}`,
-      });
-      
-      toast.error("Failed to upload OCM machines", {
-        description: errorMessage
-      });
-    }
-  });
 
   const handleDataReady = (machines: Machine[], type: 'PPM' | 'OCM') => {
     try {
       addMachines(machines);
+      setUploadStatus({
+        success: true,
+        message: `Successfully imported ${machines.length} ${type} machines.`,
+      });
       
-      if (!serverStatus.online) {
-        toast.warning("Attempting upload, but server connection hasn't been verified", {
-          description: "Click 'Check Server Connection' first for best results"
-        });
-      }
+      // Show toast notification
+      toast.success(`${machines.length} machines imported successfully!`, {
+        description: "The data is now available in the LDR Machines page.",
+        action: {
+          label: "View Machines",
+          onClick: () => navigate("/ldr-machines"),
+        },
+      });
       
-      if (type === 'PPM') {
-        bulkAddPPMMachinesMutation.mutate(machines);
-      } else {
-        bulkAddOCMMachinesMutation.mutate(machines);
-      }
+      // After a delay, optionally navigate to LDR Machines page
+      setTimeout(() => {
+        setUploadStatus(null);
+      }, 5000);
     } catch (error: any) {
       setUploadStatus({
         success: false,
         message: `Error: ${error.message || "Unknown error occurred"}`,
-      });
-      toast.error("Upload error", { 
-        description: error.message || "Failed to process upload" 
       });
     }
   };
@@ -177,47 +53,12 @@ const Upload = () => {
   return (
     <MainLayout>
       <div className="space-y-6">
-        <div className="flex justify-between items-start flex-wrap gap-4">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-primary">Upload Machine Data</h1>
-            <p className="text-lg text-muted-foreground mt-2">
-              Import your machine maintenance data from Excel
-            </p>
-          </div>
-          
-          <Button 
-            variant="outline"
-            onClick={checkServerStatus}
-            disabled={serverStatus.checking}
-            className="flex items-center gap-2"
-          >
-            {serverStatus.checking ? (
-              <>Checking... <RefreshCcw className="h-4 w-4 animate-spin" /></>
-            ) : (
-              <>Check Server Connection <RefreshCcw className="h-4 w-4" /></>
-            )}
-          </Button>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-primary">Upload Machine Data</h1>
+          <p className="text-lg text-muted-foreground mt-2">
+            Import your machine maintenance data from Excel
+          </p>
         </div>
-
-        {!serverStatus.online && serverStatus.message && (
-          <Alert variant="destructive">
-            <ServerCrash className="h-4 w-4" />
-            <AlertTitle>Server Connection Issue</AlertTitle>
-            <AlertDescription>
-              {serverStatus.message}
-              <div className="mt-2">
-                <p className="text-sm font-medium">Troubleshooting:</p>
-                <ol className="text-sm list-decimal list-inside ml-2 mt-1">
-                  <li>Ensure MongoDB connection string is correct in .env file</li>
-                  <li>Make sure special characters in password are URL-encoded</li>
-                  <li>Run the server with: <code className="bg-muted p-1 rounded">node server.js</code></li>
-                  <li>Check server logs for MongoDB connection errors</li>
-                  <li>Check that the server is running on port 3001</li>
-                </ol>
-              </div>
-            </AlertDescription>
-          </Alert>
-        )}
 
         {uploadStatus && (
           <Alert

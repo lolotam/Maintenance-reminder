@@ -1,4 +1,3 @@
-
 import { MainLayout } from "@/components/MainLayout";
 import { OCMMachinesTable } from "@/components/OCMMachinesTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,45 +10,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useAppContext } from "@/contexts/AppContext";
 import { addYears } from "date-fns";
-import { databaseService } from "@/services/databaseService";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const OCMMachines = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMachines, setSelectedMachines] = useState<string[]>([]);
-  const queryClient = useQueryClient();
+  const { countMachinesByType } = useAppContext();
 
-  // Use React Query for data fetching
-  const { data: ocmMachines, isLoading } = useQuery({
-    queryKey: ['ocmMachines'],
-    queryFn: databaseService.getOCMMachines,
-  });
-
-  const ocmMachinesCount = ocmMachines?.length || 0;
-
-  // Use mutations for data modifications
-  const addMachineMutation = useMutation({
-    mutationFn: databaseService.addOCMMachine,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ocmMachines'] });
-      toast.success("Machine added successfully");
-    },
-    onError: () => {
-      toast.error("Failed to add machine");
-    }
-  });
-  
-  const deleteMachineMutation = useMutation({
-    mutationFn: (id: string) => databaseService.deleteOCMMachine(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ocmMachines'] });
-      toast.success("Machines deleted successfully");
-      setSelectedMachines([]);
-    },
-    onError: () => {
-      toast.error("Failed to delete machines");
-    }
-  });
+  const ocmMachinesCount = countMachinesByType("OCM");
 
   const handleAddMachine = (machineData: any) => {
     try {
@@ -83,8 +50,10 @@ const OCMMachines = () => {
         },
       };
       
-      // Use mutation to add machine to database
-      addMachineMutation.mutate(newMachine);
+      const storedMachines = JSON.parse(localStorage.getItem("ocmMachines") || "[]");
+      localStorage.setItem("ocmMachines", JSON.stringify([...storedMachines, newMachine]));
+      toast.success(`${machineData.equipment} has been added`);
+      window.location.reload();
     } catch (error) {
       console.error("Error adding machine:", error);
       toast.error("Failed to add machine");
@@ -92,12 +61,11 @@ const OCMMachines = () => {
   };
 
   const handleSelectAll = () => {
-    if (!ocmMachines) return;
-    
-    if (selectedMachines.length === ocmMachines.length) {
+    const storedMachines = JSON.parse(localStorage.getItem("ocmMachines") || "[]");
+    if (selectedMachines.length === storedMachines.length) {
       setSelectedMachines([]);
     } else {
-      setSelectedMachines(ocmMachines.map((m: any) => m.id));
+      setSelectedMachines(storedMachines.map((m: any) => m.id));
     }
   };
 
@@ -108,10 +76,12 @@ const OCMMachines = () => {
     }
 
     if (window.confirm(`Are you sure you want to delete ${selectedMachines.length} machines?`)) {
-      // Delete each selected machine
-      selectedMachines.forEach(id => {
-        deleteMachineMutation.mutate(id);
-      });
+      const storedMachines = JSON.parse(localStorage.getItem("ocmMachines") || "[]");
+      const updatedMachines = storedMachines.filter((m: any) => !selectedMachines.includes(m.id));
+      localStorage.setItem("ocmMachines", JSON.stringify(updatedMachines));
+      setSelectedMachines([]);
+      toast.success(`${selectedMachines.length} machines deleted successfully`);
+      window.location.reload();
     }
   };
 
@@ -166,15 +136,11 @@ const OCMMachines = () => {
             />
           </CardHeader>
           <CardContent>
-            {isLoading ? (
-              <div className="text-center py-4">Loading machines...</div>
-            ) : (
-              <OCMMachinesTable 
-                searchTerm={searchTerm}
-                selectedMachines={selectedMachines}
-                setSelectedMachines={setSelectedMachines}
-              />
-            )}
+            <OCMMachinesTable 
+              searchTerm={searchTerm}
+              selectedMachines={selectedMachines}
+              setSelectedMachines={setSelectedMachines} 
+            />
           </CardContent>
         </Card>
       </div>
