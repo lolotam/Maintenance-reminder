@@ -1,11 +1,13 @@
-
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Home, Settings, BellRing, Wrench, Moon, Sun, Menu, X } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Home, Settings, BellRing, Wrench, Moon, Sun, Menu, X, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { useAppContext } from "@/contexts/AppContext";
+import { useAuth } from "@/components/AuthProvider";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -17,7 +19,24 @@ export function MainLayout({ children }: MainLayoutProps) {
   const isMobile = useIsMobile();
   const { settings, updateSettings } = useAppContext();
   const [isDarkMode, setIsDarkMode] = useState(true);
-  
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate("/auth");
+    } catch (error: any) {
+      toast.error("Error logging out");
+    }
+  };
+
+  useEffect(() => {
+    if (!user) {
+      navigate("/auth");
+    }
+  }, [user, navigate]);
+
   const navItems = [
     { icon: Home, label: "Dashboard", path: "/" },
     { icon: BellRing, label: "Notifications", path: "/notifications" },
@@ -53,6 +72,18 @@ export function MainLayout({ children }: MainLayoutProps) {
           </div>
           
           <div className="flex items-center gap-2">
+            {user && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleLogout}
+                className="rounded-full"
+                aria-label="Log out"
+              >
+                <LogOut className="h-5 w-5" />
+              </Button>
+            )}
+            
             <Button 
               variant="ghost" 
               size="icon" 

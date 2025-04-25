@@ -1,10 +1,11 @@
-
 import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/MainLayout";
 import { useAppContext } from "@/contexts/AppContext";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/AuthProvider";
 
 import { EmailNotificationCard } from "@/components/settings/EmailNotificationCard";
 import { WhatsAppNotificationCard } from "@/components/settings/WhatsAppNotificationCard";
@@ -15,6 +16,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 
 const Settings = () => {
   const { settings, updateSettings } = useAppContext();
+  const { user } = useAuth();
   const [email, setEmail] = useState(settings.defaultEmail || "");
   const [isDarkMode, setIsDarkMode] = useState(settings.enableDarkMode);
   const [reminderDays, setReminderDays] = useState<number[]>(settings.defaultReminderDays || []);
@@ -27,13 +29,34 @@ const Settings = () => {
 
   const { requestPermission, sendTestNotification } = useNotifications();
 
-  // Load notification permission status on component mount only
   useEffect(() => {
-    if ("Notification" in window) {
-      setNotificationPermission(Notification.permission);
-      setDesktopNotifications(Notification.permission === "granted");
-    }
-  }, []);
+    const loadProfile = async () => {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (error) throw error;
+
+        if (data) {
+          setEmail(data.email || '');
+          setReminderDays(data.reminder_days || []);
+          setWhatsappEnabled(data.whatsapp_enabled || false);
+          setWhatsappNumber(data.whatsapp_number || '');
+          setDesktopNotifications(data.desktop_notifications_enabled || false);
+        }
+      } catch (error: any) {
+        toast.error("Error loading settings");
+        console.error('Error:', error);
+      }
+    };
+
+    loadProfile();
+  }, [user]);
 
   const handleReminderDayChange = (day: number) => {
     if (reminderDays.includes(day)) {
@@ -43,37 +66,51 @@ const Settings = () => {
     }
   };
 
-  const handleSaveSettings = () => {
+  const handleSaveSettings = async () => {
+    if (!user) return;
+
     toast.loading("Saving settings...");
     
-    // Save all settings at once to prevent multiple state updates
-    updateSettings({
-      defaultEmail: email,
-      enableDarkMode: isDarkMode,
-      defaultReminderDays: reminderDays.sort((a, b) => a - b),
-      whatsappEnabled,
-      whatsappNumber,
-    });
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          email,
+          reminder_days: reminderDays,
+          whatsapp_enabled: whatsappEnabled,
+          whatsapp_number: whatsappNumber,
+          desktop_notifications_enabled: desktopNotifications,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
 
-    setTimeout(() => {
+      if (error) throw error;
+
+      // Update local settings
+      updateSettings({
+        defaultEmail: email,
+        enableDarkMode: isDarkMode,
+        defaultReminderDays: reminderDays,
+        whatsappEnabled,
+        whatsappNumber,
+      });
+
       toast.success("Settings saved successfully", {
         description: "Your notification preferences have been updated.",
       });
       
-      // Update verification status indicators
-      if (email) {
-        setEmailVerificationStatus("success");
-      }
-      
-      if (whatsappEnabled && whatsappNumber) {
-        setWhatsappVerificationStatus("success");
-      }
+      // Update verification statuses
+      if (email) setEmailVerificationStatus("success");
+      if (whatsappEnabled && whatsappNumber) setWhatsappVerificationStatus("success");
       
       // Request desktop notification permissions if needed
       if (desktopNotifications && notificationPermission !== "granted") {
         requestPermission();
       }
-    }, 1000);
+    } catch (error: any) {
+      toast.error("Error saving settings");
+      console.error('Error:', error);
+    }
   };
 
   const handleEnableNotifications = async () => {
