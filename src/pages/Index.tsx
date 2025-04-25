@@ -20,6 +20,11 @@ const Dashboard = () => {
   const isMobile = useIsMobile();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  // Get accurate counts from context
+  const ppmCount = countMachinesByType("PPM");
+  const ocmCount = countMachinesByType("OCM");
+  const totalMachines = ppmCount + ocmCount;
+
   useEffect(() => {
     const fetchMachines = () => {
       const machines = getAllMachines();
@@ -76,12 +81,6 @@ const Dashboard = () => {
         }
       }
       
-      if (machine.frequency === "Quarterly") {
-        acc.quarterly += 1;
-      } else if (machine.frequency === "Yearly") {
-        acc.yearly += 1;
-      }
-      
       return acc;
     },
     { 
@@ -96,19 +95,6 @@ const Dashboard = () => {
       yearly: 0 
     }
   );
-
-  // Get accurate total machine count from context
-  const ppmCount = countMachinesByType("PPM");
-  const ocmCount = countMachinesByType("OCM");
-  const totalMachines = ppmCount + ocmCount;
-
-  // Update quarterly and yearly counts if they don't match the PPM/OCM counts
-  if (counters.quarterly !== ppmCount) {
-    counters.quarterly = ppmCount;
-  }
-  if (counters.yearly !== ocmCount) {
-    counters.yearly = ocmCount;
-  }
 
   const displayedMachines = filteredMachines(searchTerm, filters);
 
@@ -126,6 +112,8 @@ const Dashboard = () => {
           counters={counters} 
           isMobile={isMobile} 
           totalMachines={totalMachines}
+          ppmCount={ppmCount}
+          ocmCount={ocmCount}
         />
 
         <DashboardFilters

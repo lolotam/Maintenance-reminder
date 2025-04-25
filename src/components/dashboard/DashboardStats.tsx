@@ -17,9 +17,11 @@ interface StatsProps {
   };
   isMobile: boolean;
   totalMachines: number;
+  ppmCount: number;
+  ocmCount: number;
 }
 
-export const DashboardStats = ({ counters, isMobile, totalMachines }: StatsProps) => {
+export const DashboardStats = ({ counters, isMobile, totalMachines, ppmCount, ocmCount }: StatsProps) => {
   return (
     <div ref={null} className={isMobile ? "mobile-tabs" : "grid gap-4 md:grid-cols-2 lg:grid-cols-4"}>
       <Card className={isMobile ? "mobile-tab-item w-[85vw] max-w-[300px] mr-3" : ""}>
@@ -78,8 +80,8 @@ export const DashboardStats = ({ counters, isMobile, totalMachines }: StatsProps
         </CardHeader>
         <CardContent>
           <div className="flex gap-2 flex-wrap">
-            <Badge variant="outline" className="bg-primary/10">{counters.quarterly} Quarterly</Badge>
-            <Badge variant="outline" className="bg-primary/10">{counters.yearly} Yearly</Badge>
+            <Badge variant="outline" className="bg-primary/10">{ppmCount} Quarterly</Badge>
+            <Badge variant="outline" className="bg-primary/10">{ocmCount} Yearly</Badge>
           </div>
         </CardContent>
       </Card>
