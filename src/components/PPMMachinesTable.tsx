@@ -1,21 +1,13 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
-import { format } from "date-fns";
 import { useState } from "react";
 import { toast } from "sonner";
 import { PPMMachine, MachineTableProps } from "@/types/machines";
 import { useMachineTable } from "@/hooks/useMachineTable";
 import { MachineFilters } from "@/components/machines/MachineFilters";
-import { MachineActions } from "@/components/machines/MachineActions";
 import { EditPPMMachineForm } from "@/components/machines/EditPPMMachineForm";
+import { MachineTableHeader } from "@/components/machines/MachineTableHeader";
+import { MachineTableRow } from "@/components/machines/MachineTableRow";
 
 const mockPPMMachines: PPMMachine[] = [
   {
@@ -83,26 +75,6 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
     return matchesSearch && matchesFilters;
   });
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "";
-    const parsedDate = new Date(dateString);
-    return format(parsedDate, 'dd/MM/yyyy');
-  };
-
-  const isDueSoon = (dateString: string) => {
-    if (!dateString) return false;
-    try {
-      const today = new Date();
-      const dueDate = new Date(dateString);
-      const diffTime = dueDate.getTime() - today.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays >= 0 && diffDays <= 7;
-    } catch (error) {
-      console.error("Error checking if date is due soon:", error);
-      return false;
-    }
-  };
-
   const setReminder = (machine: PPMMachine, quarter: string) => {
     toast.success(`Reminder set for ${machine.equipment} ${quarter} maintenance`);
   };
@@ -119,72 +91,42 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
     );
   };
 
+  const handleSelectAll = () => {
+    if (selectedMachines.length === filteredMachines.length) {
+      setSelectedMachines([]);
+    } else {
+      setSelectedMachines(filteredMachines.map(m => m.id));
+    }
+  };
+
   return (
     <div className="space-y-4">
       <MachineFilters filters={filters} onFilterChange={setFilters} />
       
       <div className="overflow-x-auto">
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12">Select</TableHead>
-              <TableHead>Equipment_Name</TableHead>
-              <TableHead>Model_Serial Number</TableHead>
-              <TableHead>Manufacturer</TableHead>
-              <TableHead>Log_Number</TableHead>
-              <TableHead>Q1_Date</TableHead>
-              <TableHead>Q1_Engineer</TableHead>
-              <TableHead>Q2_Date</TableHead>
-              <TableHead>Q2_Engineer</TableHead>
-              <TableHead>Q3_Date</TableHead>
-              <TableHead>Q3_Engineer</TableHead>
-              <TableHead>Q4_Date</TableHead>
-              <TableHead>Q4_Engineer</TableHead>
-              <TableHead>ACTION</TableHead>
-            </TableRow>
-          </TableHeader>
+          <MachineTableHeader 
+            type="ppm"
+            onSelectAll={handleSelectAll}
+            hasSelectedItems={selectedMachines.length > 0}
+          />
           <TableBody>
             {filteredMachines.length > 0 ? (
               filteredMachines.map((machine) => (
-                <TableRow key={machine.id}>
-                  <TableCell>
-                    <Checkbox
-                      checked={selectedMachines.includes(machine.id)}
-                      onCheckedChange={() => toggleMachineSelection(machine.id)}
-                    />
-                  </TableCell>
-                  <TableCell>{machine.equipment}</TableCell>
-                  <TableCell>{`${machine.model} - ${machine.serialNumber}`}</TableCell>
-                  <TableCell>{machine.manufacturer}</TableCell>
-                  <TableCell>{machine.logNo}</TableCell>
-                  <TableCell className={isDueSoon(machine.q1.date) ? "text-amber-600 font-medium" : ""}>
-                    {formatDate(machine.q1.date)}
-                  </TableCell>
-                  <TableCell>{machine.q1.engineer}</TableCell>
-                  <TableCell className={isDueSoon(machine.q2.date) ? "text-amber-600 font-medium" : ""}>
-                    {formatDate(machine.q2.date)}
-                  </TableCell>
-                  <TableCell>{machine.q2.engineer}</TableCell>
-                  <TableCell className={isDueSoon(machine.q3.date) ? "text-amber-600 font-medium" : ""}>
-                    {formatDate(machine.q3.date)}
-                  </TableCell>
-                  <TableCell>{machine.q3.engineer}</TableCell>
-                  <TableCell className={isDueSoon(machine.q4.date) ? "text-amber-600 font-medium" : ""}>
-                    {formatDate(machine.q4.date)}
-                  </TableCell>
-                  <TableCell>{machine.q4.engineer}</TableCell>
-                  <TableCell>
-                    <MachineActions
-                      onReminder={() => setReminder(machine, "Current")}
-                      onComplete={() => markCompleted(machine, "Current")}
-                      onEdit={() => {
-                        setEditingMachine(machine);
-                        setDialogOpen(true);
-                      }}
-                      onDelete={() => handleDelete(machine)}
-                    />
-                  </TableCell>
-                </TableRow>
+                <MachineTableRow
+                  key={machine.id}
+                  machine={machine}
+                  type="ppm"
+                  isSelected={selectedMachines.includes(machine.id)}
+                  onSelect={toggleMachineSelection}
+                  onReminder={() => setReminder(machine, "Current")}
+                  onComplete={() => markCompleted(machine, "Current")}
+                  onEdit={() => {
+                    setEditingMachine(machine);
+                    setDialogOpen(true);
+                  }}
+                  onDelete={() => handleDelete(machine)}
+                />
               ))
             ) : (
               <TableRow>

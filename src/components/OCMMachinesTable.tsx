@@ -1,21 +1,13 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody } from "@/components/ui/table";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { OCMMachine, MachineTableProps } from "@/types/machines";
 import { useMachineTable } from "@/hooks/useMachineTable";
 import { MachineFilters } from "@/components/machines/MachineFilters";
-import { MachineActions } from "@/components/machines/MachineActions";
-import { format } from "date-fns";
 import { EditOCMMachineForm } from "@/components/machines/EditOCMMachineForm";
+import { MachineTableHeader } from "@/components/machines/MachineTableHeader";
+import { MachineTableRow } from "@/components/machines/MachineTableRow";
 
 const mockOCMMachines: OCMMachine[] = [
   {
@@ -77,12 +69,6 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
     return matchesSearch && matchesFilters;
   });
 
-  const formatDate = (dateString: string | Date) => {
-    if (!dateString) return "";
-    const parsedDate = new Date(dateString);
-    return format(parsedDate, 'dd/MM/yyyy');
-  };
-
   const setReminder = (machine: OCMMachine) => {
     toast.success(`Reminder set for ${machine.equipment} annual maintenance`);
   };
@@ -99,59 +85,42 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
     );
   };
 
+  const handleSelectAll = () => {
+    if (selectedMachines.length === filteredMachines.length) {
+      setSelectedMachines([]);
+    } else {
+      setSelectedMachines(filteredMachines.map(m => m.id));
+    }
+  };
+
   return (
     <div className="space-y-4">
       <MachineFilters filters={filters} onFilterChange={setFilters} />
       
       <div className="overflow-x-auto">
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12">Select</TableHead>
-              <TableHead>Equipment_Name</TableHead>
-              <TableHead>Model_Serial Number</TableHead>
-              <TableHead>Manufacturer</TableHead>
-              <TableHead>Log_Number</TableHead>
-              <TableHead>2025 Maintenance Date</TableHead>
-              <TableHead>2025 Engineer</TableHead>
-              <TableHead>2026 Maintenance Date</TableHead>
-              <TableHead>ACTION</TableHead>
-              <TableHead>Edit/Delete</TableHead>
-            </TableRow>
-          </TableHeader>
+          <MachineTableHeader 
+            type="ocm"
+            onSelectAll={handleSelectAll}
+            hasSelectedItems={selectedMachines.length > 0}
+          />
           <TableBody>
             {filteredMachines.length > 0 ? (
               filteredMachines.map((machine) => (
-                <TableRow key={machine.id}>
-                  <TableCell>
-                    <Checkbox
-                      checked={selectedMachines.includes(machine.id)}
-                      onCheckedChange={() => toggleMachineSelection(machine.id)}
-                    />
-                  </TableCell>
-                  <TableCell>{machine.equipment}</TableCell>
-                  <TableCell>{`${machine.model} - ${machine.serialNumber}`}</TableCell>
-                  <TableCell>{machine.manufacturer}</TableCell>
-                  <TableCell>{machine.logNo}</TableCell>
-                  <TableCell>
-                    {formatDate(machine.maintenanceDate)}
-                  </TableCell>
-                  <TableCell>{machine.engineer || "-"}</TableCell>
-                  <TableCell>
-                    {formatDate(new Date(machine.maintenanceDate).setFullYear(2026))}
-                  </TableCell>
-                  <TableCell>
-                    <MachineActions
-                      onReminder={() => setReminder(machine)}
-                      onComplete={() => markCompleted(machine)}
-                      onEdit={() => {
-                        setEditingMachine(machine);
-                        setDialogOpen(true);
-                      }}
-                      onDelete={() => handleDelete(machine)}
-                    />
-                  </TableCell>
-                </TableRow>
+                <MachineTableRow
+                  key={machine.id}
+                  machine={machine}
+                  type="ocm"
+                  isSelected={selectedMachines.includes(machine.id)}
+                  onSelect={toggleMachineSelection}
+                  onReminder={() => setReminder(machine)}
+                  onComplete={() => markCompleted(machine)}
+                  onEdit={() => {
+                    setEditingMachine(machine);
+                    setDialogOpen(true);
+                  }}
+                  onDelete={() => handleDelete(machine)}
+                />
               ))
             ) : (
               <TableRow>
