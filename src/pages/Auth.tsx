@@ -27,13 +27,18 @@ export default function Auth() {
           email: "orf@example.com", // Use a valid email format for Supabase
           password: "123456789",
         });
-        if (error) throw error;
-        navigate("/");
+        if (error) {
+          toast.error("Authentication error. Please try again.");
+          console.error("Supabase auth error:", error);
+        } else {
+          navigate("/");
+        }
       } else {
-        throw new Error("Invalid credentials. Please use username: orf and password: 123456789");
+        toast.error("Invalid credentials. Please use username: orf and password: 123456789");
       }
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.message || "An error occurred during login");
+      console.error("Login error:", error);
     } finally {
       setLoading(false);
     }
@@ -69,6 +74,7 @@ export default function Auth() {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter password"
                   required
                 />
                 <Button
