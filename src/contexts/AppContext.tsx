@@ -94,6 +94,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       // Get PPM machines from localStorage
       const storedPPMMachines = JSON.parse(localStorage.getItem(PPM_MACHINES_KEY) || "[]");
       const ppmMachines = storedPPMMachines.map((machine: any) => {
+        // Handle null/undefined values safely
+        if (!machine) return null;
+        
         const dates = [
           machine.q1?.date, 
           machine.q2?.date, 
@@ -105,7 +108,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         
         if (dates.length > 0) {
           try {
-            lastMaintenanceDate = new Date(Math.max(...dates.map(d => new Date(d).getTime()))).toISOString();
+            // Use valid dates only
+            const validDates = dates
+              .filter(d => d && typeof d === 'string' && !isNaN(new Date(d).getTime()))
+              .map(d => new Date(d).getTime());
+            
+            lastMaintenanceDate = validDates.length > 0 
+              ? new Date(Math.max(...validDates)).toISOString()
+              : "";
           } catch (error) {
             console.error("Error processing PPM dates:", error, dates);
             lastMaintenanceDate = machine.lastMaintenanceDate || new Date().toISOString();
@@ -140,12 +150,28 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             reminderDays: [...settings.defaultReminderDays],
           },
         };
-      });
+      }).filter(Boolean); // Filter out null values
       
       // Get OCM machines from localStorage
       const storedOCMMachines = JSON.parse(localStorage.getItem(OCM_MACHINES_KEY) || "[]");
       const ocmMachines = storedOCMMachines.map((machine: any) => {
+        // Handle null/undefined values safely
+        if (!machine) return null;
+        
         let lastMaintenanceDate = machine.lastMaintenanceDate || machine.maintenanceDate || "";
+        
+        // Validate date
+        if (lastMaintenanceDate && typeof lastMaintenanceDate === 'string') {
+          try {
+            const date = new Date(lastMaintenanceDate);
+            if (isNaN(date.getTime())) {
+              lastMaintenanceDate = "";
+            }
+          } catch (e) {
+            lastMaintenanceDate = "";
+          }
+        }
+        
         const nextDate = machine.nextMaintenanceDate || 
           (lastMaintenanceDate ? calculateNextDate(lastMaintenanceDate, "Yearly") : "");
           
@@ -170,7 +196,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             reminderDays: [...settings.defaultReminderDays],
           },
         };
-      });
+      }).filter(Boolean); // Filter out null values
       
       // Combine all machines, avoiding duplicates based on id
       const allIds = new Set(allMachines.map(m => m.id));
@@ -191,18 +217,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   // Count machines by type
   const countMachinesByType = (type: "PPM" | "OCM") => {
     try {
-      const storedOCMMachines = JSON.parse(localStorage.getItem(OCM_MACHINES_KEY) || "[]");
-      const storedPPMMachines = JSON.parse(localStorage.getItem(PPM_MACHINES_KEY) || "[]");
+      let storedMachines = [];
       
       if (type === "OCM") {
-        return storedOCMMachines.length;
+        storedMachines = JSON.parse(localStorage.getItem(OCM_MACHINES_KEY) || "[]");
       } else if (type === "PPM") {
-        return storedPPMMachines.length;
+        storedMachines = JSON.parse(localStorage.getItem(PPM_MACHINES_KEY) || "[]");
       }
+      
+      return Array.isArray(storedMachines) ? storedMachines.length : 0;
     } catch (error) {
       console.error("Error counting machines:", error);
+      return 0;
     }
-    return 0;
   };
 
   const value = {

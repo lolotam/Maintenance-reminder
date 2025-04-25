@@ -12,7 +12,7 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
 
   const validateHeaders = (headers: string[], expectedHeaders: string[]) => {
     const missingColumns = expectedHeaders.filter(expected => 
-      !headers.some(header => header.toLowerCase() === expected.toLowerCase())
+      !headers.some(header => header && header.toString().toLowerCase() === expected.toLowerCase())
     );
     
     if (missingColumns.length) {
@@ -108,11 +108,11 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
     
     return {
       id: uuidv4(),
-      equipment: row.Equipment_Name,
-      manufacturer: row.Manufacturer,
-      model: row.Model,
-      serialNumber: row.Serial_Number,
-      logNo: row.Log_Number,
+      equipment: row.Equipment_Name || "",
+      manufacturer: row.Manufacturer || "",
+      model: row.Model || "",
+      serialNumber: row.Serial_Number || "",
+      logNo: row.Log_Number || "",
       q1: { 
         date: q1Date || "", 
         engineer: row.Q1_Engineer || "" 
@@ -138,11 +138,11 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
     
     return {
       id: uuidv4(),
-      equipment: row.Equipment_Name,
-      manufacturer: row.Manufacturer,
-      model: row.Model,
-      serialNumber: row.Serial_Number,
-      logNo: row.Log_Number,
+      equipment: row.Equipment_Name || "",
+      manufacturer: row.Manufacturer || "",
+      model: row.Model || "",
+      serialNumber: row.Serial_Number || "",
+      logNo: row.Log_Number || "",
       maintenanceDate: maintenance2025 || "",
       nextMaintenanceDate: maintenance2026 || ""
     };

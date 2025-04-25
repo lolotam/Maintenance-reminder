@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { MainLayout } from "@/components/MainLayout";
 import { MachineCard } from "@/components/MachineCard";
@@ -25,7 +26,18 @@ const Dashboard = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setAllMachines(getAllMachines());
+    const fetchMachines = () => {
+      const machines = getAllMachines();
+      setAllMachines(machines);
+    };
+    
+    fetchMachines();
+    // Set up interval to refresh machines data
+    const intervalId = setInterval(fetchMachines, 5000);
+    
+    return () => {
+      clearInterval(intervalId);
+    };
   }, [getAllMachines]);
 
   useEffect(() => {
@@ -42,16 +54,38 @@ const Dashboard = () => {
     }
   }, []);
 
+  // Helper function to safely check if a date is valid
+  const isValidDate = (dateStr: string | null | undefined): boolean => {
+    if (!dateStr) return false;
+    try {
+      const date = new Date(dateStr);
+      return !isNaN(date.getTime());
+    } catch (e) {
+      return false;
+    }
+  };
+
+  // Safe days difference calculation
+  const safeDaysDifference = (dateStr: string | null | undefined): number | null => {
+    if (!isValidDate(dateStr)) return null;
+    try {
+      const date = parseISO(dateStr as string);
+      const today = new Date();
+      return differenceInDays(date, today);
+    } catch (e) {
+      return null;
+    }
+  };
+
   const counters = allMachines.reduce(
     (acc, machine) => {
       const today = new Date();
-      const nextDate = machine.nextMaintenanceDate ? new Date(machine.nextMaintenanceDate) : null;
+      const daysRemaining = safeDaysDifference(machine.nextMaintenanceDate);
       
-      if (nextDate) {
-        if (nextDate < today) {
+      if (daysRemaining !== null) {
+        if (daysRemaining < 0) {
           acc.overdue += 1;
         } else {
-          const daysRemaining = differenceInDays(nextDate, today);
           if (daysRemaining <= 7) {
             acc.upcoming += 1;
           } else if (daysRemaining <= 14) {
@@ -97,21 +131,20 @@ const Dashboard = () => {
   allMachines.forEach(machine => {
     if (!regularMachineIds.has(machine.id)) {
       const matchesSearch = !searchTerm || 
-        machine.name.toLowerCase().includes(searchTerm.toLowerCase());
+        (machine.name && machine.name.toLowerCase().includes(searchTerm.toLowerCase()));
       
       const matchesFrequency = !filters.frequency || 
         machine.frequency === filters.frequency;
         
       let matchesStatus = true;
       if (filters.status) {
-        const today = new Date();
-        const nextDate = machine.nextMaintenanceDate ? new Date(machine.nextMaintenanceDate) : null;
+        const daysRemaining = safeDaysDifference(machine.nextMaintenanceDate);
         
-        if (nextDate) {
+        if (daysRemaining !== null) {
           if (filters.status === "overdue") {
-            matchesStatus = nextDate < today;
+            matchesStatus = daysRemaining < 0;
           } else if (filters.status === "upcoming") {
-            matchesStatus = nextDate > today;
+            matchesStatus = daysRemaining >= 0;
           }
         } else {
           matchesStatus = false;

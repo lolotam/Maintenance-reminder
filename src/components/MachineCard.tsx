@@ -15,13 +15,33 @@ interface MachineCardProps {
 }
 
 export function MachineCard({ machine, onMarkComplete }: MachineCardProps) {
-  const nextDate = machine.nextMaintenanceDate ? parseISO(machine.nextMaintenanceDate) : null;
-  const today = new Date();
-  
-  const daysRemaining = nextDate ? differenceInDays(nextDate, today) : 0;
   const [progressValue, setProgressValue] = useState(0);
   
+  // Helper function to check if a date is valid
+  const isValidDate = (date: Date | null): boolean => {
+    return date instanceof Date && !isNaN(date.getTime());
+  };
+
+  // Safely parse ISO date string
+  const safeParseISO = (dateString: string | null | undefined): Date | null => {
+    if (!dateString) return null;
+    
+    try {
+      const date = parseISO(dateString);
+      return isValidDate(date) ? date : null;
+    } catch (e) {
+      console.error("Error parsing date:", e, dateString);
+      return null;
+    }
+  };
+  
+  const nextDate = safeParseISO(machine.nextMaintenanceDate);
+  const today = new Date();
+  
+  const daysRemaining = nextDate ? differenceInDays(nextDate, today) : null;
+  
   const getUrgencyColor = () => {
+    if (daysRemaining === null) return "bg-gray-500 text-white";
     if (daysRemaining <= 0) return "bg-destructive text-destructive-foreground";
     if (daysRemaining <= 7) return "bg-warning text-warning-foreground";
     if (daysRemaining <= 30) return "bg-yellow-500 text-black dark:text-white";
@@ -32,10 +52,10 @@ export function MachineCard({ machine, onMarkComplete }: MachineCardProps) {
     if (!machine.lastMaintenanceDate) return 0;
     
     try {
-      const cycleLength = machine.frequency === 'Quarterly' ? 90 : 365;
-      const lastDate = parseISO(machine.lastMaintenanceDate);
-      if (!isValidDate(lastDate)) return 0;
+      const lastDate = safeParseISO(machine.lastMaintenanceDate);
+      if (!lastDate) return 0;
       
+      const cycleLength = machine.frequency === 'Quarterly' ? 90 : 365;
       const daysPassed = differenceInDays(today, lastDate);
       const progressPercent = Math.min(100, Math.max(0, (daysPassed / cycleLength) * 100));
       return progressPercent;
@@ -45,18 +65,13 @@ export function MachineCard({ machine, onMarkComplete }: MachineCardProps) {
     }
   };
 
-  // Helper function to check if a date is valid
-  const isValidDate = (date: Date): boolean => {
-    return date instanceof Date && !isNaN(date.getTime());
-  };
-
   // Format date safely
   const formatDate = (dateString: string | null | undefined): string => {
     if (!dateString) return "Not set";
     
     try {
-      const date = parseISO(dateString);
-      if (!isValidDate(date)) return "Invalid date";
+      const date = safeParseISO(dateString);
+      if (!date) return "Invalid date";
       return format(date, "MMM d, yyyy");
     } catch (error) {
       console.error("Error formatting date:", error, dateString);
@@ -73,6 +88,7 @@ export function MachineCard({ machine, onMarkComplete }: MachineCardProps) {
   }, [machine.lastMaintenanceDate]);
 
   const getDaysText = () => {
+    if (daysRemaining === null) return "Date not set";
     if (daysRemaining < 0) return `Overdue by ${Math.abs(daysRemaining)} days`;
     if (daysRemaining === 0) return "Due today";
     return `${daysRemaining} ${daysRemaining === 1 ? 'day' : 'days'} left`;
