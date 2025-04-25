@@ -21,13 +21,10 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      // For demonstration purposes, we're using hardcoded credentials
-      // In a real app, you would validate against Supabase Auth directly
-      if (email === "orf" && password === "123456789") {
-        // Since we're using a fixed test account, let's directly sign in
-        // with an account that already exists in Supabase
+      // For demonstration purposes, we only accept these fixed credentials
+      if (email === "demo@example.com" && password === "123456789") {
         const { data, error } = await supabase.auth.signInWithPassword({
-          email: "demo@example.com", // Use a preregistered test account
+          email: "demo@example.com",
           password: "123456789",
         });
 
@@ -39,7 +36,7 @@ export default function Auth() {
           navigate("/");
         }
       } else {
-        toast.error("Invalid credentials. Please use username: orf and password: 123456789");
+        toast.error("Invalid credentials. Please use email: demo@example.com and password: 123456789");
       }
     } catch (error: any) {
       console.error("Login error:", error);
@@ -61,11 +58,11 @@ export default function Auth() {
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Username</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
-                type="text"
-                placeholder="Enter username"
+                type="email"
+                placeholder="Enter email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
