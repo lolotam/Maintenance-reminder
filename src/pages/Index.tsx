@@ -48,10 +48,12 @@ const Dashboard = () => {
       const today = new Date();
       return differenceInDays(date, today);
     } catch (e) {
+      console.error("Error calculating days difference:", e, dateStr);
       return null;
     }
   };
 
+  // Calculate counters from ALL machines, including those from LDR
   const counters = allMachines.reduce(
     (acc, machine) => {
       const daysRemaining = safeDaysDifference(machine.nextMaintenanceDate);
