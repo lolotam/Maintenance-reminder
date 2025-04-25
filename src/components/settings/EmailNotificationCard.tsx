@@ -25,14 +25,24 @@ export const EmailNotificationCard = ({
       return;
     }
 
-    toast.promise(
-      new Promise((resolve) => setTimeout(resolve, 2000)),
-      {
-        loading: 'Sending test email...',
-        success: 'Test email sent successfully!',
-        error: 'Failed to send test email',
-      }
-    );
+    try {
+      // Simulate sending a real email - in production this would call an API
+      toast.loading("Sending test email...");
+      
+      // Wait for a second to simulate the email being sent
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // In a real app, you would call your backend here
+      // For now, we'll just show a success message
+      toast.success(`Test email sent to ${email}!`, {
+        description: "In production, this would send a real email through your backend.",
+      });
+      
+      console.log("Test email requested for:", email);
+    } catch (error) {
+      console.error("Error sending test email:", error);
+      toast.error("Failed to send test email");
+    }
   };
 
   return (

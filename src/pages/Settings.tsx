@@ -25,7 +25,7 @@ const Settings = () => {
   const [whatsappNumber, setWhatsappNumber] = useState(settings.whatsappNumber || "");
   const [whatsappVerificationStatus, setWhatsappVerificationStatus] = useState<string | null>(null);
 
-  const { requestPermission } = useNotifications();
+  const { requestPermission, sendTestNotification } = useNotifications();
 
   // Load notification permission status on component mount only
   useEffect(() => {
@@ -44,6 +44,8 @@ const Settings = () => {
   };
 
   const handleSaveSettings = () => {
+    toast.loading("Saving settings...");
+    
     // Save all settings at once to prevent multiple state updates
     updateSettings({
       defaultEmail: email,
@@ -53,24 +55,25 @@ const Settings = () => {
       whatsappNumber,
     });
 
-    if (email) {
-      setEmailVerificationStatus("verifying");
-      setTimeout(() => {
+    setTimeout(() => {
+      toast.success("Settings saved successfully", {
+        description: "Your notification preferences have been updated.",
+      });
+      
+      // Update verification status indicators
+      if (email) {
         setEmailVerificationStatus("success");
-        toast.success("Settings saved successfully");
-      }, 1500);
-    }
-    
-    if (whatsappEnabled && whatsappNumber) {
-      setWhatsappVerificationStatus("verifying");
-      setTimeout(() => {
+      }
+      
+      if (whatsappEnabled && whatsappNumber) {
         setWhatsappVerificationStatus("success");
-      }, 1800);
-    }
-
-    if (desktopNotifications && notificationPermission !== "granted") {
-      requestPermission();
-    }
+      }
+      
+      // Request desktop notification permissions if needed
+      if (desktopNotifications && notificationPermission !== "granted") {
+        requestPermission();
+      }
+    }, 1000);
   };
 
   const handleEnableNotifications = async () => {
