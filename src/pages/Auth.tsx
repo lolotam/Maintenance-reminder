@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, AlertCircle } from "lucide-react";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
@@ -21,22 +21,31 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      // For demonstration purposes, we only accept these fixed credentials
-      if (email === "demo@example.com" && password === "123456789") {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: "demo@example.com",
-          password: "123456789",
-        });
-
-        if (error) {
-          console.error("Auth error details:", error);
-          toast.error("Authentication error: " + error.message);
-        } else if (data?.session) {
-          toast.success("Login successful!");
-          navigate("/");
-        }
-      } else {
+      // For demonstration purposes only
+      if (email !== "demo@example.com" || password !== "123456789") {
         toast.error("Invalid credentials. Please use email: demo@example.com and password: 123456789");
+        setLoading(false);
+        return;
+      }
+
+      // First check if the user exists
+      const { data: userData, error: userError } = await supabase.auth.signUp({
+        email: "demo@example.com",
+        password: "123456789",
+      });
+
+      // If user already exists or was created, try to sign in
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: "demo@example.com",
+        password: "123456789",
+      });
+
+      if (error) {
+        console.error("Auth error details:", error);
+        toast.error("Authentication error: " + error.message);
+      } else if (data?.session) {
+        toast.success("Login successful!");
+        navigate("/");
       }
     } catch (error: any) {
       console.error("Login error:", error);
@@ -89,6 +98,10 @@ export default function Auth() {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
               </div>
+            </div>
+            <div className="text-sm text-amber-600 flex items-center gap-2">
+              <AlertCircle className="h-4 w-4" />
+              <span>For demo: use demo@example.com / 123456789</span>
             </div>
           </CardContent>
           <CardFooter>
