@@ -3,7 +3,7 @@ import { MainLayout } from "@/components/MainLayout";
 import { PPMMachinesTable } from "@/components/PPMMachinesTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Trash2 } from "lucide-react";
+import { Search, Trash2, Upload } from "lucide-react";
 import { useState } from "react";
 import { AddMachineDialog } from "@/components/AddMachineDialog";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useAppContext } from "@/contexts/AppContext";
 import { addMonths } from "date-fns";
+import { FileUploader } from "@/components/FileUploader";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { downloadTemplate } from "@/utils/excelTemplates";
 
 const PPMMachines = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -117,6 +120,36 @@ const PPMMachines = () => {
             />
           </div>
           <div className="flex gap-2 items-center">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  Import Data
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-full sm:w-[600px]">
+                <SheetHeader className="mb-5">
+                  <SheetTitle>Import PPM Machines Data</SheetTitle>
+                </SheetHeader>
+                <div className="space-y-6">
+                  <Button 
+                    variant="outline"
+                    onClick={() => downloadTemplate('PPM')}
+                    className="flex items-center gap-2 w-full"
+                  >
+                    Download Template
+                  </Button>
+                  <FileUploader 
+                    onDataReady={(machines) => {
+                      toast.success(`${machines.length} machines imported successfully!`);
+                      window.location.reload();
+                    }} 
+                    type="PPM"
+                  />
+                </div>
+              </SheetContent>
+            </Sheet>
+
             {selectedMachines.length > 0 && (
               <Button
                 variant="destructive"
