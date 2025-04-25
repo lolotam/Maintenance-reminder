@@ -87,7 +87,6 @@ const Settings = () => {
       // Update local settings
       updateSettings({
         defaultEmail: email,
-        enableDarkMode: isDarkMode,
         defaultReminderDays: reminderDays,
         whatsappEnabled,
         whatsappNumber,
