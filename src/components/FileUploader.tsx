@@ -72,13 +72,27 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
       const formattedMachines: Machine[] = parsedData.map(machine => {
         if (type === 'PPM') {
           // For PPM machines, ensure we're creating quarters object properly
+          // Note: We need to access these properties from the parsed data which has a different structure than Machine
           const quartersData = {
-            q1: machine.q1 || { date: '', engineer: '' },
-            q2: machine.q2 || { date: '', engineer: '' },
-            q3: machine.q3 || { date: '', engineer: '' },
-            q4: machine.q4 || { date: '', engineer: '' }
+            q1: { 
+              date: machine.q1?.date || '', 
+              engineer: machine.q1?.engineer || '' 
+            },
+            q2: { 
+              date: machine.q2?.date || '', 
+              engineer: machine.q2?.engineer || '' 
+            },
+            q3: { 
+              date: machine.q3?.date || '', 
+              engineer: machine.q3?.engineer || '' 
+            },
+            q4: { 
+              date: machine.q4?.date || '', 
+              engineer: machine.q4?.engineer || '' 
+            }
           };
           
+          // Create a Machine object with the correct structure
           return {
             id: machine.id,
             name: machine.equipment || '',
@@ -86,7 +100,7 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
             model: machine.model || '',
             Serial_Number: machine.Serial_Number || '',
             logNo: machine.logNo || '',
-            lastMaintenanceDate: machine.q1?.date || '',
+            lastMaintenanceDate: quartersData.q1.date || '',
             frequency: 'Quarterly',
             equipment: machine.equipment || '',
             // Add quarters as a proper object
