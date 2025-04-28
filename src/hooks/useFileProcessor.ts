@@ -1,16 +1,59 @@
 
 import { useState } from "react";
 import * as XLSX from "xlsx";
+import { v4 as uuidv4 } from "uuid";
 import { Machine } from "@/types";
+import { parseExcelDate } from "@/utils/dateUtils";
 import { PPM_HEADERS, OCM_HEADERS } from "@/utils/excelTemplates";
 import { toast } from "sonner";
-import { validateHeaders } from "@/utils/headerValidation";
-import { processPPMDataByIndex, processOCMDataByIndex } from "@/utils/machineDataProcessing";
-import { getExistingMachines, mergeMachines } from "@/utils/storageUtils";
 
 export const useFileProcessor = (type: 'PPM' | 'OCM') => {
   const [parsedData, setParsedData] = useState<Machine[]>([]);
   const [processingError, setProcessingError] = useState<string | null>(null);
+
+  const cleanHeaderName = (header: string): string => {
+    // Remove invisible Unicode characters, trim spaces, and normalize spaces/underscores
+    return header
+      .trim()
+      .replace(/\s+/g, '_')
+      .replace(/[^a-zA-Z0-9_]/g, '');
+  };
+
+  const validateHeaders = (worksheetHeaders: string[], expectedHeaders: string[]) => {
+    const cleanedHeaders = worksheetHeaders.map(cleanHeaderName);
+    
+    // Check for missing required columns
+    const missingColumns = expectedHeaders.filter(expected => 
+      !cleanedHeaders.some(header => header === expected)
+    );
+    
+    if (missingColumns.length) {
+      const errorMessage = `Invalid headers in your Excel file.\n\nMissing or incorrect columns:\n${missingColumns.join(", ")}\n\nRequired headers:\n${expectedHeaders.join(", ")}`;
+      throw new Error(errorMessage);
+    }
+    
+    return {
+      cleanedHeaders,
+      // Create mapping from column index to expected header name
+      headerIndexMap: cleanedHeaders.reduce((map, header, index) => {
+        if (expectedHeaders.includes(header)) {
+          map[header] = index;
+        }
+        return map;
+      }, {} as Record<string, number>)
+    };
+  };
+
+  const getExistingMachines = () => {
+    try {
+      const key = type === 'PPM' ? "ppmMachines" : "ocmMachines";
+      const stored = localStorage.getItem(key);
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error("Error getting existing machines:", error);
+      return [];
+    }
+  };
 
   const processFileData = (data: any[], worksheetData: XLSX.Sheet) => {
     try {
@@ -20,6 +63,7 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
 
       console.log("Raw Excel data:", data);
       
+      // Get the headers from the worksheet directly to preserve precise column order
       const range = XLSX.utils.decode_range(worksheetData['!ref'] || "A1");
       const headerRow: string[] = [];
       
@@ -29,29 +73,22 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
         headerRow.push(cell ? String(cell.v) : "");
       }
       
-      console.log("DEBUG - Extracted header row:", headerRow);
-      console.log("DEBUG - Column count:", headerRow.length);
+      console.log("Extracted header row:", headerRow);
       
       const expectedHeaders = type === 'PPM' ? PPM_HEADERS : OCM_HEADERS;
       const { headerIndexMap } = validateHeaders(headerRow, expectedHeaders);
       
-      console.log("DEBUG - Header to index mapping:", headerIndexMap);
+      console.log("Header to index mapping:", headerIndexMap);
       
-      const existingMachines = getExistingMachines(type);
+      const existingMachines = getExistingMachines();
       
-      const machines = type === 'PPM' 
-        ? processPPMDataByIndex(worksheetData, headerIndexMap, range)
-        : processOCMDataByIndex(worksheetData, headerIndexMap, range);
-      
-      machines.forEach((machine, index) => {
-        console.log(`DEBUG - Processed Row ${index}:`, {
-          Name: machine.name,
-          Model: machine.model,
-          SerialNumber: machine.serialNumber,
-          Manufacturer: machine.manufacturer,
-          FullMachine: machine
-        });
-      });
+      // Process the data directly from worksheet using indexes instead of object keys
+      let machines: Machine[] = [];
+      if (type === 'PPM') {
+        machines = processPPMDataByIndex(worksheetData, headerIndexMap, range);
+      } else {
+        machines = processOCMDataByIndex(worksheetData, headerIndexMap, range);
+      }
       
       const mergedMachines = mergeMachines(existingMachines, machines);
       
@@ -67,6 +104,177 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
       setParsedData([]);
       toast.error(error.message || "Error processing file");
     }
+  };
+
+  const processPPMDataByIndex = (
+    worksheet: XLSX.Sheet, 
+    headerMap: Record<string, number>, 
+    range: XLSX.Range
+  ): Machine[] => {
+    const result: Machine[] = [];
+    
+    // Start from row 1 (skip header row 0)
+    for (let r = range.s.r + 1; r <= range.e.r; r++) {
+      const machine: any = { id: uuidv4() };
+      
+      // Process each expected column using its index from the headerMap
+      const getCellValue = (header: string) => {
+        const index = headerMap[header];
+        if (index === undefined) return "";
+        
+        const cellAddress = XLSX.utils.encode_cell({ r, c: index });
+        const cell = worksheet[cellAddress];
+        return cell ? cell.v : "";
+      };
+      
+      machine.equipment = getCellValue('Equipment_Name') || "";
+      machine.manufacturer = getCellValue('Manufacturer') || "";
+      machine.model = getCellValue('Model') || "";
+      machine.serialNumber = getCellValue('Serial_Number') || "";
+      machine.logNo = getCellValue('Log_Number') || "";
+      
+      machine.q1 = { 
+        date: parseExcelDate(getCellValue('Q1_Date')) || "", 
+        engineer: getCellValue('Q1_Engineer') || "" 
+      };
+      
+      machine.q2 = { 
+        date: parseExcelDate(getCellValue('Q2_Date')) || "", 
+        engineer: getCellValue('Q2_Engineer') || "" 
+      };
+      
+      machine.q3 = { 
+        date: parseExcelDate(getCellValue('Q3_Date')) || "", 
+        engineer: getCellValue('Q3_Engineer') || "" 
+      };
+      
+      machine.q4 = { 
+        date: parseExcelDate(getCellValue('Q4_Date')) || "", 
+        engineer: getCellValue('Q4_Engineer') || "" 
+      };
+      
+      // Only add if we have at least equipment name
+      if (machine.equipment) {
+        result.push(machine);
+      }
+    }
+    
+    return result;
+  };
+
+  const processOCMDataByIndex = (
+    worksheet: XLSX.Sheet, 
+    headerMap: Record<string, number>, 
+    range: XLSX.Range
+  ): Machine[] => {
+    const result: Machine[] = [];
+    
+    // Start from row 1 (skip header row 0)
+    for (let r = range.s.r + 1; r <= range.e.r; r++) {
+      const machine: any = { id: uuidv4() };
+      
+      // Process each expected column using its index from the headerMap
+      const getCellValue = (header: string) => {
+        const index = headerMap[header];
+        if (index === undefined) return "";
+        
+        const cellAddress = XLSX.utils.encode_cell({ r, c: index });
+        const cell = worksheet[cellAddress];
+        return cell ? cell.v : "";
+      };
+      
+      machine.equipment = getCellValue('Equipment_Name') || "";
+      machine.manufacturer = getCellValue('Manufacturer') || "";
+      machine.model = getCellValue('Model') || "";
+      machine.serialNumber = getCellValue('Serial_Number') || "";
+      machine.logNo = getCellValue('Log_Number') || "";
+      
+      machine.maintenanceDate = parseExcelDate(getCellValue('2025_Maintenance_Date')) || "";
+      machine.engineer = getCellValue('2025_Engineer') || "";
+      machine.nextMaintenanceDate = parseExcelDate(getCellValue('2026_Maintenance_Date')) || "";
+      
+      // Only add if we have at least equipment name
+      if (machine.equipment) {
+        result.push(machine);
+      }
+    }
+    
+    return result;
+  };
+  
+  // These functions are no longer needed as we process directly from the worksheet
+  const normalizeRowData = (row: any) => {
+    const normalized: any = {};
+    
+    Object.entries(row).forEach(([key, value]) => {
+      const normalizedKey = key.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+      normalized[normalizedKey] = value;
+    });
+    
+    return normalized;
+  };
+
+  const mergeMachines = (existingMachines: any[], newMachines: any[]) => {
+    const result = [...existingMachines];
+    
+    newMachines.forEach(newMachine => {
+      const existingIndex = result.findIndex(
+        existing => 
+          existing.equipment === newMachine.equipment && 
+          existing.serialNumber === newMachine.serialNumber
+      );
+      
+      if (existingIndex >= 0) {
+        result[existingIndex] = { ...newMachine, id: result[existingIndex].id };
+      } else {
+        result.push(newMachine);
+      }
+    });
+    
+    return result;
+  };
+
+  const processPPMRow = (row: any): any => {
+    // This is kept for backward compatibility but not used in the new implementation
+    return {
+      id: uuidv4(),
+      equipment: row.Equipment_Name || "",
+      manufacturer: row.Manufacturer || "",
+      model: row.Model || "",
+      serialNumber: row.Serial_Number || "",
+      logNo: row.Log_Number || "",
+      q1: { 
+        date: parseExcelDate(row.Q1_Date) || "", 
+        engineer: row.Q1_Engineer || "" 
+      },
+      q2: { 
+        date: parseExcelDate(row.Q2_Date) || "", 
+        engineer: row.Q2_Engineer || "" 
+      },
+      q3: { 
+        date: parseExcelDate(row.Q3_Date) || "", 
+        engineer: row.Q3_Engineer || "" 
+      },
+      q4: { 
+        date: parseExcelDate(row.Q4_Date) || "", 
+        engineer: row.Q4_Engineer || "" 
+      }
+    };
+  };
+
+  const processOCMRow = (row: any): any => {
+    // This is kept for backward compatibility but not used in the new implementation
+    return {
+      id: uuidv4(),
+      equipment: row.Equipment_Name || "",
+      manufacturer: row.Manufacturer || "",
+      model: row.Model || "",
+      serialNumber: row.Serial_Number || "",
+      logNo: row.Log_Number || "",
+      maintenanceDate: parseExcelDate(row['2025_Maintenance_Date']) || "",
+      engineer: row['2025_Engineer'] || "",
+      nextMaintenanceDate: parseExcelDate(row['2026_Maintenance_Date']) || ""
+    };
   };
 
   return { parsedData, processingError, processFileData, setProcessingError };
