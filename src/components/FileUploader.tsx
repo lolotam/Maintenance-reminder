@@ -75,20 +75,20 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
           // Note: We need to access these properties from the parsed data which has a different structure than Machine
           const quartersData = {
             q1: { 
-              date: machine.q1?.date || '', 
-              engineer: machine.q1?.engineer || '' 
+              date: machine.q1_date || '', 
+              engineer: machine.q1_engineer || '' 
             },
             q2: { 
-              date: machine.q2?.date || '', 
-              engineer: machine.q2?.engineer || '' 
+              date: machine.q2_date || '', 
+              engineer: machine.q2_engineer || '' 
             },
             q3: { 
-              date: machine.q3?.date || '', 
-              engineer: machine.q3?.engineer || '' 
+              date: machine.q3_date || '', 
+              engineer: machine.q3_engineer || '' 
             },
             q4: { 
-              date: machine.q4?.date || '', 
-              engineer: machine.q4?.engineer || '' 
+              date: machine.q4_date || '', 
+              engineer: machine.q4_engineer || '' 
             }
           };
           
