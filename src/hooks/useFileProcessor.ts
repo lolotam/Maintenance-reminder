@@ -22,6 +22,9 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
   const validateHeaders = (worksheetHeaders: string[], expectedHeaders: string[]) => {
     const cleanedHeaders = worksheetHeaders.map(cleanHeaderName);
     
+    console.log("DEBUG - Cleaned Headers:", cleanedHeaders);
+    console.log("DEBUG - Expected Headers:", expectedHeaders);
+    
     // Check for missing required columns
     const missingColumns = expectedHeaders.filter(expected => 
       !cleanedHeaders.some(header => header === expected)
@@ -73,12 +76,13 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
         headerRow.push(cell ? String(cell.v) : "");
       }
       
-      console.log("Extracted header row:", headerRow);
+      console.log("DEBUG - Extracted header row:", headerRow);
+      console.log("DEBUG - Column count:", headerRow.length);
       
       const expectedHeaders = type === 'PPM' ? PPM_HEADERS : OCM_HEADERS;
       const { headerIndexMap } = validateHeaders(headerRow, expectedHeaders);
       
-      console.log("Header to index mapping:", headerIndexMap);
+      console.log("DEBUG - Header to index mapping:", headerIndexMap);
       
       const existingMachines = getExistingMachines();
       
@@ -89,6 +93,17 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
       } else {
         machines = processOCMDataByIndex(worksheetData, headerIndexMap, range);
       }
+      
+      // Debug log - check for correct separation of Model and Serial_Number
+      machines.forEach((machine, index) => {
+        console.log(`DEBUG - Processed Row ${index}:`, {
+          Equipment: machine.equipment,
+          Model: machine.model,
+          SerialNumber: machine.serialNumber,
+          // Full machine for comparison
+          FullMachine: machine
+        });
+      });
       
       const mergedMachines = mergeMachines(existingMachines, machines);
       
@@ -132,6 +147,16 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
       machine.model = getCellValue('Model') || "";
       machine.serialNumber = getCellValue('Serial_Number') || "";
       machine.logNo = getCellValue('Log_Number') || "";
+      
+      // Debug log each cell value to see if Model and Serial_Number are correctly separated
+      console.log(`DEBUG - PPM Row ${r-1} Cell Values:`, {
+        EquipmentCol: headerMap['Equipment_Name'],
+        Equipment: machine.equipment,
+        ModelCol: headerMap['Model'], 
+        Model: machine.model,
+        SerialNumberCol: headerMap['Serial_Number'],
+        SerialNumber: machine.serialNumber
+      });
       
       machine.q1 = { 
         date: parseExcelDate(getCellValue('Q1_Date')) || "", 
@@ -188,6 +213,16 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
       machine.model = getCellValue('Model') || "";
       machine.serialNumber = getCellValue('Serial_Number') || "";
       machine.logNo = getCellValue('Log_Number') || "";
+      
+      // Debug log each cell value to see if Model and Serial_Number are correctly separated
+      console.log(`DEBUG - OCM Row ${r-1} Cell Values:`, {
+        EquipmentCol: headerMap['Equipment_Name'],
+        Equipment: machine.equipment,
+        ModelCol: headerMap['Model'], 
+        Model: machine.model,
+        SerialNumberCol: headerMap['Serial_Number'],
+        SerialNumber: machine.serialNumber
+      });
       
       machine.maintenanceDate = parseExcelDate(getCellValue('2025_Maintenance_Date')) || "";
       machine.engineer = getCellValue('2025_Engineer') || "";

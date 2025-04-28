@@ -52,6 +52,19 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
         console.log("Raw imported data:", jsonData);
         
+        // DEBUG: Log raw columns and headers before processing
+        const range = XLSX.utils.decode_range(worksheet['!ref'] || "A1");
+        const headerRow: string[] = [];
+        
+        for (let c = range.s.c; c <= range.e.c; c++) {
+          const cellAddress = XLSX.utils.encode_cell({ r: range.s.r, c });
+          const cell = worksheet[cellAddress];
+          headerRow.push(cell ? String(cell.v) : "");
+        }
+        
+        console.log("DEBUG - Raw Excel Headers:", headerRow);
+        console.log("DEBUG - Column Count:", headerRow.length);
+        
         // Pass both the JSON data and the raw worksheet to process by index
         processFileData(jsonData, worksheet);
       } catch (error: any) {
@@ -66,6 +79,15 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
   const saveToApplication = () => {
     try {
       console.log("Saving data to application:", parsedData);
+      // Debug log for each row before save
+      parsedData.forEach((machine, index) => {
+        console.log(`DEBUG - Row ${index} Before Insert:`, {
+          Equipment: machine.equipment,
+          Model: machine.model,
+          SerialNumber: machine.serialNumber,
+          Manufacturer: machine.manufacturer
+        });
+      });
       onDataReady(parsedData);
     } catch (error: any) {
       console.error("Error saving data:", error);
