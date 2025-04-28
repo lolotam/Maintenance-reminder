@@ -48,8 +48,15 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         
-        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+        // Raw parsing of Excel data
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: false, defval: "" });
         console.log("Raw imported data:", jsonData);
+        
+        // Log the headers to debug
+        if (jsonData.length > 0) {
+          console.log("Excel headers:", Object.keys(jsonData[0]));
+        }
+        
         processFileData(jsonData);
       } catch (error: any) {
         console.error("Error reading file:", error);
@@ -58,7 +65,7 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
     };
     
     reader.readAsBinaryString(file);
-  }, []);
+  }, [processFileData, setProcessingError]);
 
   const saveToApplication = () => {
     try {

@@ -38,23 +38,76 @@ export function ParsedDataTable({ data, onSave }: ParsedDataTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Machine Name</TableHead>
-              <TableHead>Last Maintenance</TableHead>
-              <TableHead>Frequency</TableHead>
-              <TableHead>Next Maintenance</TableHead>
+              <TableHead>Equipment</TableHead>
+              <TableHead>Model</TableHead>
+              <TableHead>Serial Number</TableHead>
+              <TableHead>Manufacturer</TableHead>
+              {data[0].q1 ? (
+                <>
+                  <TableHead>Q1 Date</TableHead>
+                  <TableHead>Q2 Date</TableHead>
+                  <TableHead>Q3 Date</TableHead>
+                  <TableHead>Q4 Date</TableHead>
+                </>
+              ) : (
+                <>
+                  <TableHead>Maintenance Date</TableHead>
+                  <TableHead>Engineer</TableHead>
+                  <TableHead>Next Maintenance</TableHead>
+                </>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
             {data.map((machine) => {
-              const lastDate = new Date(machine.lastMaintenanceDate);
-              const nextDate = machine.nextMaintenanceDate ? new Date(machine.nextMaintenanceDate) : null;
+              // Check if this is a PPM or OCM machine
+              const isPPM = 'q1' in machine;
               
               return (
                 <TableRow key={machine.id}>
-                  <TableCell className="font-medium">{machine.name}</TableCell>
-                  <TableCell>{isValid(lastDate) ? format(lastDate, "MMM d, yyyy") : "N/A"}</TableCell>
-                  <TableCell>{machine.frequency}</TableCell>
-                  <TableCell>{nextDate && isValid(nextDate) ? format(nextDate, "MMM d, yyyy") : "N/A"}</TableCell>
+                  <TableCell className="font-medium">{machine.equipment}</TableCell>
+                  <TableCell>{machine.model || "N/A"}</TableCell>
+                  <TableCell>{machine.serialNumber || "N/A"}</TableCell>
+                  <TableCell>{machine.manufacturer || "N/A"}</TableCell>
+                  
+                  {isPPM ? (
+                    <>
+                      <TableCell>
+                        {machine.q1?.date && isValid(new Date(machine.q1.date)) 
+                          ? format(new Date(machine.q1.date), "MMM d, yyyy") 
+                          : "N/A"}
+                      </TableCell>
+                      <TableCell>
+                        {machine.q2?.date && isValid(new Date(machine.q2.date)) 
+                          ? format(new Date(machine.q2.date), "MMM d, yyyy") 
+                          : "N/A"}
+                      </TableCell>
+                      <TableCell>
+                        {machine.q3?.date && isValid(new Date(machine.q3.date)) 
+                          ? format(new Date(machine.q3.date), "MMM d, yyyy") 
+                          : "N/A"}
+                      </TableCell>
+                      <TableCell>
+                        {machine.q4?.date && isValid(new Date(machine.q4.date)) 
+                          ? format(new Date(machine.q4.date), "MMM d, yyyy") 
+                          : "N/A"}
+                      </TableCell>
+                    </>
+                  ) : (
+                    <>
+                      <TableCell>
+                        {machine.maintenanceDate && isValid(new Date(machine.maintenanceDate)) 
+                          ? format(new Date(machine.maintenanceDate), "MMM d, yyyy") 
+                          : "N/A"}
+                      </TableCell>
+                      <TableCell>{machine.engineer || "N/A"}</TableCell>
+                      <TableCell>
+                        {machine.nextMaintenanceDate && isValid(new Date(machine.nextMaintenanceDate)) 
+                          ? format(new Date(machine.nextMaintenanceDate), "MMM d, yyyy") 
+                          : "N/A"}
+                      </TableCell>
+                    </>
+                  )}
                 </TableRow>
               );
             })}
