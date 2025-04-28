@@ -43,6 +43,7 @@ export const processPPMDataByIndex = (
       SerialNumber: machine.serialNumber
     });
     
+    // Initialize quarters object with all required fields
     machine.quarters = {
       q1: { 
         date: parseExcelDate(getCellValue('Q1_Date')) || "", 
@@ -62,7 +63,7 @@ export const processPPMDataByIndex = (
       }
     };
     
-    machine.lastMaintenanceDate = machine.quarters.q1.date;
+    machine.lastMaintenanceDate = machine.quarters.q1.date || "";
     
     if (machine.name) {
       result.push(machine);

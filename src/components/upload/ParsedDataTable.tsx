@@ -84,14 +84,14 @@ export function ParsedDataTable({ data, onSave }: ParsedDataTableProps) {
                 
                 {isPPM ? (
                   <>
-                    <TableCell>{formatDate(machine.quarters?.q1.date)}</TableCell>
-                    <TableCell>{machine.quarters?.q1.engineer}</TableCell>
+                    <TableCell>{formatDate(machine.quarters?.q1?.date)}</TableCell>
+                    <TableCell>{machine.quarters?.q1?.engineer || ''}</TableCell>
                   </>
                 ) : (
                   <>
-                    <TableCell>{formatDate(machine.years?.['2025'].date)}</TableCell>
-                    <TableCell>{machine.years?.['2025'].engineer}</TableCell>
-                    <TableCell>{formatDate(machine.years?.['2026'].date)}</TableCell>
+                    <TableCell>{formatDate(machine.years?.['2025']?.date)}</TableCell>
+                    <TableCell>{machine.years?.['2025']?.engineer || ''}</TableCell>
+                    <TableCell>{formatDate(machine.years?.['2026']?.date)}</TableCell>
                   </>
                 )}
               </TableRow>

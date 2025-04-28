@@ -14,10 +14,10 @@ export interface OCMMachine extends BaseMachine {
 }
 
 export interface PPMMachine extends BaseMachine {
-  q1: { date: string; engineer: string };
-  q2: { date: string; engineer: string };
-  q3: { date: string; engineer: string };
-  q4: { date: string; engineer: string };
+  q1: { date?: string; engineer?: string };
+  q2: { date?: string; engineer?: string };
+  q3: { date?: string; engineer?: string };
+  q4: { date?: string; engineer?: string };
 }
 
 export interface MachineTableProps {

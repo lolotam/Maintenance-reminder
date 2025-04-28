@@ -26,13 +26,18 @@ export function MachineTableRow({
   onEdit,
   onDelete
 }: MachineTableRowProps) {
-  const formatDate = (dateString: string | Date) => {
+  const formatDate = (dateString: string | Date | undefined | null) => {
     if (!dateString) return "";
-    const parsedDate = new Date(dateString);
-    return format(parsedDate, 'dd/MM/yyyy');
+    try {
+      const parsedDate = new Date(dateString);
+      return isNaN(parsedDate.getTime()) ? "" : format(parsedDate, 'dd/MM/yyyy');
+    } catch (error) {
+      console.error("Error formatting date:", error, dateString);
+      return "";
+    }
   };
 
-  const isDueSoon = (dateString: string) => {
+  const isDueSoon = (dateString: string | undefined | null) => {
     if (!dateString) return false;
     try {
       const today = new Date();
@@ -62,10 +67,10 @@ export function MachineTableRow({
         <TableCell>{formatDate(ocmMachine.maintenanceDate)}</TableCell>
         <TableCell>{ocmMachine.engineer || "-"}</TableCell>
         <TableCell>
-          {formatDate(new Date(
+          {ocmMachine.maintenanceDate ? formatDate(new Date(
             // Create a new Date object from the maintenance date string before using setFullYear
             new Date(ocmMachine.maintenanceDate).setFullYear(2026)
-          ))}
+          )) : ""}
         </TableCell>
         <TableCell>
           <MachineActions
@@ -92,22 +97,22 @@ export function MachineTableRow({
       <TableCell>{`${machine.model} - ${machine.serialNumber}`}</TableCell>
       <TableCell>{machine.manufacturer}</TableCell>
       <TableCell>{machine.logNo}</TableCell>
-      <TableCell className={isDueSoon(ppmMachine.q1.date) ? "text-amber-600 font-medium" : ""}>
-        {formatDate(ppmMachine.q1.date)}
+      <TableCell className={isDueSoon(ppmMachine.q1?.date) ? "text-amber-600 font-medium" : ""}>
+        {formatDate(ppmMachine.q1?.date)}
       </TableCell>
-      <TableCell>{ppmMachine.q1.engineer}</TableCell>
-      <TableCell className={isDueSoon(ppmMachine.q2.date) ? "text-amber-600 font-medium" : ""}>
-        {formatDate(ppmMachine.q2.date)}
+      <TableCell>{ppmMachine.q1?.engineer || ""}</TableCell>
+      <TableCell className={isDueSoon(ppmMachine.q2?.date) ? "text-amber-600 font-medium" : ""}>
+        {formatDate(ppmMachine.q2?.date)}
       </TableCell>
-      <TableCell>{ppmMachine.q2.engineer}</TableCell>
-      <TableCell className={isDueSoon(ppmMachine.q3.date) ? "text-amber-600 font-medium" : ""}>
-        {formatDate(ppmMachine.q3.date)}
+      <TableCell>{ppmMachine.q2?.engineer || ""}</TableCell>
+      <TableCell className={isDueSoon(ppmMachine.q3?.date) ? "text-amber-600 font-medium" : ""}>
+        {formatDate(ppmMachine.q3?.date)}
       </TableCell>
-      <TableCell>{ppmMachine.q3.engineer}</TableCell>
-      <TableCell className={isDueSoon(ppmMachine.q4.date) ? "text-amber-600 font-medium" : ""}>
-        {formatDate(ppmMachine.q4.date)}
+      <TableCell>{ppmMachine.q3?.engineer || ""}</TableCell>
+      <TableCell className={isDueSoon(ppmMachine.q4?.date) ? "text-amber-600 font-medium" : ""}>
+        {formatDate(ppmMachine.q4?.date)}
       </TableCell>
-      <TableCell>{ppmMachine.q4.engineer}</TableCell>
+      <TableCell>{ppmMachine.q4?.engineer || ""}</TableCell>
       <TableCell>
         <MachineActions
           onReminder={onReminder}
