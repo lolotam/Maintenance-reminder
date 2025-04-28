@@ -16,10 +16,10 @@ export const Clock = () => {
   }, []);
 
   return (
-    <Card className="w-fit">
-      <CardContent className="flex items-center gap-2 py-3">
+    <Card className="w-fit bg-card/50 backdrop-blur-sm border-muted">
+      <CardContent className="flex items-center gap-3 py-3">
         <ClockIcon className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm font-medium">
+        <span className="text-sm font-medium text-foreground/90">
           {format(currentTime, "EEEE, dd MMMM yyyy - hh:mm:ss a")}
         </span>
       </CardContent>
