@@ -1,4 +1,3 @@
-
 import { Check, Phone } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSmsNotifications } from "@/hooks/useSmsNotifications";
+import { useWhatsappVerification } from "@/hooks/useWhatsappVerification";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface MessageNotificationCardProps {
@@ -36,6 +36,7 @@ export const MessageNotificationCard = ({
   smsVerificationStatus,
 }: MessageNotificationCardProps) => {
   const { sending, sendTestSms } = useSmsNotifications();
+  const { verifying, sendVerification } = useWhatsappVerification();
 
   const handleTestWhatsApp = async () => {
     if (!whatsappNumber) {
@@ -43,14 +44,7 @@ export const MessageNotificationCard = ({
       return;
     }
 
-    toast.promise(
-      new Promise((resolve) => setTimeout(resolve, 2000)),
-      {
-        loading: 'Sending test WhatsApp message...',
-        success: 'Test WhatsApp message sent successfully!',
-        error: 'Failed to send test WhatsApp message',
-      }
-    );
+    await sendVerification(whatsappNumber);
   };
 
   const handleTestSms = async () => {
