@@ -36,7 +36,7 @@ export function ParsedDataTable({ data, onSave }: ParsedDataTableProps) {
   };
 
   // Check the structure of the data to determine if it's PPM or OCM
-  const isPPM = 'q1' in data[0];
+  const isPPM = data[0].quarters !== undefined;
 
   return (
     <Card className="overflow-hidden">
@@ -56,7 +56,7 @@ export function ParsedDataTable({ data, onSave }: ParsedDataTableProps) {
             <TableRow>
               <TableHead>Equipment Name</TableHead>
               <TableHead>Model</TableHead>
-              <TableHead>Serial_Number</TableHead>
+              <TableHead>Serial Number</TableHead>
               <TableHead>Manufacturer</TableHead>
               <TableHead>Log Number</TableHead>
               {isPPM ? (
@@ -74,9 +74,9 @@ export function ParsedDataTable({ data, onSave }: ParsedDataTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map((machine: any) => (
+            {data.map((machine) => (
               <TableRow key={machine.id}>
-                <TableCell className="font-medium">{machine.equipment}</TableCell>
+                <TableCell className="font-medium">{machine.name}</TableCell>
                 <TableCell>{machine.model}</TableCell>
                 <TableCell>{machine.serialNumber}</TableCell>
                 <TableCell>{machine.manufacturer}</TableCell>
@@ -84,14 +84,14 @@ export function ParsedDataTable({ data, onSave }: ParsedDataTableProps) {
                 
                 {isPPM ? (
                   <>
-                    <TableCell>{formatDate(machine.q1?.date)}</TableCell>
-                    <TableCell>{machine.q1?.engineer}</TableCell>
+                    <TableCell>{formatDate(machine.quarters?.q1.date)}</TableCell>
+                    <TableCell>{machine.quarters?.q1.engineer}</TableCell>
                   </>
                 ) : (
                   <>
-                    <TableCell>{formatDate(machine.maintenanceDate)}</TableCell>
-                    <TableCell>{machine.engineer}</TableCell>
-                    <TableCell>{formatDate(machine.nextMaintenanceDate)}</TableCell>
+                    <TableCell>{formatDate(machine.years?.['2025'].date)}</TableCell>
+                    <TableCell>{machine.years?.['2025'].engineer}</TableCell>
+                    <TableCell>{formatDate(machine.years?.['2026'].date)}</TableCell>
                   </>
                 )}
               </TableRow>

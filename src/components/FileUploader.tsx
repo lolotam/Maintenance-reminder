@@ -82,7 +82,7 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
       // Debug log for each row before save
       parsedData.forEach((machine, index) => {
         console.log(`DEBUG - Row ${index} Before Insert:`, {
-          Equipment: machine.equipment,
+          Name: machine.name || machine.equipment,
           Model: machine.model,
           SerialNumber: machine.serialNumber,
           Manufacturer: machine.manufacturer

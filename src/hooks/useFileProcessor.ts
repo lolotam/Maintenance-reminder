@@ -97,9 +97,10 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
       // Debug log - check for correct separation of Model and Serial_Number
       machines.forEach((machine, index) => {
         console.log(`DEBUG - Processed Row ${index}:`, {
-          Equipment: machine.equipment,
+          Name: machine.name,
           Model: machine.model,
           SerialNumber: machine.serialNumber,
+          Manufacturer: machine.manufacturer,
           // Full machine for comparison
           FullMachine: machine
         });
@@ -130,7 +131,12 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
     
     // Start from row 1 (skip header row 0)
     for (let r = range.s.r + 1; r <= range.e.r; r++) {
-      const machine: any = { id: uuidv4() };
+      const machine: Machine = { 
+        id: uuidv4(),
+        name: "",
+        lastMaintenanceDate: "",
+        frequency: 'Quarterly'
+      };
       
       // Process each expected column using its index from the headerMap
       const getCellValue = (header: string) => {
@@ -142,7 +148,8 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
         return cell ? cell.v : "";
       };
       
-      machine.equipment = getCellValue('Equipment_Name') || "";
+      // Map fields correctly ensuring strict separation
+      machine.name = getCellValue('Equipment_Name') || "";
       machine.manufacturer = getCellValue('Manufacturer') || "";
       machine.model = getCellValue('Model') || "";
       machine.serialNumber = getCellValue('Serial_Number') || "";
@@ -151,35 +158,38 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
       // Debug log each cell value to see if Model and Serial_Number are correctly separated
       console.log(`DEBUG - PPM Row ${r-1} Cell Values:`, {
         EquipmentCol: headerMap['Equipment_Name'],
-        Equipment: machine.equipment,
+        Equipment: machine.name,
         ModelCol: headerMap['Model'], 
         Model: machine.model,
         SerialNumberCol: headerMap['Serial_Number'],
         SerialNumber: machine.serialNumber
       });
       
-      machine.q1 = { 
-        date: parseExcelDate(getCellValue('Q1_Date')) || "", 
-        engineer: getCellValue('Q1_Engineer') || "" 
+      // Add quarterly data to the machine
+      machine.quarters = {
+        q1: { 
+          date: parseExcelDate(getCellValue('Q1_Date')) || "", 
+          engineer: getCellValue('Q1_Engineer') || "" 
+        },
+        q2: { 
+          date: parseExcelDate(getCellValue('Q2_Date')) || "", 
+          engineer: getCellValue('Q2_Engineer') || "" 
+        },
+        q3: { 
+          date: parseExcelDate(getCellValue('Q3_Date')) || "", 
+          engineer: getCellValue('Q3_Engineer') || "" 
+        },
+        q4: { 
+          date: parseExcelDate(getCellValue('Q4_Date')) || "", 
+          engineer: getCellValue('Q4_Engineer') || "" 
+        }
       };
       
-      machine.q2 = { 
-        date: parseExcelDate(getCellValue('Q2_Date')) || "", 
-        engineer: getCellValue('Q2_Engineer') || "" 
-      };
-      
-      machine.q3 = { 
-        date: parseExcelDate(getCellValue('Q3_Date')) || "", 
-        engineer: getCellValue('Q3_Engineer') || "" 
-      };
-      
-      machine.q4 = { 
-        date: parseExcelDate(getCellValue('Q4_Date')) || "", 
-        engineer: getCellValue('Q4_Engineer') || "" 
-      };
+      // Set lastMaintenanceDate from Q1 date for consistency
+      machine.lastMaintenanceDate = machine.quarters.q1.date;
       
       // Only add if we have at least equipment name
-      if (machine.equipment) {
+      if (machine.name) {
         result.push(machine);
       }
     }
@@ -196,7 +206,12 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
     
     // Start from row 1 (skip header row 0)
     for (let r = range.s.r + 1; r <= range.e.r; r++) {
-      const machine: any = { id: uuidv4() };
+      const machine: Machine = { 
+        id: uuidv4(),
+        name: "",
+        lastMaintenanceDate: "",
+        frequency: 'Yearly'
+      };
       
       // Process each expected column using its index from the headerMap
       const getCellValue = (header: string) => {
@@ -208,7 +223,8 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
         return cell ? cell.v : "";
       };
       
-      machine.equipment = getCellValue('Equipment_Name') || "";
+      // Map fields correctly ensuring strict separation
+      machine.name = getCellValue('Equipment_Name') || "";
       machine.manufacturer = getCellValue('Manufacturer') || "";
       machine.model = getCellValue('Model') || "";
       machine.serialNumber = getCellValue('Serial_Number') || "";
@@ -217,19 +233,35 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
       // Debug log each cell value to see if Model and Serial_Number are correctly separated
       console.log(`DEBUG - OCM Row ${r-1} Cell Values:`, {
         EquipmentCol: headerMap['Equipment_Name'],
-        Equipment: machine.equipment,
+        Equipment: machine.name,
         ModelCol: headerMap['Model'], 
         Model: machine.model,
         SerialNumberCol: headerMap['Serial_Number'],
         SerialNumber: machine.serialNumber
       });
       
-      machine.maintenanceDate = parseExcelDate(getCellValue('2025_Maintenance_Date')) || "";
-      machine.engineer = getCellValue('2025_Engineer') || "";
-      machine.nextMaintenanceDate = parseExcelDate(getCellValue('2026_Maintenance_Date')) || "";
+      // Add yearly data
+      const maintenanceDate = parseExcelDate(getCellValue('2025_Maintenance_Date')) || "";
+      const engineer = getCellValue('2025_Engineer') || "";
+      const nextMaintenanceDate = parseExcelDate(getCellValue('2026_Maintenance_Date')) || "";
+      
+      machine.lastMaintenanceDate = maintenanceDate;
+      machine.nextMaintenanceDate = nextMaintenanceDate;
+      
+      // Store yearly data in the years property
+      machine.years = {
+        '2025': { 
+          date: maintenanceDate, 
+          engineer: engineer 
+        },
+        '2026': { 
+          date: nextMaintenanceDate, 
+          engineer: "" 
+        }
+      };
       
       // Only add if we have at least equipment name
-      if (machine.equipment) {
+      if (machine.name) {
         result.push(machine);
       }
     }
@@ -255,7 +287,7 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
     newMachines.forEach(newMachine => {
       const existingIndex = result.findIndex(
         existing => 
-          existing.equipment === newMachine.equipment && 
+          existing.name === newMachine.name && 
           existing.serialNumber === newMachine.serialNumber
       );
       
@@ -269,46 +301,62 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
     return result;
   };
 
+  // These are kept for backward compatibility but not used in the new implementation
   const processPPMRow = (row: any): any => {
-    // This is kept for backward compatibility but not used in the new implementation
     return {
       id: uuidv4(),
-      equipment: row.Equipment_Name || "",
+      name: row.Equipment_Name || "",
       manufacturer: row.Manufacturer || "",
       model: row.Model || "",
       serialNumber: row.Serial_Number || "",
       logNo: row.Log_Number || "",
-      q1: { 
-        date: parseExcelDate(row.Q1_Date) || "", 
-        engineer: row.Q1_Engineer || "" 
+      quarters: {
+        q1: { 
+          date: parseExcelDate(row.Q1_Date) || "", 
+          engineer: row.Q1_Engineer || "" 
+        },
+        q2: { 
+          date: parseExcelDate(row.Q2_Date) || "", 
+          engineer: row.Q2_Engineer || "" 
+        },
+        q3: { 
+          date: parseExcelDate(row.Q3_Date) || "", 
+          engineer: row.Q3_Engineer || "" 
+        },
+        q4: { 
+          date: parseExcelDate(row.Q4_Date) || "", 
+          engineer: row.Q4_Engineer || "" 
+        }
       },
-      q2: { 
-        date: parseExcelDate(row.Q2_Date) || "", 
-        engineer: row.Q2_Engineer || "" 
-      },
-      q3: { 
-        date: parseExcelDate(row.Q3_Date) || "", 
-        engineer: row.Q3_Engineer || "" 
-      },
-      q4: { 
-        date: parseExcelDate(row.Q4_Date) || "", 
-        engineer: row.Q4_Engineer || "" 
-      }
+      lastMaintenanceDate: parseExcelDate(row.Q1_Date) || "",
+      frequency: 'Quarterly'
     };
   };
 
   const processOCMRow = (row: any): any => {
-    // This is kept for backward compatibility but not used in the new implementation
+    const maintenanceDate = parseExcelDate(row['2025_Maintenance_Date']) || "";
+    const nextMaintenanceDate = parseExcelDate(row['2026_Maintenance_Date']) || "";
+    
     return {
       id: uuidv4(),
-      equipment: row.Equipment_Name || "",
+      name: row.Equipment_Name || "",
       manufacturer: row.Manufacturer || "",
       model: row.Model || "",
       serialNumber: row.Serial_Number || "",
       logNo: row.Log_Number || "",
-      maintenanceDate: parseExcelDate(row['2025_Maintenance_Date']) || "",
-      engineer: row['2025_Engineer'] || "",
-      nextMaintenanceDate: parseExcelDate(row['2026_Maintenance_Date']) || ""
+      lastMaintenanceDate: maintenanceDate,
+      nextMaintenanceDate: nextMaintenanceDate,
+      years: {
+        '2025': { 
+          date: maintenanceDate, 
+          engineer: row['2025_Engineer'] || "" 
+        },
+        '2026': { 
+          date: nextMaintenanceDate, 
+          engineer: "" 
+        }
+      },
+      frequency: 'Yearly'
     };
   };
 
