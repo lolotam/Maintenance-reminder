@@ -1,3 +1,4 @@
+
 import React, { useCallback } from "react";
 import * as XLSX from "xlsx";
 import { Machine } from "@/types";
@@ -70,6 +71,14 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
       
       const formattedMachines: Machine[] = parsedData.map(machine => {
         if (type === 'PPM') {
+          // For PPM machines, ensure we're creating quarters object properly
+          const quartersData = {
+            q1: machine.q1 || { date: '', engineer: '' },
+            q2: machine.q2 || { date: '', engineer: '' },
+            q3: machine.q3 || { date: '', engineer: '' },
+            q4: machine.q4 || { date: '', engineer: '' }
+          };
+          
           return {
             id: machine.id,
             name: machine.equipment || '',
@@ -80,12 +89,8 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
             lastMaintenanceDate: machine.q1?.date || '',
             frequency: 'Quarterly',
             equipment: machine.equipment || '',
-            quarters: {
-              q1: machine.q1 || { date: '', engineer: '' },
-              q2: machine.q2 || { date: '', engineer: '' },
-              q3: machine.q3 || { date: '', engineer: '' },
-              q4: machine.q4 || { date: '', engineer: '' }
-            }
+            // Add quarters as a proper object
+            quarters: quartersData
           };
         } else {
           return {
