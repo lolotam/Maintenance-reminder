@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import * as XLSX from "xlsx";
 import { v4 as uuidv4 } from "uuid";
@@ -17,37 +16,6 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
     
     if (missingColumns.length) {
       throw new Error(`Missing required columns: ${missingColumns.join(", ")}`);
-    }
-  };
-
-  const checkDuplicates = (data: any[], existingMachines: Machine[]) => {
-    const uniqueCombinations = new Map<string, boolean>();
-    const duplicates = new Set<string>();
-    
-    data.forEach(row => {
-      const serialNumber = row.Serial_Number || '';
-      const equipmentName = row.Equipment_Name || '';
-      const uniqueKey = `${serialNumber}|${equipmentName}`;
-      
-      if (uniqueCombinations.has(uniqueKey)) {
-        duplicates.add(`${equipmentName} (${serialNumber})`);
-      } else {
-        uniqueCombinations.set(uniqueKey, true);
-      }
-    });
-    
-    existingMachines.forEach(machine => {
-      const serialNumber = machine.serialNumber || '';
-      const equipmentName = machine.name || '';
-      const uniqueKey = `${serialNumber}|${equipmentName}`;
-      
-      if (uniqueCombinations.has(uniqueKey)) {
-        duplicates.add(`${equipmentName} (${serialNumber})`);
-      }
-    });
-    
-    if (duplicates.size > 0) {
-      throw new Error(`Duplicate machines found: ${Array.from(duplicates).join(", ")}`);
     }
   };
 
@@ -75,8 +43,7 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
       validateHeaders(headers, expectedHeaders);
       
       const existingMachines = getExistingMachines();
-      checkDuplicates(data, existingMachines);
-
+      
       let machines: Machine[] = [];
       if (type === 'PPM') {
         machines = data.map(row => processPPMRow(row));
@@ -84,11 +51,12 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
         machines = data.map(row => processOCMRow(row));
       }
 
-      // Now store the processed machines directly in localStorage
+      // Merge new machines with existing ones, replacing duplicates
+      const mergedMachines = mergeMachines(existingMachines, machines);
+      
+      // Store the processed machines in localStorage
       const storageKey = type === 'PPM' ? "ppmMachines" : "ocmMachines";
-      const existingData = JSON.parse(localStorage.getItem(storageKey) || "[]");
-      const combinedData = [...existingData, ...machines];
-      localStorage.setItem(storageKey, JSON.stringify(combinedData));
+      localStorage.setItem(storageKey, JSON.stringify(mergedMachines));
       
       console.log(`Processed ${machines.length} ${type} machines`, machines);
       setParsedData(machines);
@@ -98,6 +66,32 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
       setProcessingError(error.message || "Unknown error processing file");
       setParsedData([]);
     }
+  };
+
+  // Function to merge machines, replacing duplicates based on name and serial number
+  const mergeMachines = (existingMachines: any[], newMachines: any[]) => {
+    const result = [...existingMachines];
+    
+    newMachines.forEach(newMachine => {
+      const existingIndex = result.findIndex(
+        existing => 
+          (existing.equipment && existing.equipment === newMachine.equipment && 
+           existing.serialNumber && existing.serialNumber === newMachine.serialNumber) ||
+          (existing.name && existing.name === newMachine.name && 
+           existing.serialNumber && existing.serialNumber === newMachine.serialNumber)
+      );
+      
+      if (existingIndex >= 0) {
+        // Replace the existing machine with the new one, but keep the same ID
+        result[existingIndex] = { ...newMachine, id: result[existingIndex].id };
+        console.log(`Replaced existing machine: ${newMachine.equipment || newMachine.name} (${newMachine.serialNumber})`);
+      } else {
+        // Add the new machine
+        result.push(newMachine);
+      }
+    });
+    
+    return result;
   };
 
   const processPPMRow = (row: any): any => {
