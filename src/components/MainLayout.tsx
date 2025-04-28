@@ -25,20 +25,28 @@ export function MainLayout({ children }: MainLayoutProps) {
     { icon: Settings, label: "Settings", path: "/settings" },
   ];
 
+  // Sync dark mode with settings and apply class on component mount and when settings change
+  useEffect(() => {
+    setIsDarkMode(settings.enableDarkMode);
+  }, [settings.enableDarkMode]);
+
+  // Apply dark mode class when isDarkMode changes
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
-    updateSettings({
-      ...settings,
-      enableDarkMode: isDarkMode
-    });
-  }, [isDarkMode, settings, updateSettings]);
+  }, [isDarkMode]);
 
   const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
+    const newDarkMode = !isDarkMode;
+    setIsDarkMode(newDarkMode);
+    // Save the setting when toggling from the navbar
+    updateSettings({
+      ...settings,
+      enableDarkMode: newDarkMode
+    });
   };
 
   return (

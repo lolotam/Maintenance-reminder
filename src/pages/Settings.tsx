@@ -16,7 +16,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 const Settings = () => {
   const { settings, updateSettings } = useAppContext();
   const [email, setEmail] = useState(settings.defaultEmail || "");
-  const [isDarkMode, setIsDarkMode] = useState(settings.enableDarkMode);
+  const [isDarkMode, setIsDarkMode] = useState(settings.enableDarkMode || false);
   const [reminderDays, setReminderDays] = useState<number[]>(settings.defaultReminderDays || []);
   const [emailVerificationStatus, setEmailVerificationStatus] = useState<string | null>(null);
   const [desktopNotifications, setDesktopNotifications] = useState(false);
@@ -29,6 +29,16 @@ const Settings = () => {
   const [smsVerificationStatus, setSmsVerificationStatus] = useState<string | null>(null);
 
   const { requestPermission } = useNotifications();
+
+  // Set initial dark mode on component mount
+  useEffect(() => {
+    // Apply the current dark mode setting from app context
+    if (settings.enableDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [settings.enableDarkMode]);
 
   // Load notification permission status on component mount only
   useEffect(() => {

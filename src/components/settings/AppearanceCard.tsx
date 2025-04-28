@@ -23,6 +23,16 @@ export const AppearanceCard = ({
     }
   }, [isDarkMode]);
 
+  const handleToggleDarkMode = (checked: boolean) => {
+    setIsDarkMode(checked);
+    // Ensure the class is immediately applied
+    if (checked) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -42,7 +52,7 @@ export const AppearanceCard = ({
           <Switch
             id="dark-mode"
             checked={isDarkMode}
-            onCheckedChange={setIsDarkMode}
+            onCheckedChange={handleToggleDarkMode}
           />
         </div>
       </CardContent>
