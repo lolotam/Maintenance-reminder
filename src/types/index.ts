@@ -21,6 +21,8 @@ export interface Machine {
     '2026'?: { date: string; engineer: string };
   };
   equipment?: string;
+  engineer?: string;
+  maintenanceDate?: string; // Adding for OCM compatibility
 }
 
 export interface NotificationSettings {

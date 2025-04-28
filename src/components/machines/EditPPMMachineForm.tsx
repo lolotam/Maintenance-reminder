@@ -100,7 +100,7 @@ export function EditPPMMachineForm({ machine, onSave, onCancel }: EditPPMMachine
           />
           <FormField
             control={form.control}
-            name="serialNumber"
+            name="Serial_Number"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Serial Number</FormLabel>
