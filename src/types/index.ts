@@ -8,7 +8,7 @@ export interface Machine {
   notificationSettings?: NotificationSettings;
   manufacturer?: string;
   model?: string;
-  serialNumber?: string;
+  Serial_Number?: string;
   logNo?: string;
   quarters?: {
     q1: { date: string; engineer: string };
@@ -20,6 +20,7 @@ export interface Machine {
     '2025'?: { date: string; engineer: string };
     '2026'?: { date: string; engineer: string };
   };
+  equipment?: string;
 }
 
 export interface NotificationSettings {

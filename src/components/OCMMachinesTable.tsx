@@ -15,7 +15,7 @@ const mockOCMMachines: OCMMachine[] = [
     id: "1",
     equipment: "CT Scanner",
     model: "Revolution CT",
-    serialNumber: "CT123456",
+    Serial_Number: "CT123456",
     manufacturer: "GE Healthcare",
     logNo: "LG101",
     maintenanceDate: "2025-04-15",
@@ -24,7 +24,7 @@ const mockOCMMachines: OCMMachine[] = [
     id: "2",
     equipment: "MRI",
     model: "Magnetom Sola",
-    serialNumber: "MR789012",
+    Serial_Number: "MR789012",
     manufacturer: "Siemens",
     logNo: "LG102",
     maintenanceDate: "2025-07-20",
@@ -62,7 +62,7 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
     const matchesModelFilter = !filters.model || 
       safeIncludes(machine.model, filters.model);
     const matchesSerialFilter = !filters.serialNumber || 
-      safeIncludes(machine.serialNumber, filters.serialNumber);
+      safeIncludes(machine.Serial_Number, filters.serialNumber);
     const matchesManufacturerFilter = !filters.manufacturer || 
       safeIncludes(machine.manufacturer, filters.manufacturer);
     const matchesLogNoFilter = !filters.logNo || 

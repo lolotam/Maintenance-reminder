@@ -1,3 +1,4 @@
+
 import React, { useCallback } from "react";
 import * as XLSX from "xlsx";
 import { Machine } from "@/types";
@@ -84,7 +85,8 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
               q2: machine.q2 || { date: '', engineer: '' },
               q3: machine.q3 || { date: '', engineer: '' },
               q4: machine.q4 || { date: '', engineer: '' }
-            }
+            },
+            equipment: machine.equipment || ''
           };
         } else {
           return {
@@ -97,6 +99,7 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
             lastMaintenanceDate: machine.maintenanceDate || '',
             nextMaintenanceDate: machine.nextMaintenanceDate || '',
             frequency: 'Yearly',
+            equipment: machine.equipment || ''
           };
         }
       });

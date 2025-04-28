@@ -15,7 +15,7 @@ const mockPPMMachines: PPMMachine[] = [
     id: "1",
     equipment: "Ventilator",
     model: "PB840",
-    serialNumber: "V123456",
+    Serial_Number: "V123456",
     manufacturer: "Puritan Bennett",
     logNo: "LG001",
     q1: { date: "2025-03-15", engineer: "John Smith" },
@@ -27,7 +27,7 @@ const mockPPMMachines: PPMMachine[] = [
     id: "2",
     equipment: "Patient Monitor",
     model: "IntelliVue MX450",
-    serialNumber: "PM789012",
+    Serial_Number: "PM789012",
     manufacturer: "Philips",
     logNo: "LG002",
     q1: { date: "2025-02-20", engineer: "John Smith" },
@@ -68,7 +68,7 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
     const matchesModelFilter = !filters.model || 
       safeIncludes(machine.model, filters.model);
     const matchesSerialFilter = !filters.serialNumber || 
-      safeIncludes(machine.serialNumber, filters.serialNumber);
+      safeIncludes(machine.Serial_Number, filters.serialNumber);
     const matchesManufacturerFilter = !filters.manufacturer || 
       safeIncludes(machine.manufacturer, filters.manufacturer);
     const matchesLogNoFilter = !filters.logNo || 

@@ -10,7 +10,7 @@ import * as z from "zod";
 const formSchema = z.object({
   equipment: z.string().min(1, "Equipment name is required"),
   model: z.string().min(1, "Model is required"),
-  serialNumber: z.string().min(1, "Serial number is required"),
+  Serial_Number: z.string().min(1, "Serial number is required"),
   manufacturer: z.string().min(1, "Manufacturer is required"),
   logNo: z.string().min(1, "Log number is required"),
   q1_date: z.string().min(1, "Q1 date is required"),
@@ -37,7 +37,7 @@ export function EditPPMMachineForm({ machine, onSave, onCancel }: EditPPMMachine
     defaultValues: machine ? {
       equipment: machine.equipment,
       model: machine.model,
-      serialNumber: machine.serialNumber,
+      Serial_Number: machine.Serial_Number,
       manufacturer: machine.manufacturer,
       logNo: machine.logNo,
       q1_date: machine.q1.date,
@@ -58,7 +58,7 @@ export function EditPPMMachineForm({ machine, onSave, onCancel }: EditPPMMachine
       ...machine,
       equipment: data.equipment,
       model: data.model,
-      serialNumber: data.serialNumber,
+      Serial_Number: data.Serial_Number,
       manufacturer: data.manufacturer,
       logNo: data.logNo,
       q1: { date: data.q1_date, engineer: data.q1_engineer },
