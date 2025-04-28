@@ -1,11 +1,10 @@
 
 import { useState } from 'react';
 import { toast } from "sonner";
-import { useSupabaseClient } from '@supabase/auth-helpers-react';
+import { supabase } from "@/integrations/supabase/client"; // Direct import of the Supabase client
 
 export const useWhatsappVerification = () => {
   const [verifying, setVerifying] = useState(false);
-  const supabase = useSupabaseClient();
 
   const sendVerification = async (phoneNumber: string) => {
     if (!phoneNumber) {
