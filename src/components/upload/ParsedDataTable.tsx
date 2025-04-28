@@ -22,6 +22,10 @@ interface ParsedDataTableProps {
 export function ParsedDataTable({ data, onSave }: ParsedDataTableProps) {
   if (data.length === 0) return null;
 
+  // Determine if we're dealing with PPM or OCM machines
+  // Check if the first machine has quarters property which would indicate a PPM machine
+  const isPPM = data[0].quarters !== undefined;
+
   return (
     <Card className="overflow-hidden">
       <div className="p-4 bg-muted flex items-center justify-between">
@@ -42,7 +46,7 @@ export function ParsedDataTable({ data, onSave }: ParsedDataTableProps) {
               <TableHead>Model</TableHead>
               <TableHead>Serial Number</TableHead>
               <TableHead>Manufacturer</TableHead>
-              {data[0].q1 ? (
+              {isPPM ? (
                 <>
                   <TableHead>Q1 Date</TableHead>
                   <TableHead>Q2 Date</TableHead>
@@ -60,12 +64,9 @@ export function ParsedDataTable({ data, onSave }: ParsedDataTableProps) {
           </TableHeader>
           <TableBody>
             {data.map((machine) => {
-              // Check if this is a PPM or OCM machine
-              const isPPM = 'q1' in machine;
-              
               return (
                 <TableRow key={machine.id}>
-                  <TableCell className="font-medium">{machine.equipment}</TableCell>
+                  <TableCell className="font-medium">{machine.name || "N/A"}</TableCell>
                   <TableCell>{machine.model || "N/A"}</TableCell>
                   <TableCell>{machine.serialNumber || "N/A"}</TableCell>
                   <TableCell>{machine.manufacturer || "N/A"}</TableCell>
@@ -73,34 +74,34 @@ export function ParsedDataTable({ data, onSave }: ParsedDataTableProps) {
                   {isPPM ? (
                     <>
                       <TableCell>
-                        {machine.q1?.date && isValid(new Date(machine.q1.date)) 
-                          ? format(new Date(machine.q1.date), "MMM d, yyyy") 
+                        {machine.quarters?.q1?.date && isValid(new Date(machine.quarters.q1.date)) 
+                          ? format(new Date(machine.quarters.q1.date), "MMM d, yyyy") 
                           : "N/A"}
                       </TableCell>
                       <TableCell>
-                        {machine.q2?.date && isValid(new Date(machine.q2.date)) 
-                          ? format(new Date(machine.q2.date), "MMM d, yyyy") 
+                        {machine.quarters?.q2?.date && isValid(new Date(machine.quarters.q2.date)) 
+                          ? format(new Date(machine.quarters.q2.date), "MMM d, yyyy") 
                           : "N/A"}
                       </TableCell>
                       <TableCell>
-                        {machine.q3?.date && isValid(new Date(machine.q3.date)) 
-                          ? format(new Date(machine.q3.date), "MMM d, yyyy") 
+                        {machine.quarters?.q3?.date && isValid(new Date(machine.quarters.q3.date)) 
+                          ? format(new Date(machine.quarters.q3.date), "MMM d, yyyy") 
                           : "N/A"}
                       </TableCell>
                       <TableCell>
-                        {machine.q4?.date && isValid(new Date(machine.q4.date)) 
-                          ? format(new Date(machine.q4.date), "MMM d, yyyy") 
+                        {machine.quarters?.q4?.date && isValid(new Date(machine.quarters.q4.date)) 
+                          ? format(new Date(machine.quarters.q4.date), "MMM d, yyyy") 
                           : "N/A"}
                       </TableCell>
                     </>
                   ) : (
                     <>
                       <TableCell>
-                        {machine.maintenanceDate && isValid(new Date(machine.maintenanceDate)) 
-                          ? format(new Date(machine.maintenanceDate), "MMM d, yyyy") 
+                        {machine.lastMaintenanceDate && isValid(new Date(machine.lastMaintenanceDate)) 
+                          ? format(new Date(machine.lastMaintenanceDate), "MMM d, yyyy") 
                           : "N/A"}
                       </TableCell>
-                      <TableCell>{machine.engineer || "N/A"}</TableCell>
+                      <TableCell>{machine.quarters?.q1?.engineer || "N/A"}</TableCell>
                       <TableCell>
                         {machine.nextMaintenanceDate && isValid(new Date(machine.nextMaintenanceDate)) 
                           ? format(new Date(machine.nextMaintenanceDate), "MMM d, yyyy") 

@@ -70,7 +70,42 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
   const saveToApplication = () => {
     try {
       console.log("Saving data to application:", parsedData);
-      onDataReady(parsedData);
+      
+      // Transform data to match Machine type before passing to onDataReady
+      const formattedMachines: Machine[] = parsedData.map(machine => {
+        if (type === 'PPM') {
+          return {
+            id: machine.id,
+            name: machine.equipment || '',
+            manufacturer: machine.manufacturer || '',
+            model: machine.model || '',
+            serialNumber: machine.serialNumber || '',
+            logNo: machine.logNo || '',
+            lastMaintenanceDate: machine.q1?.date || '',
+            frequency: 'Quarterly',
+            quarters: {
+              q1: machine.q1 || { date: '', engineer: '' },
+              q2: machine.q2 || { date: '', engineer: '' },
+              q3: machine.q3 || { date: '', engineer: '' },
+              q4: machine.q4 || { date: '', engineer: '' }
+            }
+          };
+        } else {
+          return {
+            id: machine.id,
+            name: machine.equipment || '',
+            manufacturer: machine.manufacturer || '',
+            model: machine.model || '',
+            serialNumber: machine.serialNumber || '',
+            logNo: machine.logNo || '',
+            lastMaintenanceDate: machine.maintenanceDate || '',
+            nextMaintenanceDate: machine.nextMaintenanceDate || '',
+            frequency: 'Yearly',
+          };
+        }
+      });
+      
+      onDataReady(formattedMachines);
     } catch (error: any) {
       console.error("Error saving data:", error);
       setProcessingError(error.message || "Error saving data");
