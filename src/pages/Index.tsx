@@ -7,6 +7,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { DashboardStats } from "@/components/dashboard/DashboardStats";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { MachinesList } from "@/components/dashboard/MachinesList";
+import { Clock } from "@/components/dashboard/Clock";
 
 const Dashboard = () => {
   const { markMachineComplete, filteredMachines, getAllMachines, countMachinesByType } = useAppContext();
@@ -103,11 +104,14 @@ const Dashboard = () => {
   return (
     <MainLayout>
       <div className="space-y-8 animate-fade-in">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight mb-2">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Monitor and manage your machine maintenance schedule
-          </p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight mb-2">Dashboard</h1>
+            <p className="text-muted-foreground">
+              Monitor and manage your machine maintenance schedule
+            </p>
+          </div>
+          <Clock />
         </div>
 
         <DashboardStats 
