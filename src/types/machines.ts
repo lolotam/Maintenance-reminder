@@ -1,10 +1,8 @@
-
 export interface BaseMachine {
   id: string;
   equipment: string;
   model: string;
-  serialNumber: string;
-  manufacturer: string;
+  Serial_Number: string;
   logNo: string;
 }
 

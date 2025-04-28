@@ -1,4 +1,3 @@
-
 import React, { useCallback } from "react";
 import * as XLSX from "xlsx";
 import { Machine } from "@/types";
@@ -48,11 +47,9 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         
-        // Raw parsing of Excel data
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: false, defval: "" });
         console.log("Raw imported data:", jsonData);
         
-        // Log the headers to debug
         if (jsonData.length > 0) {
           console.log("Excel headers:", Object.keys(jsonData[0]));
         }
@@ -71,7 +68,6 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
     try {
       console.log("Saving data to application:", parsedData);
       
-      // Transform data to match Machine type before passing to onDataReady
       const formattedMachines: Machine[] = parsedData.map(machine => {
         if (type === 'PPM') {
           return {
@@ -79,7 +75,7 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
             name: machine.equipment || '',
             manufacturer: machine.manufacturer || '',
             model: machine.model || '',
-            serialNumber: machine.serialNumber || '',
+            Serial_Number: machine.Serial_Number || '',
             logNo: machine.logNo || '',
             lastMaintenanceDate: machine.q1?.date || '',
             frequency: 'Quarterly',
@@ -96,7 +92,7 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
             name: machine.equipment || '',
             manufacturer: machine.manufacturer || '',
             model: machine.model || '',
-            serialNumber: machine.serialNumber || '',
+            Serial_Number: machine.Serial_Number || '',
             logNo: machine.logNo || '',
             lastMaintenanceDate: machine.maintenanceDate || '',
             nextMaintenanceDate: machine.nextMaintenanceDate || '',
