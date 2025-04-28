@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import * as XLSX from "xlsx";
 import { v4 as uuidv4 } from "uuid";
@@ -79,7 +80,7 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
     const normalized: any = {};
     
     Object.entries(row).forEach(([key, value]) => {
-      const normalizedKey = key.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+      const normalizedKey = key.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
       normalized[normalizedKey] = value;
     });
     

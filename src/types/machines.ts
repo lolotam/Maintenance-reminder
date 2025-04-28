@@ -2,22 +2,23 @@
 export interface BaseMachine {
   id: string;
   equipment: string;
-  model: string;
-  serialNumber: string;
-  manufacturer: string;
-  logNo: string;
+  model?: string;
+  serialNumber?: string;
+  manufacturer?: string;
+  logNo?: string;
 }
 
 export interface OCMMachine extends BaseMachine {
-  maintenanceDate: string | Date;
+  maintenanceDate?: string | Date;
   engineer?: string;
+  nextMaintenanceDate?: string | Date;
 }
 
 export interface PPMMachine extends BaseMachine {
-  q1: { date: string; engineer: string };
-  q2: { date: string; engineer: string };
-  q3: { date: string; engineer: string };
-  q4: { date: string; engineer: string };
+  q1?: { date?: string; engineer?: string };
+  q2?: { date?: string; engineer?: string };
+  q3?: { date?: string; engineer?: string };
+  q4?: { date?: string; engineer?: string };
 }
 
 export interface MachineTableProps {

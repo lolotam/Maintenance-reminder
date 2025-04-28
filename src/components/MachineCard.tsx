@@ -78,7 +78,7 @@ export function MachineCard({ machine, onMarkComplete }: MachineCardProps) {
       if (!date) return "Invalid date";
       return format(date, "MMM d, yyyy");
     } catch (error) {
-      console.error("Error formatting date:", error, dateString);
+      console.error("Error formatting date:", error);
       return "Invalid date";
     }
   };
