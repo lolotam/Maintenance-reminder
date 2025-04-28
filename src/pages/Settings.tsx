@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
 import { EmailNotificationCard } from "@/components/settings/EmailNotificationCard";
-import { WhatsAppNotificationCard } from "@/components/settings/WhatsAppNotificationCard";
+import { MessageNotificationCard } from "@/components/settings/MessageNotificationCard";
 import { DesktopNotificationCard } from "@/components/settings/DesktopNotificationCard";
 import { ReminderDaysCard } from "@/components/settings/ReminderDaysCard";
 import { AppearanceCard } from "@/components/settings/AppearanceCard";
@@ -24,6 +24,9 @@ const Settings = () => {
   const [whatsappEnabled, setWhatsappEnabled] = useState(settings.whatsappEnabled || false);
   const [whatsappNumber, setWhatsappNumber] = useState(settings.whatsappNumber || "");
   const [whatsappVerificationStatus, setWhatsappVerificationStatus] = useState<string | null>(null);
+  const [smsEnabled, setSmsEnabled] = useState(settings.smsEnabled || false);
+  const [smsNumber, setSmsNumber] = useState(settings.smsNumber || "");
+  const [smsVerificationStatus, setSmsVerificationStatus] = useState<string | null>(null);
 
   const { requestPermission } = useNotifications();
 
@@ -51,6 +54,8 @@ const Settings = () => {
       defaultReminderDays: reminderDays.sort((a, b) => a - b),
       whatsappEnabled,
       whatsappNumber,
+      smsEnabled,
+      smsNumber,
     });
 
     if (email) {
@@ -66,6 +71,13 @@ const Settings = () => {
       setTimeout(() => {
         setWhatsappVerificationStatus("success");
       }, 1800);
+    }
+
+    if (smsEnabled && smsNumber) {
+      setSmsVerificationStatus("verifying");
+      setTimeout(() => {
+        setSmsVerificationStatus("success");
+      }, 1600);
     }
 
     if (desktopNotifications && notificationPermission !== "granted") {
@@ -104,12 +116,17 @@ const Settings = () => {
               emailVerificationStatus={emailVerificationStatus}
             />
             
-            <WhatsAppNotificationCard
+            <MessageNotificationCard
               whatsappEnabled={whatsappEnabled}
               setWhatsappEnabled={setWhatsappEnabled}
               whatsappNumber={whatsappNumber}
               setWhatsappNumber={setWhatsappNumber}
               whatsappVerificationStatus={whatsappVerificationStatus}
+              smsEnabled={smsEnabled}
+              setSmsEnabled={setSmsEnabled}
+              smsNumber={smsNumber}
+              setSmsNumber={setSmsNumber}
+              smsVerificationStatus={smsVerificationStatus}
             />
 
             <DesktopNotificationCard

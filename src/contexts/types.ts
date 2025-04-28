@@ -7,6 +7,8 @@ export interface Settings {
   defaultReminderDays: number[];
   whatsappEnabled: boolean;
   whatsappNumber: string;
+  smsEnabled?: boolean;
+  smsNumber?: string;
 }
 
 export interface AppContextType {
@@ -28,4 +30,6 @@ export const defaultSettings: Settings = {
   defaultReminderDays: [7, 3, 1],
   whatsappEnabled: false,
   whatsappNumber: "",
+  smsEnabled: false,
+  smsNumber: "",
 };
