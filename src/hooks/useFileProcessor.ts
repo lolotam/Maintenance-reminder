@@ -5,24 +5,21 @@ import { v4 as uuidv4 } from "uuid";
 import { Machine } from "@/types";
 import { parseExcelDate } from "@/utils/dateUtils";
 import { PPM_HEADERS, OCM_HEADERS } from "@/utils/excelTemplates";
-import { toast } from "sonner";
 
 export const useFileProcessor = (type: 'PPM' | 'OCM') => {
   const [parsedData, setParsedData] = useState<Machine[]>([]);
   const [processingError, setProcessingError] = useState<string | null>(null);
 
   const validateHeaders = (headers: string[], expectedHeaders: string[]) => {
-    const normalizedHeaders = headers.map(h => 
-      h.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '')
-    );
+    const normalizedHeaders = headers.map(h => h.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, ''));
+    const normalizedExpected = expectedHeaders.map(h => h.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, ''));
     
-    const missingColumns = expectedHeaders.filter(expected => 
-      !normalizedHeaders.some(header => header === expected)
+    const missingColumns = normalizedExpected.filter(expected => 
+      !normalizedHeaders.some(header => header.toLowerCase() === expected.toLowerCase())
     );
     
     if (missingColumns.length) {
-      const errorMessage = `Invalid headers in your Excel file.\n\nMissing or incorrect columns:\n${missingColumns.join(", ")}\n\nRequired headers:\n${expectedHeaders.join(", ")}`;
-      throw new Error(errorMessage);
+      throw new Error(`Missing required columns: ${missingColumns.join(", ")}`);
     }
     
     return normalizedHeaders;
@@ -49,6 +46,7 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
       const headers = Object.keys(data[0]);
       const expectedHeaders = type === 'PPM' ? PPM_HEADERS : OCM_HEADERS;
 
+      // Validate and normalize headers
       validateHeaders(headers, expectedHeaders);
       
       const existingMachines = getExistingMachines();
@@ -60,6 +58,7 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
         machines = data.map(row => processOCMRow(normalizeRowData(row)));
       }
 
+      // Merge new machines with existing ones, replacing duplicates
       const mergedMachines = mergeMachines(existingMachines, machines);
       
       const storageKey = type === 'PPM' ? "ppmMachines" : "ocmMachines";
@@ -72,7 +71,6 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
       console.error("Error processing file:", error);
       setProcessingError(error.message || "Unknown error processing file");
       setParsedData([]);
-      toast.error(error.message || "Error processing file");
     }
   };
 
@@ -80,7 +78,8 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
     const normalized: any = {};
     
     Object.entries(row).forEach(([key, value]) => {
-      const normalizedKey = key.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+      // Normalize the key by replacing spaces with underscores and removing special characters
+      const normalizedKey = key.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
       normalized[normalizedKey] = value;
     });
     

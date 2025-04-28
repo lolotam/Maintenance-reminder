@@ -20,19 +20,7 @@ interface ParsedDataTableProps {
 }
 
 export function ParsedDataTable({ data, onSave }: ParsedDataTableProps) {
-  if (!data || data.length === 0) return null;
-
-  const formatDate = (dateStr: string | undefined | null) => {
-    if (!dateStr) return "N/A";
-    
-    try {
-      const date = new Date(dateStr);
-      return isValid(date) ? format(date, "MMM d, yyyy") : "N/A";
-    } catch (error) {
-      console.error("Error formatting date:", error);
-      return "N/A";
-    }
-  };
+  if (data.length === 0) return null;
 
   return (
     <Card className="overflow-hidden">
@@ -57,14 +45,19 @@ export function ParsedDataTable({ data, onSave }: ParsedDataTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map((machine) => (
-              <TableRow key={machine.id}>
-                <TableCell className="font-medium">{machine.name}</TableCell>
-                <TableCell>{formatDate(machine.lastMaintenanceDate)}</TableCell>
-                <TableCell>{machine.frequency}</TableCell>
-                <TableCell>{formatDate(machine.nextMaintenanceDate)}</TableCell>
-              </TableRow>
-            ))}
+            {data.map((machine) => {
+              const lastDate = new Date(machine.lastMaintenanceDate);
+              const nextDate = machine.nextMaintenanceDate ? new Date(machine.nextMaintenanceDate) : null;
+              
+              return (
+                <TableRow key={machine.id}>
+                  <TableCell className="font-medium">{machine.name}</TableCell>
+                  <TableCell>{isValid(lastDate) ? format(lastDate, "MMM d, yyyy") : "N/A"}</TableCell>
+                  <TableCell>{machine.frequency}</TableCell>
+                  <TableCell>{nextDate && isValid(nextDate) ? format(nextDate, "MMM d, yyyy") : "N/A"}</TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>

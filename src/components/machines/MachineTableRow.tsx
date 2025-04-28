@@ -26,29 +26,21 @@ export function MachineTableRow({
   onEdit,
   onDelete
 }: MachineTableRowProps) {
-  const formatDate = (dateString: string | Date | undefined) => {
+  const formatDate = (dateString: string | Date) => {
     if (!dateString) return "";
-    try {
-      const parsedDate = new Date(dateString);
-      if (isNaN(parsedDate.getTime())) return "";
-      return format(parsedDate, 'dd/MM/yyyy');
-    } catch (error) {
-      console.error("Error formatting date:", error);
-      return "";
-    }
+    const parsedDate = new Date(dateString);
+    return format(parsedDate, 'dd/MM/yyyy');
   };
 
-  const isDueSoon = (dateString: string | undefined) => {
+  const isDueSoon = (dateString: string) => {
     if (!dateString) return false;
     try {
       const today = new Date();
       const dueDate = new Date(dateString);
-      if (isNaN(dueDate.getTime())) return false;
       const diffTime = dueDate.getTime() - today.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       return diffDays >= 0 && diffDays <= 7;
     } catch (error) {
-      console.error("Error checking due date:", error);
       return false;
     }
   };
@@ -64,13 +56,16 @@ export function MachineTableRow({
           />
         </TableCell>
         <TableCell>{machine.equipment}</TableCell>
-        <TableCell>{`${machine.model || '-'} - ${machine.serialNumber || '-'}`}</TableCell>
+        <TableCell>{`${machine.model} - ${machine.serialNumber}`}</TableCell>
         <TableCell>{machine.manufacturer}</TableCell>
         <TableCell>{machine.logNo}</TableCell>
         <TableCell>{formatDate(ocmMachine.maintenanceDate)}</TableCell>
         <TableCell>{ocmMachine.engineer || "-"}</TableCell>
         <TableCell>
-          {formatDate(ocmMachine.nextMaintenanceDate)}
+          {formatDate(new Date(
+            // Create a new Date object from the maintenance date string before using setFullYear
+            new Date(ocmMachine.maintenanceDate).setFullYear(2026)
+          ))}
         </TableCell>
         <TableCell>
           <MachineActions
@@ -94,25 +89,25 @@ export function MachineTableRow({
         />
       </TableCell>
       <TableCell>{machine.equipment}</TableCell>
-      <TableCell>{`${machine.model || '-'} - ${machine.serialNumber || '-'}`}</TableCell>
+      <TableCell>{`${machine.model} - ${machine.serialNumber}`}</TableCell>
       <TableCell>{machine.manufacturer}</TableCell>
       <TableCell>{machine.logNo}</TableCell>
-      <TableCell className={isDueSoon(ppmMachine.q1?.date) ? "text-amber-600 font-medium" : ""}>
-        {formatDate(ppmMachine.q1?.date)}
+      <TableCell className={isDueSoon(ppmMachine.q1.date) ? "text-amber-600 font-medium" : ""}>
+        {formatDate(ppmMachine.q1.date)}
       </TableCell>
-      <TableCell>{ppmMachine.q1?.engineer || ""}</TableCell>
-      <TableCell className={isDueSoon(ppmMachine.q2?.date) ? "text-amber-600 font-medium" : ""}>
-        {formatDate(ppmMachine.q2?.date)}
+      <TableCell>{ppmMachine.q1.engineer}</TableCell>
+      <TableCell className={isDueSoon(ppmMachine.q2.date) ? "text-amber-600 font-medium" : ""}>
+        {formatDate(ppmMachine.q2.date)}
       </TableCell>
-      <TableCell>{ppmMachine.q2?.engineer || ""}</TableCell>
-      <TableCell className={isDueSoon(ppmMachine.q3?.date) ? "text-amber-600 font-medium" : ""}>
-        {formatDate(ppmMachine.q3?.date)}
+      <TableCell>{ppmMachine.q2.engineer}</TableCell>
+      <TableCell className={isDueSoon(ppmMachine.q3.date) ? "text-amber-600 font-medium" : ""}>
+        {formatDate(ppmMachine.q3.date)}
       </TableCell>
-      <TableCell>{ppmMachine.q3?.engineer || ""}</TableCell>
-      <TableCell className={isDueSoon(ppmMachine.q4?.date) ? "text-amber-600 font-medium" : ""}>
-        {formatDate(ppmMachine.q4?.date)}
+      <TableCell>{ppmMachine.q3.engineer}</TableCell>
+      <TableCell className={isDueSoon(ppmMachine.q4.date) ? "text-amber-600 font-medium" : ""}>
+        {formatDate(ppmMachine.q4.date)}
       </TableCell>
-      <TableCell>{ppmMachine.q4?.engineer || ""}</TableCell>
+      <TableCell>{ppmMachine.q4.engineer}</TableCell>
       <TableCell>
         <MachineActions
           onReminder={onReminder}
