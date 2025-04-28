@@ -1,9 +1,8 @@
-
 import { MainLayout } from "@/components/MainLayout";
 import { OCMMachinesTable } from "@/components/OCMMachinesTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Trash2, Upload } from "lucide-react";
+import { Search, Trash2, Upload, Download } from "lucide-react";
 import { useState } from "react";
 import { AddMachineDialog } from "@/components/AddMachineDialog";
 import { Button } from "@/components/ui/button";
@@ -26,7 +25,6 @@ const OCMMachines = () => {
     try {
       console.log("Adding new OCM machine:", machineData);
       
-      // Calculate 2026 date based on 2025 date if not provided
       let maintenance2026Date = machineData.maintenance2026?.date;
       if (!maintenance2026Date && machineData.maintenance2025?.date) {
         const date2025 = new Date(machineData.maintenance2025.date);
@@ -115,6 +113,16 @@ const OCMMachines = () => {
             />
           </div>
           <div className="flex gap-2 items-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => downloadTemplate('OCM')}
+              className="flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Download Template
+            </Button>
+            
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="outline" size="sm" className="flex items-center gap-2">
