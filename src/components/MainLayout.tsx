@@ -16,7 +16,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   const location = useLocation();
   const isMobile = useIsMobile();
   const { settings, updateSettings } = useAppContext();
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(settings.enableDarkMode || false);
   
   const navItems = [
     { icon: Home, label: "Dashboard", path: "/" },

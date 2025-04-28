@@ -3,6 +3,7 @@ import { Moon } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect } from "react";
 
 interface AppearanceCardProps {
   isDarkMode: boolean;
@@ -13,6 +14,15 @@ export const AppearanceCard = ({
   isDarkMode,
   setIsDarkMode,
 }: AppearanceCardProps) => {
+  useEffect(() => {
+    // Update the document class when dark mode changes
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
   return (
     <Card>
       <CardHeader>

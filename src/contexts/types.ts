@@ -1,4 +1,3 @@
-
 import { Machine } from "@/types";
 
 export interface Settings {
@@ -26,7 +25,7 @@ export interface AppContextType {
 
 export const defaultSettings: Settings = {
   defaultEmail: "",
-  enableDarkMode: false,
+  enableDarkMode: false, // Set default to false for light mode
   defaultReminderDays: [7, 3, 1],
   whatsappEnabled: false,
   whatsappNumber: "",
