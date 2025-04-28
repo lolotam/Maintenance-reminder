@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import * as XLSX from "xlsx";
 import { v4 as uuidv4 } from "uuid";
@@ -11,20 +10,13 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
   const [parsedData, setParsedData] = useState<Machine[]>([]);
   const [processingError, setProcessingError] = useState<string | null>(null);
 
-  const cleanHeaderName = (header: string): string => {
-    // Remove invisible Unicode characters, trim spaces, and normalize spaces/underscores
-    return header
-      .trim()
-      .replace(/\s+/g, '_')
-      .replace(/[^a-zA-Z0-9_]/g, '');
-  };
-
-  const validateHeaders = (worksheetHeaders: string[], expectedHeaders: string[]) => {
-    const cleanedHeaders = worksheetHeaders.map(cleanHeaderName);
+  const validateHeaders = (headers: string[], expectedHeaders: string[]) => {
+    const normalizedHeaders = headers.map(h => 
+      h.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '')
+    );
     
-    // Check for missing required columns
     const missingColumns = expectedHeaders.filter(expected => 
-      !cleanedHeaders.some(header => header === expected)
+      !normalizedHeaders.some(header => header === expected)
     );
     
     if (missingColumns.length) {
@@ -32,16 +24,7 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
       throw new Error(errorMessage);
     }
     
-    return {
-      cleanedHeaders,
-      // Create mapping from column index to expected header name
-      headerIndexMap: cleanedHeaders.reduce((map, header, index) => {
-        if (expectedHeaders.includes(header)) {
-          map[header] = index;
-        }
-        return map;
-      }, {} as Record<string, number>)
-    };
+    return normalizedHeaders;
   };
 
   const getExistingMachines = () => {
@@ -55,41 +38,27 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
     }
   };
 
-  const processFileData = (data: any[], worksheetData: XLSX.Sheet) => {
+  const processFileData = (data: any[]) => {
     try {
       if (!data || !data.length) {
         throw new Error("No data found in file");
       }
 
-      console.log("Raw Excel data:", data);
-      
-      // Get the headers from the worksheet directly to preserve precise column order
-      const range = XLSX.utils.decode_range(worksheetData['!ref'] || "A1");
-      const headerRow: string[] = [];
-      
-      for (let c = range.s.c; c <= range.e.c; c++) {
-        const cellAddress = XLSX.utils.encode_cell({ r: range.s.r, c });
-        const cell = worksheetData[cellAddress];
-        headerRow.push(cell ? String(cell.v) : "");
-      }
-      
-      console.log("Extracted header row:", headerRow);
-      
+      console.log("Processing file data:", data);
+      const headers = Object.keys(data[0]);
       const expectedHeaders = type === 'PPM' ? PPM_HEADERS : OCM_HEADERS;
-      const { headerIndexMap } = validateHeaders(headerRow, expectedHeaders);
-      
-      console.log("Header to index mapping:", headerIndexMap);
+
+      validateHeaders(headers, expectedHeaders);
       
       const existingMachines = getExistingMachines();
       
-      // Process the data directly from worksheet using indexes instead of object keys
       let machines: Machine[] = [];
       if (type === 'PPM') {
-        machines = processPPMDataByIndex(worksheetData, headerIndexMap, range);
+        machines = data.map(row => processPPMRow(normalizeRowData(row)));
       } else {
-        machines = processOCMDataByIndex(worksheetData, headerIndexMap, range);
+        machines = data.map(row => processOCMRow(normalizeRowData(row)));
       }
-      
+
       const mergedMachines = mergeMachines(existingMachines, machines);
       
       const storageKey = type === 'PPM' ? "ppmMachines" : "ocmMachines";
@@ -106,103 +75,6 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
     }
   };
 
-  const processPPMDataByIndex = (
-    worksheet: XLSX.Sheet, 
-    headerMap: Record<string, number>, 
-    range: XLSX.Range
-  ): Machine[] => {
-    const result: Machine[] = [];
-    
-    // Start from row 1 (skip header row 0)
-    for (let r = range.s.r + 1; r <= range.e.r; r++) {
-      const machine: any = { id: uuidv4() };
-      
-      // Process each expected column using its index from the headerMap
-      const getCellValue = (header: string) => {
-        const index = headerMap[header];
-        if (index === undefined) return "";
-        
-        const cellAddress = XLSX.utils.encode_cell({ r, c: index });
-        const cell = worksheet[cellAddress];
-        return cell ? cell.v : "";
-      };
-      
-      machine.equipment = getCellValue('Equipment_Name') || "";
-      machine.manufacturer = getCellValue('Manufacturer') || "";
-      machine.model = getCellValue('Model') || "";
-      machine.serialNumber = getCellValue('Serial_Number') || "";
-      machine.logNo = getCellValue('Log_Number') || "";
-      
-      machine.q1 = { 
-        date: parseExcelDate(getCellValue('Q1_Date')) || "", 
-        engineer: getCellValue('Q1_Engineer') || "" 
-      };
-      
-      machine.q2 = { 
-        date: parseExcelDate(getCellValue('Q2_Date')) || "", 
-        engineer: getCellValue('Q2_Engineer') || "" 
-      };
-      
-      machine.q3 = { 
-        date: parseExcelDate(getCellValue('Q3_Date')) || "", 
-        engineer: getCellValue('Q3_Engineer') || "" 
-      };
-      
-      machine.q4 = { 
-        date: parseExcelDate(getCellValue('Q4_Date')) || "", 
-        engineer: getCellValue('Q4_Engineer') || "" 
-      };
-      
-      // Only add if we have at least equipment name
-      if (machine.equipment) {
-        result.push(machine);
-      }
-    }
-    
-    return result;
-  };
-
-  const processOCMDataByIndex = (
-    worksheet: XLSX.Sheet, 
-    headerMap: Record<string, number>, 
-    range: XLSX.Range
-  ): Machine[] => {
-    const result: Machine[] = [];
-    
-    // Start from row 1 (skip header row 0)
-    for (let r = range.s.r + 1; r <= range.e.r; r++) {
-      const machine: any = { id: uuidv4() };
-      
-      // Process each expected column using its index from the headerMap
-      const getCellValue = (header: string) => {
-        const index = headerMap[header];
-        if (index === undefined) return "";
-        
-        const cellAddress = XLSX.utils.encode_cell({ r, c: index });
-        const cell = worksheet[cellAddress];
-        return cell ? cell.v : "";
-      };
-      
-      machine.equipment = getCellValue('Equipment_Name') || "";
-      machine.manufacturer = getCellValue('Manufacturer') || "";
-      machine.model = getCellValue('Model') || "";
-      machine.serialNumber = getCellValue('Serial_Number') || "";
-      machine.logNo = getCellValue('Log_Number') || "";
-      
-      machine.maintenanceDate = parseExcelDate(getCellValue('2025_Maintenance_Date')) || "";
-      machine.engineer = getCellValue('2025_Engineer') || "";
-      machine.nextMaintenanceDate = parseExcelDate(getCellValue('2026_Maintenance_Date')) || "";
-      
-      // Only add if we have at least equipment name
-      if (machine.equipment) {
-        result.push(machine);
-      }
-    }
-    
-    return result;
-  };
-  
-  // These functions are no longer needed as we process directly from the worksheet
   const normalizeRowData = (row: any) => {
     const normalized: any = {};
     
@@ -235,7 +107,6 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
   };
 
   const processPPMRow = (row: any): any => {
-    // This is kept for backward compatibility but not used in the new implementation
     return {
       id: uuidv4(),
       equipment: row.Equipment_Name || "",
@@ -263,7 +134,6 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
   };
 
   const processOCMRow = (row: any): any => {
-    // This is kept for backward compatibility but not used in the new implementation
     return {
       id: uuidv4(),
       equipment: row.Equipment_Name || "",

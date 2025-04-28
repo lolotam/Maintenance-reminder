@@ -48,12 +48,9 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         
-        // Convert worksheet to JSON to pass to the processor
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
         console.log("Raw imported data:", jsonData);
-        
-        // Pass both the JSON data and the raw worksheet to process by index
-        processFileData(jsonData, worksheet);
+        processFileData(jsonData);
       } catch (error: any) {
         console.error("Error reading file:", error);
         setProcessingError(error.message || "Error reading file");
@@ -61,7 +58,7 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
     };
     
     reader.readAsBinaryString(file);
-  }, [processFileData, setProcessingError]);
+  }, []);
 
   const saveToApplication = () => {
     try {
@@ -81,7 +78,7 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
-          <AlertDescription className="whitespace-pre-line">{processingError}</AlertDescription>
+          <AlertDescription>{processingError}</AlertDescription>
         </Alert>
       )}
 
