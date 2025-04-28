@@ -44,7 +44,14 @@ export const MessageNotificationCard = ({
       return;
     }
 
-    await sendVerification(whatsappNumber);
+    toast.promise(
+      sendVerification(whatsappNumber),
+      {
+        loading: 'Sending WhatsApp verification...',
+        success: () => `Test WhatsApp message sent to ${whatsappNumber}!`,
+        error: 'Failed to send test WhatsApp message',
+      }
+    );
   };
 
   const handleTestSms = async () => {
@@ -165,9 +172,9 @@ export const MessageNotificationCard = ({
                   <Button 
                     variant="outline" 
                     onClick={handleTestWhatsApp}
-                    disabled={!whatsappEnabled || !whatsappNumber}
+                    disabled={!whatsappEnabled || !whatsappNumber || verifying}
                   >
-                    Send Test Message
+                    {verifying ? "Sending..." : "Send Test Message"}
                   </Button>
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">
