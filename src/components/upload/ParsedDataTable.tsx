@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { format, isValid } from 'date-fns';
+import { format, isValid, parseISO } from 'date-fns';
 import { Machine } from '@/types';
 import { FileCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,22 @@ interface ParsedDataTableProps {
 
 export function ParsedDataTable({ data, onSave }: ParsedDataTableProps) {
   if (data.length === 0) return null;
+  
+  // Helper function to format dates nicely
+  const formatDate = (dateStr: string | Date | null | undefined) => {
+    if (!dateStr) return 'N/A';
+    
+    try {
+      const date = typeof dateStr === 'string' ? parseISO(dateStr) : dateStr;
+      return isValid(date) ? format(date, "dd/MM/yyyy") : 'N/A';
+    } catch (error) {
+      console.warn("Invalid date format:", dateStr);
+      return 'N/A';
+    }
+  };
+
+  // Check the structure of the data to determine if it's PPM or OCM
+  const isPPM = 'q1' in data[0];
 
   return (
     <Card className="overflow-hidden">
@@ -38,26 +54,48 @@ export function ParsedDataTable({ data, onSave }: ParsedDataTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Machine Name</TableHead>
-              <TableHead>Last Maintenance</TableHead>
-              <TableHead>Frequency</TableHead>
-              <TableHead>Next Maintenance</TableHead>
+              <TableHead>Equipment Name</TableHead>
+              <TableHead>Model</TableHead>
+              <TableHead>Serial_Number</TableHead>
+              <TableHead>Manufacturer</TableHead>
+              <TableHead>Log Number</TableHead>
+              {isPPM ? (
+                <>
+                  <TableHead>Q1 Date</TableHead>
+                  <TableHead>Q1 Engineer</TableHead>
+                </>
+              ) : (
+                <>
+                  <TableHead>2025 Maintenance</TableHead>
+                  <TableHead>2025 Engineer</TableHead>
+                  <TableHead>2026 Maintenance</TableHead>
+                </>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map((machine) => {
-              const lastDate = new Date(machine.lastMaintenanceDate);
-              const nextDate = machine.nextMaintenanceDate ? new Date(machine.nextMaintenanceDate) : null;
-              
-              return (
-                <TableRow key={machine.id}>
-                  <TableCell className="font-medium">{machine.name}</TableCell>
-                  <TableCell>{isValid(lastDate) ? format(lastDate, "MMM d, yyyy") : "N/A"}</TableCell>
-                  <TableCell>{machine.frequency}</TableCell>
-                  <TableCell>{nextDate && isValid(nextDate) ? format(nextDate, "MMM d, yyyy") : "N/A"}</TableCell>
-                </TableRow>
-              );
-            })}
+            {data.map((machine: any) => (
+              <TableRow key={machine.id}>
+                <TableCell className="font-medium">{machine.equipment}</TableCell>
+                <TableCell>{machine.model}</TableCell>
+                <TableCell>{machine.serialNumber}</TableCell>
+                <TableCell>{machine.manufacturer}</TableCell>
+                <TableCell>{machine.logNo}</TableCell>
+                
+                {isPPM ? (
+                  <>
+                    <TableCell>{formatDate(machine.q1?.date)}</TableCell>
+                    <TableCell>{machine.q1?.engineer}</TableCell>
+                  </>
+                ) : (
+                  <>
+                    <TableCell>{formatDate(machine.maintenanceDate)}</TableCell>
+                    <TableCell>{machine.engineer}</TableCell>
+                    <TableCell>{formatDate(machine.nextMaintenanceDate)}</TableCell>
+                  </>
+                )}
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </div>
