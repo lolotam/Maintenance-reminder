@@ -10,7 +10,7 @@ import * as z from "zod";
 const formSchema = z.object({
   equipment: z.string().min(1, "Equipment name is required"),
   model: z.string().min(1, "Model is required"),
-  Serial_Number: z.string().min(1, "Serial number is required"),
+  serialNumber: z.string().min(1, "Serial number is required"),
   manufacturer: z.string().min(1, "Manufacturer is required"),
   logNo: z.string().min(1, "Log number is required"),
   maintenanceDate: z.string().min(1, "Maintenance date is required"),
@@ -31,7 +31,7 @@ export function EditOCMMachineForm({ machine, onSave, onCancel }: EditOCMMachine
     defaultValues: machine ? {
       equipment: machine.equipment,
       model: machine.model,
-      Serial_Number: machine.Serial_Number,
+      serialNumber: machine.serialNumber,
       manufacturer: machine.manufacturer,
       logNo: machine.logNo,
       maintenanceDate: machine.maintenanceDate.toString(),
@@ -80,7 +80,7 @@ export function EditOCMMachineForm({ machine, onSave, onCancel }: EditOCMMachine
         />
         <FormField
           control={form.control}
-          name="Serial_Number"
+          name="serialNumber"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Serial Number</FormLabel>

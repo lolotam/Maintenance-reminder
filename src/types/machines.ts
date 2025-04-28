@@ -3,7 +3,7 @@ export interface BaseMachine {
   id: string;
   equipment: string;
   model: string;
-  Serial_Number: string;
+  serialNumber: string;
   manufacturer: string;
   logNo: string;
 }

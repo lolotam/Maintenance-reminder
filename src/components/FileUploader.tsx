@@ -48,13 +48,8 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: false, defval: "" });
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
         console.log("Raw imported data:", jsonData);
-        
-        if (jsonData.length > 0) {
-          console.log("Excel headers:", Object.keys(jsonData[0]));
-        }
-        
         processFileData(jsonData);
       } catch (error: any) {
         console.error("Error reading file:", error);
@@ -63,68 +58,12 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
     };
     
     reader.readAsBinaryString(file);
-  }, [processFileData, setProcessingError]);
+  }, []);
 
   const saveToApplication = () => {
     try {
       console.log("Saving data to application:", parsedData);
-      
-      const formattedMachines: Machine[] = parsedData.map(machine => {
-        if (type === 'PPM') {
-          // For PPM machines, ensure we're creating quarters object properly
-          // Note: We need to access these properties from the parsed data which has a different structure than Machine
-          const quartersData = {
-            q1: { 
-              date: machine.q1_date || '', 
-              engineer: machine.q1_engineer || '' 
-            },
-            q2: { 
-              date: machine.q2_date || '', 
-              engineer: machine.q2_engineer || '' 
-            },
-            q3: { 
-              date: machine.q3_date || '', 
-              engineer: machine.q3_engineer || '' 
-            },
-            q4: { 
-              date: machine.q4_date || '', 
-              engineer: machine.q4_engineer || '' 
-            }
-          };
-          
-          // Create a Machine object with the correct structure
-          return {
-            id: machine.id,
-            name: machine.equipment || '',
-            manufacturer: machine.manufacturer || '',
-            model: machine.model || '',
-            Serial_Number: machine.Serial_Number || '',
-            logNo: machine.logNo || '',
-            lastMaintenanceDate: quartersData.q1.date || '',
-            frequency: 'Quarterly',
-            equipment: machine.equipment || '',
-            // Add quarters as a proper object
-            quarters: quartersData
-          };
-        } else {
-          return {
-            id: machine.id,
-            name: machine.equipment || '',
-            manufacturer: machine.manufacturer || '',
-            model: machine.model || '',
-            Serial_Number: machine.Serial_Number || '',
-            logNo: machine.logNo || '',
-            lastMaintenanceDate: machine.maintenanceDate || '',
-            nextMaintenanceDate: machine.nextMaintenanceDate || '',
-            frequency: 'Yearly',
-            equipment: machine.equipment || '',
-            engineer: machine.engineer || '',
-            maintenanceDate: machine.maintenanceDate || ''
-          };
-        }
-      });
-      
-      onDataReady(formattedMachines);
+      onDataReady(parsedData);
     } catch (error: any) {
       console.error("Error saving data:", error);
       setProcessingError(error.message || "Error saving data");

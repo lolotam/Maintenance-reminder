@@ -12,7 +12,7 @@ export const useMachineManagement = (initialMachines: Machine[] = []) => {
       
       newMachines.forEach(newMachine => {
         const existingIndex = updatedMachines.findIndex(
-          m => m.name === newMachine.name && m.Serial_Number === newMachine.Serial_Number
+          m => m.name === newMachine.name && m.serialNumber === newMachine.serialNumber
         );
         
         if (existingIndex >= 0) {

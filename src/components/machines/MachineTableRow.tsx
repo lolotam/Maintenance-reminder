@@ -56,7 +56,7 @@ export function MachineTableRow({
           />
         </TableCell>
         <TableCell>{machine.equipment}</TableCell>
-        <TableCell>{`${machine.model} - ${machine.Serial_Number}`}</TableCell>
+        <TableCell>{`${machine.model} - ${machine.serialNumber}`}</TableCell>
         <TableCell>{machine.manufacturer}</TableCell>
         <TableCell>{machine.logNo}</TableCell>
         <TableCell>{formatDate(ocmMachine.maintenanceDate)}</TableCell>
@@ -89,7 +89,7 @@ export function MachineTableRow({
         />
       </TableCell>
       <TableCell>{machine.equipment}</TableCell>
-      <TableCell>{`${machine.model} - ${machine.Serial_Number}`}</TableCell>
+      <TableCell>{`${machine.model} - ${machine.serialNumber}`}</TableCell>
       <TableCell>{machine.manufacturer}</TableCell>
       <TableCell>{machine.logNo}</TableCell>
       <TableCell className={isDueSoon(ppmMachine.q1.date) ? "text-amber-600 font-medium" : ""}>
