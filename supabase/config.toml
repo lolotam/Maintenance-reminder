@@ -1,6 +1,39 @@
 
-[functions]
-node_version = 18
+project_id = "fxrsuzsypswseotxzeei"
 
-[functions.verify-whatsapp]
+[api]
+port = 8080
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 5432
+major_version = 15
+
+[studio]
+port = 3000
+
+[inbucket]
+port = 4000
+
+[storage]
+file_size_limit = "50MiB"
+
+[functions.send-notification]
 verify_jwt = true
+
+[functions.send-test-email]
+verify_jwt = true
+
+[functions.send-test-whatsapp]
+verify_jwt = true
+
+[functions.get-vapid-key]
+verify_jwt = true
+
+[functions.send-test-notification]
+verify_jwt = true
+
+[functions.check-due-maintenance]
+verify_jwt = false

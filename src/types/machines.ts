@@ -11,6 +11,11 @@ export interface BaseMachine {
 export interface OCMMachine extends BaseMachine {
   maintenanceDate: string | Date;
   engineer?: string;
+  location?: string;
+  lastMaintenanceDate?: string | Date;
+  nextMaintenanceDate?: string | Date;
+  maintenanceIntervalDays?: number;
+  notes?: string;
 }
 
 export interface PPMMachine extends BaseMachine {
@@ -18,6 +23,10 @@ export interface PPMMachine extends BaseMachine {
   q2: { date: string; engineer: string };
   q3: { date: string; engineer: string };
   q4: { date: string; engineer: string };
+  location?: string;
+  lastMaintenanceDate?: string | Date;
+  nextMaintenanceDate?: string | Date;
+  notes?: string;
 }
 
 export interface MachineTableProps {
@@ -32,4 +41,14 @@ export interface MachineFilters {
   serialNumber: string;
   manufacturer: string;
   logNo: string;
+}
+
+export type NotificationType = 'email' | 'whatsapp' | 'push' | 'sms';
+
+export interface NotificationSettings {
+  email: boolean;
+  whatsapp: boolean;
+  push: boolean;
+  sms: boolean;
+  reminderDays: number[];
 }

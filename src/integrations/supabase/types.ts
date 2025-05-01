@@ -9,6 +9,134 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      email_templates: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          name: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          name: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          name?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      machines: {
+        Row: {
+          created_at: string
+          engineer_id: string | null
+          equipment_type: string
+          id: string
+          last_maintenance_date: string | null
+          location: string | null
+          log_number: string | null
+          maintenance_interval: string
+          maintenance_interval_days: number
+          manufacturer: string | null
+          model: string | null
+          name: string
+          next_maintenance_date: string | null
+          notes: string | null
+          serial_number: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          engineer_id?: string | null
+          equipment_type: string
+          id?: string
+          last_maintenance_date?: string | null
+          location?: string | null
+          log_number?: string | null
+          maintenance_interval: string
+          maintenance_interval_days: number
+          manufacturer?: string | null
+          model?: string | null
+          name: string
+          next_maintenance_date?: string | null
+          notes?: string | null
+          serial_number?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          engineer_id?: string | null
+          equipment_type?: string
+          id?: string
+          last_maintenance_date?: string | null
+          location?: string | null
+          log_number?: string | null
+          maintenance_interval?: string
+          maintenance_interval_days?: number
+          manufacturer?: string | null
+          model?: string | null
+          name?: string
+          next_maintenance_date?: string | null
+          notes?: string | null
+          serial_number?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          content: Json | null
+          created_at: string
+          id: string
+          machine_id: string | null
+          sent_at: string | null
+          status: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          content?: Json | null
+          created_at?: string
+          id?: string
+          machine_id?: string | null
+          sent_at?: string | null
+          status: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          content?: Json | null
+          created_at?: string
+          id?: string
+          machine_id?: string | null
+          sent_at?: string | null
+          status?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -16,6 +144,7 @@ export type Database = {
           email: string | null
           email_notifications_enabled: boolean | null
           id: string
+          notification_settings: Json | null
           reminder_days: number[] | null
           updated_at: string | null
           whatsapp_enabled: boolean | null
@@ -27,6 +156,7 @@ export type Database = {
           email?: string | null
           email_notifications_enabled?: boolean | null
           id: string
+          notification_settings?: Json | null
           reminder_days?: number[] | null
           updated_at?: string | null
           whatsapp_enabled?: boolean | null
@@ -38,10 +168,41 @@ export type Database = {
           email?: string | null
           email_notifications_enabled?: boolean | null
           id?: string
+          notification_settings?: Json | null
           reminder_days?: number[] | null
           updated_at?: string | null
           whatsapp_enabled?: boolean | null
           whatsapp_number?: string | null
+        }
+        Relationships: []
+      }
+      push_notification_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
