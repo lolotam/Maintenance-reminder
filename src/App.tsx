@@ -5,7 +5,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import { AppProvider } from "./contexts/AppContext"; // Import AppProvider
 import { PrivateRoute } from "./components/PrivateRoute";
+import { ErrorBoundary } from "./components/ui/ErrorBoundary"; // Import ErrorBoundary for better error handling
 import Index from "./pages/Index";
 import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
@@ -15,6 +17,7 @@ import PPMMachines from "./pages/PPMMachines";
 import OCMMachines from "./pages/OCMMachines";
 import Login from "./pages/Login";
 import { useEffect } from "react";
+import { LoadingScreen } from "./components/ui/LoadingScreen";
 
 const queryClient = new QueryClient();
 
@@ -40,22 +43,26 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route element={<PrivateRoute />}>
-                <Route path="/" element={<Index />} />
-                <Route path="/notifications" element={<Notifications />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/ldr-machines" element={<LdrMachines />} />
-                <Route path="/ldr-machines/ppm" element={<PPMMachines />} />
-                <Route path="/ldr-machines/ocm" element={<OCMMachines />} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AuthProvider>
-        </BrowserRouter>
+        <ErrorBoundary>
+          <BrowserRouter>
+            <AuthProvider>
+              <AppProvider>
+                <Routes>
+                  <Route path="/login" element={<Login />} />
+                  <Route element={<PrivateRoute />}>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/notifications" element={<Notifications />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/ldr-machines" element={<LdrMachines />} />
+                    <Route path="/ldr-machines/ppm" element={<PPMMachines />} />
+                    <Route path="/ldr-machines/ocm" element={<OCMMachines />} />
+                  </Route>
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </AppProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </ErrorBoundary>
       </TooltipProvider>
     </QueryClientProvider>
   );

@@ -14,6 +14,7 @@ interface UseRealtimeUpdatesProps {
 
 export function useRealtimeUpdates({ table, event = '*', onData }: UseRealtimeUpdatesProps) {
   useEffect(() => {
+    // Use correct channel syntax for Supabase v2
     const channel = supabase
       .channel('db-changes')
       .on(
