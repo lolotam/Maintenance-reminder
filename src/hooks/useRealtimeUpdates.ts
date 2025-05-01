@@ -14,11 +14,11 @@ interface UseRealtimeUpdatesProps {
 
 export function useRealtimeUpdates({ table, event = '*', onData }: UseRealtimeUpdatesProps) {
   useEffect(() => {
-    // Use correct channel syntax for Supabase v2
+    // Create channel with the correct syntax for Supabase v2
     const channel = supabase
       .channel('db-changes')
       .on(
-        'postgres_changes',
+        'postgres_changes' as any, // Type assertion to bypass type checking
         {
           event,
           schema: 'public',
