@@ -1,6 +1,6 @@
 
 import { createClient } from '@supabase/supabase-js'
-import { Twilio } from "twilio"
+import { Twilio } from "npm:twilio"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',

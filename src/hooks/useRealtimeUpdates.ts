@@ -23,7 +23,7 @@ export function useRealtimeUpdates({ table, event = '*', onData }: UseRealtimeUp
           schema: 'public',
           table,
         },
-        payload => {
+        (payload) => {
           onData(payload);
         }
       )

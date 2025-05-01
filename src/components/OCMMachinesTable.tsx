@@ -1,3 +1,4 @@
+
 import { Table, TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
@@ -28,7 +29,7 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
   const { sendNotification } = useNotificationHandler();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingMachine, setEditingMachine] = useState<Machine | null>(null);
-  const [filters, setFilters] = useState<MachineFilters>({
+  const [filters, setFilters] = useState({
     equipment: "",
     model: "",
     serialNumber: "",
