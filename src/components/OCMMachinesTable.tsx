@@ -1,10 +1,9 @@
-
 import { Table, TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { MachineTableProps } from "@/types/machines";
-import { MachineFilters } from "@/components/machines/MachineFilters";
+import { MachineTableProps, MachineFilters } from "@/types/machines";
+import { MachineFilters as MachineFiltersComponent } from "@/components/machines/MachineFilters";
 import { EditOCMMachineForm } from "@/components/machines/EditOCMMachineForm";
 import { MachineTableHeader } from "@/components/machines/MachineTableHeader";
 import { MachineTableRow } from "@/components/machines/MachineTableRow";
@@ -29,7 +28,7 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
   const { sendNotification } = useNotificationHandler();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingMachine, setEditingMachine] = useState<Machine | null>(null);
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<MachineFilters>({
     equipment: "",
     model: "",
     serialNumber: "",
@@ -169,7 +168,10 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
   return (
     <ErrorBoundary>
       <div className="space-y-4">
-        <MachineFilters filters={filters} onFilterChange={setFilters} />
+        <MachineFiltersComponent 
+          filters={filters} 
+          onFilterChange={(newFilters: MachineFilters) => setFilters(newFilters)} 
+        />
         
         <div className="overflow-x-auto">
           <Table>
