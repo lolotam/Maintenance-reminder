@@ -7,9 +7,11 @@ import { AddMachineDialog } from "@/components/AddMachineDialog";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { usePPMMachines } from "@/hooks/usePPMMachines";
+import { useMachineOperations } from "@/hooks/useMachineOperations";
 
 const DepartmentPPMMachines = () => {
   const { departmentId } = useParams<{ departmentId: string }>();
+  const { addMachine } = useMachineOperations();
   const ppmMachinesHook = usePPMMachines();
   
   // State for machine selection and search
@@ -24,7 +26,11 @@ const DepartmentPPMMachines = () => {
   const handleAddMachine = (machineData: any) => {
     // Generate a unique ID for the new machine
     const newId = crypto.randomUUID();
-    const newMachine = { ...machineData, id: newId };
+    const newMachine = { 
+      ...machineData, 
+      id: newId, 
+      department: displayName // Set the department from URL
+    };
     
     // Update machines using the setMachines method available from the hook
     const updatedMachines = [...ppmMachinesHook.machines, newMachine];
@@ -47,13 +53,18 @@ const DepartmentPPMMachines = () => {
             </Link>
             <h1 className="text-2xl font-bold tracking-tight">{displayName} PPM Machines</h1>
           </div>
-          <AddMachineDialog type="ppm" onAddMachine={handleAddMachine} />
+          <AddMachineDialog 
+            type="ppm" 
+            onAddMachine={handleAddMachine} 
+            defaultDepartment={displayName}
+          />
         </div>
 
         <PPMMachinesTable 
           searchTerm={searchTerm}
           selectedMachines={selectedMachines}
           setSelectedMachines={setSelectedMachines}
+          departmentFilter={displayName} // Add department filter
         />
       </div>
     </MainLayout>

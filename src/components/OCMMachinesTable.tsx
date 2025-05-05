@@ -1,6 +1,6 @@
 
 import { Table, TableBody, TableRow, TableCell } from "@/components/ui/table";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MachineTableProps } from "@/types/machines";
 import { MachineFilters as MachineFiltersComponent } from "@/components/machines/MachineFilters";
 import { MachineTableHeader } from "@/components/machines/MachineTableHeader";
@@ -10,7 +10,7 @@ import { OCMEditDialog } from "@/components/machines/OCMEditDialog";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 
-export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMachines }: MachineTableProps) => {
+export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMachines, departmentFilter }: MachineTableProps) => {
   const {
     filteredMachines,
     loading,
@@ -28,6 +28,25 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
   
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  // Apply department filter if provided
+  const applyDepartmentFilter = (machines: any[]) => {
+    if (!departmentFilter) return machines;
+    return machines.filter(machine => 
+      (machine.location?.toLowerCase() === departmentFilter.toLowerCase()) ||
+      (machine.department?.toLowerCase() === departmentFilter.toLowerCase())
+    );
+  };
+
+  // Set department filter in filters if provided
+  useEffect(() => {
+    if (departmentFilter && (!filters.department || filters.department !== departmentFilter)) {
+      setFilters({
+        ...filters,
+        department: departmentFilter
+      });
+    }
+  }, [departmentFilter, filters]);
+
   // Toggle machine selection
   const toggleMachineSelection = (machineId: string) => {
     setSelectedMachines(
@@ -39,7 +58,7 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
 
   // Handle select all
   const handleSelectAll = () => {
-    const machines = filteredMachines(searchTerm);
+    const machines = applyDepartmentFilter(filteredMachines(searchTerm));
     if (selectedMachines.length === machines.length) {
       setSelectedMachines([]);
     } else {
@@ -65,7 +84,8 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
     );
   }
 
-  const machines = filteredMachines(searchTerm);
+  // Apply both filters
+  const machines = applyDepartmentFilter(filteredMachines(searchTerm));
 
   return (
     <ErrorBoundary>

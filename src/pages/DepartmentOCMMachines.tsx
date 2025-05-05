@@ -23,6 +23,19 @@ const DepartmentOCMMachines = () => {
     ? departmentId.toUpperCase().replace(/-/g, ' ')
     : "";
 
+  // Custom add machine handler to set the department
+  const handleAddMachine = (machineData: any) => {
+    // Add department information to the machine data
+    const machineWithDepartment = {
+      ...machineData,
+      department: displayName,
+      location: displayName // Set location field which is used for department in OCM
+    };
+    
+    // Use the addMachine function from the hook
+    addMachine(machineWithDepartment, "ocm");
+  };
+
   return (
     <MainLayout>
       <div className="space-y-6">
@@ -36,13 +49,18 @@ const DepartmentOCMMachines = () => {
             </Link>
             <h1 className="text-2xl font-bold tracking-tight">{displayName} OCM Machines</h1>
           </div>
-          <AddMachineDialog type="ocm" onAddMachine={addMachine} />
+          <AddMachineDialog 
+            type="ocm" 
+            onAddMachine={handleAddMachine}
+            defaultDepartment={displayName}
+          />
         </div>
 
         <OCMMachinesTable 
           searchTerm={searchTerm}
           selectedMachines={selectedMachines}
           setSelectedMachines={setSelectedMachines}
+          departmentFilter={displayName} // Add department filter
         />
       </div>
     </MainLayout>

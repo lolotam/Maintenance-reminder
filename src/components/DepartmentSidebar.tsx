@@ -1,5 +1,5 @@
 
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   Sidebar,
@@ -47,6 +47,7 @@ const departments = [
 
 export function DepartmentSidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Convert department names to URL-friendly format
   const getDepartmentUrl = (dept: string) => {
@@ -56,7 +57,11 @@ export function DepartmentSidebar() {
   // Check if current route is for a specific department
   const isDepartmentActive = (dept: string) => {
     const deptUrl = getDepartmentUrl(dept);
-    return location.pathname === deptUrl;
+    return location.pathname.startsWith(deptUrl);
+  };
+
+  const handleDepartmentClick = (dept: string) => {
+    navigate(getDepartmentUrl(dept));
   };
 
   return (
@@ -71,6 +76,7 @@ export function DepartmentSidebar() {
                   <SidebarMenuButton 
                     isActive={isDepartmentActive(dept)}
                     tooltip={dept}
+                    onClick={() => handleDepartmentClick(dept)}
                   >
                     <Hospital className="h-4 w-4" />
                     <span>{dept}</span>

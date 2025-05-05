@@ -39,7 +39,7 @@ const mockPPMMachines = [
   },
 ];
 
-export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMachines }: MachineTableProps) => {
+export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMachines, departmentFilter }: MachineTableProps) => {
   const {
     filteredMachines,
     filters,
@@ -54,6 +54,14 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
   
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  // Apply department filter if provided
+  const applyDepartmentFilter = (machines: any[]) => {
+    if (!departmentFilter) return machines;
+    return machines.filter(m => 
+      m.department?.toLowerCase() === departmentFilter.toLowerCase()
+    );
+  };
+
   const toggleMachineSelection = (machineId: string) => {
     setSelectedMachines(
       selectedMachines.includes(machineId)
@@ -63,7 +71,7 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
   };
 
   const handleSelectAll = () => {
-    const machines = filteredMachines(searchTerm);
+    const machines = applyDepartmentFilter(filteredMachines(searchTerm));
     if (selectedMachines.length === machines.length) {
       setSelectedMachines([]);
     } else {
@@ -71,7 +79,18 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
     }
   };
 
-  const machines = filteredMachines(searchTerm);
+  // Apply both filters
+  const machines = applyDepartmentFilter(filteredMachines(searchTerm));
+
+  // Set department filter in filters if not already set
+  useState(() => {
+    if (departmentFilter && (!filters.department || filters.department !== departmentFilter)) {
+      setFilters({
+        ...filters,
+        department: departmentFilter
+      });
+    }
+  });
 
   return (
     <div className="space-y-4">

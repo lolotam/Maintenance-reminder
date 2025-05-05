@@ -33,7 +33,8 @@ export interface PPMMachine extends BaseMachine {
 export interface MachineTableProps {
   searchTerm: string;
   selectedMachines: string[];
-  setSelectedMachines: (machines: string[]) => void;
+  setSelectedMachines: (machineIds: string[]) => void;
+  departmentFilter?: string; // Add optional department filter
 }
 
 export interface MachineFilters {
