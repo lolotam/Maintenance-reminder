@@ -1,133 +1,32 @@
+
 import { Table, TableBody, TableRow, TableCell } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
-import { MachineTableProps, MachineFilters } from "@/types/machines";
+import { useState } from "react";
+import { MachineTableProps } from "@/types/machines";
 import { MachineFilters as MachineFiltersComponent } from "@/components/machines/MachineFilters";
-import { EditOCMMachineForm } from "@/components/machines/EditOCMMachineForm";
 import { MachineTableHeader } from "@/components/machines/MachineTableHeader";
 import { MachineTableRow } from "@/components/machines/MachineTableRow";
-import { useMachineOperations, Machine } from "@/hooks/useMachineOperations";
-import { useRealtimeUpdates } from "@/hooks/useRealtimeUpdates";
-import { useAuth } from "@/contexts/AuthContext";
-import { useNotificationHandler } from "@/hooks/useNotificationHandler";
+import { useOCMMachines } from "@/hooks/useOCMMachines";
+import { OCMEditDialog } from "@/components/machines/OCMEditDialog";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 
 export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMachines }: MachineTableProps) => {
-  const { user } = useAuth();
   const {
-    machines: allMachines,
+    filteredMachines,
     loading,
     error,
+    filters,
+    setFilters,
+    editingMachine,
+    setEditingMachine,
     fetchMachines,
     updateMachine,
-    deleteMachine
-  } = useMachineOperations();
+    deleteMachine,
+    setReminder,
+    markCompleted
+  } = useOCMMachines();
   
-  const { sendNotification } = useNotificationHandler();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingMachine, setEditingMachine] = useState<Machine | null>(null);
-  const [filters, setFilters] = useState<MachineFilters>({
-    equipment: "",
-    model: "",
-    serialNumber: "",
-    manufacturer: "",
-    logNo: "",
-    department: "",
-  });
-
-  // Fetch OCM machines on load
-  useEffect(() => {
-    if (user) {
-      fetchMachines({ type: 'ocm' });
-    }
-  }, [user]);
-
-  // Set up real-time updates
-  useRealtimeUpdates({
-    table: 'machines',
-    onData: (payload) => {
-      if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-        // Only refresh if the machine is an OCM machine
-        if (payload.new && payload.new.maintenance_interval === 'yearly') {
-          fetchMachines({ type: 'ocm' });
-        }
-      } else if (payload.eventType === 'DELETE') {
-        // Always refresh on delete to keep the list updated
-        fetchMachines({ type: 'ocm' });
-      }
-    }
-  });
-
-  // Safe string lowercase comparison helper
-  const safeIncludes = (value: string | null | undefined, term: string) => {
-    return value && typeof value === 'string' 
-      ? value.toLowerCase().includes(term.toLowerCase()) 
-      : false;
-  };
-
-  // Filter OCM machines
-  const ocmMachines = allMachines.filter(machine => machine.maintenance_interval === 'yearly');
-  
-  const filteredMachines = ocmMachines.filter((machine) => {
-    const equipmentMatch = safeIncludes(machine.name, searchTerm);
-    const modelMatch = safeIncludes(machine.model || '', searchTerm);
-    const manufacturerMatch = safeIncludes(machine.manufacturer || '', searchTerm);
-    const departmentMatch = safeIncludes(machine.location || '', searchTerm); // Using location field for department
-    
-    const matchesSearch = equipmentMatch || modelMatch || manufacturerMatch || departmentMatch;
-
-    const matchesEquipmentFilter = !filters.equipment || 
-      safeIncludes(machine.name, filters.equipment);
-    const matchesModelFilter = !filters.model || 
-      safeIncludes(machine.model || '', filters.model);
-    const matchesSerialFilter = !filters.serialNumber || 
-      safeIncludes(machine.serial_number || '', filters.serialNumber);
-    const matchesManufacturerFilter = !filters.manufacturer || 
-      safeIncludes(machine.manufacturer || '', filters.manufacturer);
-    const matchesLogNoFilter = !filters.logNo || 
-      safeIncludes(machine.log_number || '', filters.logNo);
-    const matchesDepartmentFilter = !filters.department || 
-      safeIncludes(machine.location || '', filters.department); // Using location field for department
-
-    const matchesFilters = matchesEquipmentFilter && matchesModelFilter && 
-      matchesSerialFilter && matchesManufacturerFilter && matchesLogNoFilter && matchesDepartmentFilter;
-
-    return matchesSearch && matchesFilters;
-  });
-
-  // Handle maintenance actions
-  const setReminder = async (machine: Machine) => {
-    try {
-      const success = await sendNotification(machine, 'email');
-      if (success) {
-        toast.success(`Reminder set for ${machine.name} annual maintenance`);
-      }
-    } catch (error) {
-      console.error('Error setting reminder:', error);
-      toast.error('Failed to set reminder');
-    }
-  };
-
-  const markCompleted = async (machine: Machine) => {
-    try {
-      const today = new Date().toISOString();
-      const maintInterval = machine.maintenance_interval_days || 365;
-      
-      const success = await updateMachine(machine.id, {
-        last_maintenance_date: today,
-        // Next maintenance date will be auto-calculated by the database trigger
-      });
-      
-      if (success) {
-        toast.success(`Annual maintenance for ${machine.name} marked as completed`);
-      }
-    } catch (error) {
-      console.error('Error marking as completed:', error);
-      toast.error('Failed to mark as completed');
-    }
-  };
 
   // Toggle machine selection
   const toggleMachineSelection = (machineId: string) => {
@@ -140,10 +39,11 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
 
   // Handle select all
   const handleSelectAll = () => {
-    if (selectedMachines.length === filteredMachines.length) {
+    const machines = filteredMachines(searchTerm);
+    if (selectedMachines.length === machines.length) {
       setSelectedMachines([]);
     } else {
-      setSelectedMachines(filteredMachines.map(m => m.id));
+      setSelectedMachines(machines.map(m => m.id));
     }
   };
 
@@ -165,12 +65,14 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
     );
   }
 
+  const machines = filteredMachines(searchTerm);
+
   return (
     <ErrorBoundary>
       <div className="space-y-4">
         <MachineFiltersComponent 
           filters={filters} 
-          onFilterChange={(newFilters: MachineFilters) => setFilters(newFilters)} 
+          onFilterChange={(newFilters) => setFilters(newFilters)} 
         />
         
         <div className="overflow-x-auto">
@@ -181,8 +83,8 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
               hasSelectedItems={selectedMachines.length > 0}
             />
             <TableBody>
-              {filteredMachines.length > 0 ? (
-                filteredMachines.map((machine) => (
+              {machines.length > 0 ? (
+                machines.map((machine) => (
                   <MachineTableRow
                     key={machine.id}
                     machine={{
@@ -227,55 +129,16 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
           </Table>
         </div>
 
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Edit OCM Machine</DialogTitle>
-            </DialogHeader>
-            {editingMachine && (
-              <EditOCMMachineForm
-                machine={{
-                  id: editingMachine.id,
-                  equipment: editingMachine.name,
-                  model: editingMachine.model || '',
-                  serialNumber: editingMachine.serial_number || '',
-                  manufacturer: editingMachine.manufacturer || '',
-                  logNo: editingMachine.log_number || '',
-                  maintenanceDate: editingMachine.next_maintenance_date || '',
-                  engineer: editingMachine.engineer_id || '',
-                  location: editingMachine.location || '',
-                  notes: editingMachine.notes || '',
-                  type: 'OCM',
-                  department: editingMachine.location || '',
-                }}
-                onSave={async (updatedMachine) => {
-                  const success = await updateMachine(editingMachine.id, {
-                    name: updatedMachine.equipment,
-                    model: updatedMachine.model,
-                    serial_number: updatedMachine.serialNumber,
-                    manufacturer: updatedMachine.manufacturer,
-                    log_number: updatedMachine.logNo,
-                    next_maintenance_date: updatedMachine.maintenanceDate?.toString(),
-                    engineer_id: updatedMachine.engineer,
-                    location: updatedMachine.department || updatedMachine.location, // Use department if provided
-                    notes: updatedMachine.notes,
-                  });
-                  
-                  if (success) {
-                    setDialogOpen(false);
-                    setEditingMachine(null);
-                    toast.success(`${updatedMachine.equipment} has been updated`);
-                  }
-                }}
-                onCancel={() => {
-                  setDialogOpen(false);
-                  setEditingMachine(null);
-                }}
-              />
-            )}
-          </DialogContent>
-        </Dialog>
+        <OCMEditDialog
+          machine={editingMachine}
+          isOpen={dialogOpen}
+          onOpenChange={(open) => {
+            setDialogOpen(open);
+            if (!open) setEditingMachine(null);
+          }}
+          onUpdate={updateMachine}
+        />
       </div>
     </ErrorBoundary>
   );
-}
+};
