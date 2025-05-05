@@ -23,9 +23,18 @@ const DepartmentPage = () => {
   const departmentMachines = filteredMachines(searchTerm, { department: displayName });
   
   // Count PPM and OCM machines for this department
-  // Use optional chaining to safely access the type property
-  const ppmCount = departmentMachines.filter(m => m.type === "PPM" || (m as any).frequency === 'Quarterly').length;
-  const ocmCount = departmentMachines.filter(m => m.type === "OCM" || (m as any).frequency === 'Yearly').length;
+  // We need to check frequency or other indicators since 'type' property doesn't exist directly
+  const ppmCount = departmentMachines.filter(m => 
+    (m as any).frequency === 'Quarterly' || 
+    (m as any).quarters ||
+    (m as any).q1
+  ).length;
+  
+  const ocmCount = departmentMachines.filter(m => 
+    (m as any).frequency === 'Yearly' || 
+    (m as any).maintenanceDate ||
+    (m as any).engineer
+  ).length;
 
   const handleMarkComplete = (id: string) => {
     // This is a placeholder function to satisfy the onMarkComplete prop requirement

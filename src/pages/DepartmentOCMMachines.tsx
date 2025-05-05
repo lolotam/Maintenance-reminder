@@ -32,8 +32,8 @@ const DepartmentOCMMachines = () => {
       location: displayName // Set location field which is used for department in OCM
     };
     
-    // Use the addMachine function from the hook
-    addMachine(machineWithDepartment, "ocm");
+    // Use the addMachine function from the hook - fixed by passing only one argument
+    addMachine(machineWithDepartment);
   };
 
   return (
