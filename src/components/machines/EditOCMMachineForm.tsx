@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { departments } from "./PPMFormSchema";
 import {
   Select,
   SelectContent,
@@ -36,8 +37,6 @@ interface EditOCMMachineFormProps {
 }
 
 export function EditOCMMachineForm({ machine, onSave, onCancel }: EditOCMMachineFormProps) {
-  const departments = ["LDR", "OR", "X-RAY", "Deram", "Ped", "Plastic"];
-  
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: machine ? {
@@ -172,7 +171,7 @@ export function EditOCMMachineForm({ machine, onSave, onCancel }: EditOCMMachine
                       <SelectValue placeholder="Select department" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
+                  <SelectContent className="max-h-[200px] overflow-y-auto">
                     {departments.map((dept) => (
                       <SelectItem key={dept} value={dept}>
                         {dept}

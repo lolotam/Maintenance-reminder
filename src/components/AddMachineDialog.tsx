@@ -9,6 +9,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { departments } from "./machines/PPMFormSchema"; // Import the departments array
 import {
   Select,
   SelectContent,
@@ -65,7 +66,6 @@ const ocmFormSchema = z.object({
 });
 
 export const AddMachineDialog = ({ type, onAddMachine }: AddMachineDialogProps) => {
-  const departments = ["LDR", "OR", "X-RAY", "Deram", "Ped", "Plastic"];
   const formSchema = type === "ppm" ? ppmFormSchema : ocmFormSchema;
   
   const form = useForm({
@@ -230,7 +230,7 @@ export const AddMachineDialog = ({ type, onAddMachine }: AddMachineDialogProps) 
                           <SelectValue placeholder="Select department" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="max-h-[200px] overflow-y-auto">
                         {departments.map((dept) => (
                           <SelectItem key={dept} value={dept}>
                             {dept}

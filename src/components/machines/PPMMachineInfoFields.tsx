@@ -2,7 +2,7 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
-import { PPMFormData } from "./PPMFormSchema";
+import { PPMFormData, departments } from "./PPMFormSchema";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   Select,
@@ -17,8 +17,6 @@ interface PPMMachineInfoFieldsProps {
 }
 
 export function PPMMachineInfoFields({ form }: PPMMachineInfoFieldsProps) {
-  const departments = ["LDR", "OR", "X-RAY", "Deram", "Ped", "Plastic"];
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <FormField
@@ -126,7 +124,7 @@ export function PPMMachineInfoFields({ form }: PPMMachineInfoFieldsProps) {
                   <SelectValue placeholder="Select department" />
                 </SelectTrigger>
               </FormControl>
-              <SelectContent>
+              <SelectContent className="max-h-[200px] overflow-y-auto">
                 {departments.map((dept) => (
                   <SelectItem key={dept} value={dept}>
                     {dept}
