@@ -14,11 +14,10 @@ import {
 } from "@/components/ui/sidebar";
 import { Hospital } from "lucide-react";
 
-// List of all departments
+// List of all departments (removed "Sheet1")
 const departments = [
   "LDR",
   "IM",
-  "Sheet1",
   "ENT",
   "OPTHA",
   "DERMA",
@@ -68,7 +67,7 @@ export function DepartmentSidebar() {
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Departments</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-lg font-bold">Departments</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {departments.map((dept) => (
@@ -77,8 +76,12 @@ export function DepartmentSidebar() {
                     isActive={isDepartmentActive(dept)}
                     tooltip={dept}
                     onClick={() => handleDepartmentClick(dept)}
+                    className={cn(
+                      "transition-all duration-200 hover:bg-primary/10 hover:scale-105",
+                      isDepartmentActive(dept) ? "bg-primary/20 font-semibold" : ""
+                    )}
                   >
-                    <Hospital className="h-4 w-4" />
+                    <Hospital className={cn("h-4 w-4", isDepartmentActive(dept) ? "text-primary" : "")} />
                     <span>{dept}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

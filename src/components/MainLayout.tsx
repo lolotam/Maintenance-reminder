@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Settings, BellRing, Wrench, Moon, Sun, Menu, X, Info } from "lucide-react";
+import { Home, Settings, BellRing, Wrench, Moon, Sun, Menu, X, Info, Calendar, ClipboardCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,8 @@ export function MainLayout({ children }: MainLayoutProps) {
   
   const navItems = [
     { icon: Home, label: "Dashboard", path: "/" },
+    { icon: ClipboardCheck, label: "Tasks", path: "/tasks" },
+    { icon: Calendar, label: "Schedule", path: "/schedule" },
     { icon: BellRing, label: "Notifications", path: "/notifications" },
     { icon: Settings, label: "Settings", path: "/settings" },
   ];
@@ -120,20 +122,28 @@ export function MainLayout({ children }: MainLayoutProps) {
               </Button>
             </div>
             
-            <nav className="hidden lg:flex gap-6 absolute left-1/2 transform -translate-x-1/2">
+            <nav className="hidden lg:flex gap-3 absolute left-1/2 transform -translate-x-1/2">
               {navItems.map((item) => (
                 <Link
                   key={item.label}
                   to={item.path}
-                  className={cn(
-                    "flex items-center gap-2 transition-colors px-3 py-2 rounded-md",
-                    location.pathname === item.path
-                      ? "text-primary bg-accent font-medium"
-                      : "text-foreground/70 hover:text-primary hover:bg-accent/50"
-                  )}
+                  className="group"
                 >
-                  <item.icon className="h-4 w-4" />
-                  <span>{item.label}</span>
+                  <Button
+                    variant={location.pathname === item.path ? "default" : "outline"}
+                    size="sm"
+                    className={cn(
+                      "flex items-center gap-2 transition-all duration-200 hover:scale-105",
+                      location.pathname === item.path 
+                        ? "font-medium shadow-md" 
+                        : "text-foreground/70 hover:text-primary hover:border-primary"
+                    )}
+                  >
+                    <item.icon className={cn("h-4 w-4", 
+                      location.pathname === item.path ? "" : "group-hover:text-primary"
+                    )} />
+                    <span>{item.label}</span>
+                  </Button>
                 </Link>
               ))}
             </nav>
@@ -150,16 +160,18 @@ export function MainLayout({ children }: MainLayoutProps) {
                 <Link
                   key={item.label}
                   to={item.path}
-                  className={cn(
-                    "flex items-center gap-2 p-3 rounded-md transition-colors",
-                    location.pathname === item.path
-                      ? "bg-accent text-primary font-medium"
-                      : "text-foreground/70 hover:bg-accent/50 hover:text-primary"
-                  )}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <item.icon className="h-5 w-5" />
-                  <span>{item.label}</span>
+                  <Button
+                    variant={location.pathname === item.path ? "default" : "ghost"}
+                    className={cn(
+                      "w-full justify-start",
+                      location.pathname === item.path ? "bg-primary" : ""
+                    )}
+                  >
+                    <item.icon className="h-5 w-5 mr-2" />
+                    <span>{item.label}</span>
+                  </Button>
                 </Link>
               ))}
             </div>
