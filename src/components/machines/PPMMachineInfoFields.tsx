@@ -10,7 +10,7 @@ interface PPMMachineInfoFieldsProps {
 
 export function PPMMachineInfoFields({ form }: PPMMachineInfoFieldsProps) {
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <FormField
         control={form.control}
         name="equipment"
@@ -71,6 +71,19 @@ export function PPMMachineInfoFields({ form }: PPMMachineInfoFieldsProps) {
             <FormLabel>Log No</FormLabel>
             <FormControl>
               <Input placeholder="Log number" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="department"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Department</FormLabel>
+            <FormControl>
+              <Input placeholder="Department" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>

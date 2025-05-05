@@ -7,6 +7,7 @@ export const ppmMachineFormSchema = z.object({
   serialNumber: z.string().min(1, "Serial number is required"),
   manufacturer: z.string().min(1, "Manufacturer is required"),
   logNo: z.string().min(1, "Log number is required"),
+  department: z.string().optional(),
   q1_date: z.string().min(1, "Q1 date is required"),
   q1_engineer: z.string().min(1, "Q1 engineer is required"),
   q2_date: z.string().min(1, "Q2 date is required"),

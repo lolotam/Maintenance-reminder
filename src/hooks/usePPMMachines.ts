@@ -6,7 +6,15 @@ import { PPMMachine, MachineFilters } from '@/types/machines';
 export function usePPMMachines(initialMachines: PPMMachine[] = []) {
   const [machines, setMachines] = useState<PPMMachine[]>(() => {
     const stored = localStorage.getItem("ppmMachines");
-    return stored ? JSON.parse(stored) : initialMachines;
+    // Make sure all machines have properly defined q1-q4 objects
+    const parsedMachines = stored ? JSON.parse(stored) : initialMachines;
+    return parsedMachines.map((machine: PPMMachine) => ({
+      ...machine,
+      q1: machine.q1 || { date: '', engineer: '' },
+      q2: machine.q2 || { date: '', engineer: '' },
+      q3: machine.q3 || { date: '', engineer: '' },
+      q4: machine.q4 || { date: '', engineer: '' },
+    }));
   });
   
   const [editingMachine, setEditingMachine] = useState<PPMMachine | null>(null);
@@ -33,8 +41,17 @@ export function usePPMMachines(initialMachines: PPMMachine[] = []) {
   };
   
   const updateMachine = (updatedMachine: PPMMachine) => {
+    // Ensure all quarter objects are defined
+    const machineWithQuarters = {
+      ...updatedMachine,
+      q1: updatedMachine.q1 || { date: '', engineer: '' },
+      q2: updatedMachine.q2 || { date: '', engineer: '' },
+      q3: updatedMachine.q3 || { date: '', engineer: '' },
+      q4: updatedMachine.q4 || { date: '', engineer: '' },
+    };
+    
     const updatedMachines = machines.map(m =>
-      m.id === updatedMachine.id ? updatedMachine : m
+      m.id === machineWithQuarters.id ? machineWithQuarters : m
     );
     setMachines(updatedMachines);
     saveToLocalStorage(updatedMachines);

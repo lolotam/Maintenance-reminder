@@ -23,14 +23,15 @@ export function EditPPMMachineForm({ machine, onSave, onCancel }: EditPPMMachine
       serialNumber: machine.serialNumber,
       manufacturer: machine.manufacturer,
       logNo: machine.logNo,
-      q1_date: machine.q1.date,
-      q1_engineer: machine.q1.engineer,
-      q2_date: machine.q2.date,
-      q2_engineer: machine.q2.engineer,
-      q3_date: machine.q3.date,
-      q3_engineer: machine.q3.engineer,
-      q4_date: machine.q4.date,
-      q4_engineer: machine.q4.engineer,
+      department: machine.department || '',
+      q1_date: machine.q1?.date || '',
+      q1_engineer: machine.q1?.engineer || '',
+      q2_date: machine.q2?.date || '',
+      q2_engineer: machine.q2?.engineer || '',
+      q3_date: machine.q3?.date || '',
+      q3_engineer: machine.q3?.engineer || '',
+      q4_date: machine.q4?.date || '',
+      q4_engineer: machine.q4?.engineer || '',
     } : undefined,
   });
 
@@ -44,6 +45,7 @@ export function EditPPMMachineForm({ machine, onSave, onCancel }: EditPPMMachine
       serialNumber: data.serialNumber,
       manufacturer: data.manufacturer,
       logNo: data.logNo,
+      department: data.department,
       q1: { date: data.q1_date, engineer: data.q1_engineer },
       q2: { date: data.q2_date, engineer: data.q2_engineer },
       q3: { date: data.q3_date, engineer: data.q3_engineer },
@@ -56,7 +58,7 @@ export function EditPPMMachineForm({ machine, onSave, onCancel }: EditPPMMachine
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <PPMMachineInfoFields form={form} />
 
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <PPMQuarterFields form={form} quarter="q1" title="Q1" />
           <PPMQuarterFields form={form} quarter="q2" title="Q2" />
           <PPMQuarterFields form={form} quarter="q3" title="Q3" />
