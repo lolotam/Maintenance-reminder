@@ -6,46 +6,33 @@ import { Wrench, Settings, Bell } from "lucide-react";
 import { useAppContext } from "@/contexts/AppContext";
 import { toast } from "sonner";
 import { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
-const LdrMachines = () => {
-  const navigate = useNavigate();
+const DepartmentPage = () => {
+  const { departmentId } = useParams<{ departmentId: string }>();
   const { countMachinesByType } = useAppContext();
   const [ppmMachinesCount, setPpmMachinesCount] = useState(0);
   const [ocmMachinesCount, setOcmMachinesCount] = useState(0);
   
-  // Use useCallback to memoize the update function to avoid infinite re-renders
+  // Format the department name for display
+  const displayName = departmentId 
+    ? departmentId.toUpperCase().replace(/-/g, ' ')
+    : "";
+  
+  // Use useCallback to memoize the update function
   const updateCounts = useCallback(() => {
     setPpmMachinesCount(countMachinesByType("PPM"));
     setOcmMachinesCount(countMachinesByType("OCM"));
   }, [countMachinesByType]);
   
   useEffect(() => {
-    // Redirect to the new URL structure after a short delay
-    const timeout = setTimeout(() => {
-      navigate("/departments/ldr");
-    }, 100);
-    
-    // Update counts when the component mounts
     updateCounts();
-    
-    // Set up an interval to update counts regularly
     const intervalId = setInterval(updateCounts, 5000);
-    
-    return () => {
-      clearInterval(intervalId);
-      clearTimeout(timeout);
-    };
-  }, [updateCounts, navigate]); 
-
-  const handleDashboardLink = () => {
-    // Integration with dashboard will be implemented here
-    toast.info("Redirecting to dashboard...");
-  };
+    return () => clearInterval(intervalId);
+  }, [updateCounts]);
 
   const handleNotifications = () => {
-    // Integration with notifications will be implemented here
-    toast.info("Checking maintenance notifications...");
+    toast.info(`Checking maintenance notifications for ${displayName}...`);
   };
 
   return (
@@ -54,7 +41,7 @@ const LdrMachines = () => {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-primary">
-              LDR Machines 
+              {displayName} Machines 
               <span className="ml-2 text-sm text-muted-foreground">
                 ({ppmMachinesCount + ocmMachinesCount} Total)
               </span>
@@ -70,7 +57,7 @@ const LdrMachines = () => {
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
-          <Link to="/departments/ldr/ppm" className="block">
+          <Link to={`/departments/${departmentId}/ppm`} className="block">
             <Button
               variant="outline"
               size="lg"
@@ -82,7 +69,7 @@ const LdrMachines = () => {
             </Button>
           </Link>
 
-          <Link to="/departments/ldr/ocm" className="block">
+          <Link to={`/departments/${departmentId}/ocm`} className="block">
             <Button
               variant="outline"
               size="lg"
@@ -99,4 +86,4 @@ const LdrMachines = () => {
   );
 };
 
-export default LdrMachines;
+export default DepartmentPage;
