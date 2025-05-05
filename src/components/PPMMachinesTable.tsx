@@ -18,6 +18,8 @@ const mockPPMMachines: PPMMachine[] = [
     serialNumber: "V123456",
     manufacturer: "Puritan Bennett",
     logNo: "LG001",
+    type: "PPM",
+    department: "ICU",
     q1: { date: "2025-03-15", engineer: "John Smith" },
     q2: { date: "2025-06-15", engineer: "Emma Davis" },
     q3: { date: "2025-09-15", engineer: "Michael Brown" },
@@ -30,6 +32,8 @@ const mockPPMMachines: PPMMachine[] = [
     serialNumber: "PM789012",
     manufacturer: "Philips",
     logNo: "LG002",
+    type: "PPM",
+    department: "Emergency",
     q1: { date: "2025-02-20", engineer: "John Smith" },
     q2: { date: "2025-05-20", engineer: "Emma Davis" },
     q3: { date: "2025-08-20", engineer: "Michael Brown" },
@@ -60,8 +64,9 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
     const equipmentMatch = safeIncludes(machine.equipment, searchTerm);
     const modelMatch = safeIncludes(machine.model, searchTerm);
     const manufacturerMatch = safeIncludes(machine.manufacturer, searchTerm);
+    const departmentMatch = safeIncludes(machine.department, searchTerm);
     
-    const matchesSearch = equipmentMatch || modelMatch || manufacturerMatch;
+    const matchesSearch = equipmentMatch || modelMatch || manufacturerMatch || departmentMatch;
 
     const matchesEquipmentFilter = !filters.equipment || 
       safeIncludes(machine.equipment, filters.equipment);
@@ -73,9 +78,11 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
       safeIncludes(machine.manufacturer, filters.manufacturer);
     const matchesLogNoFilter = !filters.logNo || 
       (machine.logNo && safeIncludes(machine.logNo.toString(), filters.logNo));
+    const matchesDepartmentFilter = !filters.department || 
+      safeIncludes(machine.department, filters.department);
 
     const matchesFilters = matchesEquipmentFilter && matchesModelFilter && 
-      matchesSerialFilter && matchesManufacturerFilter && matchesLogNoFilter;
+      matchesSerialFilter && matchesManufacturerFilter && matchesLogNoFilter && matchesDepartmentFilter;
 
     return matchesSearch && matchesFilters;
   });
@@ -135,7 +142,7 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={14} className="text-center py-4">
+                <TableCell colSpan={16} className="text-center py-4">
                   No PPM machines found matching your criteria.
                 </TableCell>
               </TableRow>

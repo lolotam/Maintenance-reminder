@@ -35,6 +35,7 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
     serialNumber: "",
     manufacturer: "",
     logNo: "",
+    department: "",
   });
 
   // Fetch OCM machines on load
@@ -74,8 +75,9 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
     const equipmentMatch = safeIncludes(machine.name, searchTerm);
     const modelMatch = safeIncludes(machine.model || '', searchTerm);
     const manufacturerMatch = safeIncludes(machine.manufacturer || '', searchTerm);
+    const departmentMatch = safeIncludes(machine.location || '', searchTerm); // Using location field for department
     
-    const matchesSearch = equipmentMatch || modelMatch || manufacturerMatch;
+    const matchesSearch = equipmentMatch || modelMatch || manufacturerMatch || departmentMatch;
 
     const matchesEquipmentFilter = !filters.equipment || 
       safeIncludes(machine.name, filters.equipment);
@@ -87,9 +89,11 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
       safeIncludes(machine.manufacturer || '', filters.manufacturer);
     const matchesLogNoFilter = !filters.logNo || 
       safeIncludes(machine.log_number || '', filters.logNo);
+    const matchesDepartmentFilter = !filters.department || 
+      safeIncludes(machine.location || '', filters.department); // Using location field for department
 
     const matchesFilters = matchesEquipmentFilter && matchesModelFilter && 
-      matchesSerialFilter && matchesManufacturerFilter && matchesLogNoFilter;
+      matchesSerialFilter && matchesManufacturerFilter && matchesLogNoFilter && matchesDepartmentFilter;
 
     return matchesSearch && matchesFilters;
   });
@@ -186,6 +190,8 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
                       serialNumber: machine.serial_number || '',
                       manufacturer: machine.manufacturer || '',
                       logNo: machine.log_number || '',
+                      type: 'OCM', // Add machine type
+                      department: machine.location || '', // Use location field for department
                       maintenanceDate: machine.next_maintenance_date || '',
                       engineer: machine.engineer_id || '',
                       location: machine.location || '',
@@ -210,7 +216,7 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center py-4">
+                  <TableCell colSpan={12} className="text-center py-4">
                     No OCM machines found matching your criteria.
                   </TableCell>
                 </TableRow>
@@ -237,6 +243,8 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
                   engineer: editingMachine.engineer_id || '',
                   location: editingMachine.location || '',
                   notes: editingMachine.notes || '',
+                  type: 'OCM',
+                  department: editingMachine.location || '',
                 }}
                 onSave={async (updatedMachine) => {
                   const success = await updateMachine(editingMachine.id, {
@@ -247,7 +255,7 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
                     log_number: updatedMachine.logNo,
                     next_maintenance_date: updatedMachine.maintenanceDate?.toString(),
                     engineer_id: updatedMachine.engineer,
-                    location: updatedMachine.location,
+                    location: updatedMachine.department || updatedMachine.location, // Use department if provided
                     notes: updatedMachine.notes,
                   });
                   
@@ -268,4 +276,4 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
       </div>
     </ErrorBoundary>
   );
-};
+}

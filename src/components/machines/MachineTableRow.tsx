@@ -55,8 +55,11 @@ export function MachineTableRow({
             onCheckedChange={() => onSelect(machine.id)}
           />
         </TableCell>
+        <TableCell>{machine.type || 'OCM'}</TableCell>
+        <TableCell>{machine.department || '-'}</TableCell>
         <TableCell>{machine.equipment}</TableCell>
-        <TableCell>{`${machine.model} - ${machine.serialNumber}`}</TableCell>
+        <TableCell>{machine.model}</TableCell>
+        <TableCell>{machine.serialNumber}</TableCell>
         <TableCell>{machine.manufacturer}</TableCell>
         <TableCell>{machine.logNo}</TableCell>
         <TableCell>{formatDate(ocmMachine.maintenanceDate)}</TableCell>
@@ -88,8 +91,11 @@ export function MachineTableRow({
           onCheckedChange={() => onSelect(machine.id)}
         />
       </TableCell>
+      <TableCell>{machine.type || 'PPM'}</TableCell>
+      <TableCell>{machine.department || '-'}</TableCell>
       <TableCell>{machine.equipment}</TableCell>
-      <TableCell>{`${machine.model} - ${machine.serialNumber}`}</TableCell>
+      <TableCell>{machine.model}</TableCell>
+      <TableCell>{machine.serialNumber}</TableCell>
       <TableCell>{machine.manufacturer}</TableCell>
       <TableCell>{machine.logNo}</TableCell>
       <TableCell className={isDueSoon(ppmMachine.q1.date) ? "text-amber-600 font-medium" : ""}>
