@@ -1,3 +1,4 @@
+
 import { Table, TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { useState } from "react";
 import { MachineTableProps } from "@/types/machines";
@@ -15,7 +16,7 @@ const mockPPMMachines = [
     serialNumber: "V123456",
     manufacturer: "Puritan Bennett",
     logNo: "LG001",
-    type: "PPM",
+    type: "PPM" as const,
     department: "ICU",
     q1: { date: "2025-03-15", engineer: "John Smith" },
     q2: { date: "2025-06-15", engineer: "Emma Davis" },
@@ -29,7 +30,7 @@ const mockPPMMachines = [
     serialNumber: "PM789012",
     manufacturer: "Philips",
     logNo: "LG002",
-    type: "PPM",
+    type: "PPM" as const,
     department: "Emergency",
     q1: { date: "2025-02-20", engineer: "John Smith" },
     q2: { date: "2025-05-20", engineer: "Emma Davis" },
