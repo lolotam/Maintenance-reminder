@@ -3,14 +3,49 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
 import { PPMFormData } from "./PPMFormSchema";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface PPMMachineInfoFieldsProps {
   form: UseFormReturn<PPMFormData>;
 }
 
 export function PPMMachineInfoFields({ form }: PPMMachineInfoFieldsProps) {
+  const departments = ["LDR", "OR", "X-RAY", "Deram", "Ped", "Plastic"];
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <FormField
+        control={form.control}
+        name="type"
+        render={({ field }) => (
+          <FormItem className="col-span-1 md:col-span-2">
+            <FormLabel>Machine Type</FormLabel>
+            <FormControl>
+              <ToggleGroup
+                type="single"
+                value={field.value}
+                onValueChange={(value) => {
+                  if (value) field.onChange(value);
+                }}
+                className="justify-start"
+                variant="outline"
+              >
+                <ToggleGroupItem value="PPM">PPM</ToggleGroupItem>
+                <ToggleGroupItem value="OCM">OCM</ToggleGroupItem>
+              </ToggleGroup>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
       <FormField
         control={form.control}
         name="equipment"
@@ -82,9 +117,23 @@ export function PPMMachineInfoFields({ form }: PPMMachineInfoFieldsProps) {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Department</FormLabel>
-            <FormControl>
-              <Input placeholder="Department" {...field} />
-            </FormControl>
+            <Select
+              onValueChange={field.onChange}
+              defaultValue={field.value}
+            >
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select department" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {departments.map((dept) => (
+                  <SelectItem key={dept} value={dept}>
+                    {dept}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <FormMessage />
           </FormItem>
         )}

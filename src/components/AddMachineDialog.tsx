@@ -8,6 +8,14 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface AddMachineDialogProps {
   type: "ppm" | "ocm";
@@ -21,6 +29,8 @@ const ppmFormSchema = z.object({
   serialNumber: z.string().min(1, "Serial number is required"),
   manufacturer: z.string().min(1, "Manufacturer is required"),
   logNo: z.string().min(1, "Log number is required"),
+  department: z.string().min(1, "Department is required"),
+  type: z.enum(["PPM", "OCM"]).default("PPM"),
   q1_date: z.string().min(1, "Q1 date is required"),
   q1_engineer: z.string().min(1, "Q1 engineer is required"),
   q2_date: z.string().optional(),
@@ -38,6 +48,8 @@ const ocmFormSchema = z.object({
   serialNumber: z.string().min(1, "Serial number is required"),
   manufacturer: z.string().min(1, "Manufacturer is required"),
   logNo: z.string().min(1, "Log number is required"),
+  department: z.string().min(1, "Department is required"),
+  type: z.enum(["PPM", "OCM"]).default("OCM"),
   maintenance2024: z.object({
     date: z.string().min(1, "2024 maintenance date is required"),
     engineer: z.string().min(1, "2024 engineer is required"),
@@ -53,7 +65,9 @@ const ocmFormSchema = z.object({
 });
 
 export const AddMachineDialog = ({ type, onAddMachine }: AddMachineDialogProps) => {
+  const departments = ["LDR", "OR", "X-RAY", "Deram", "Ped", "Plastic"];
   const formSchema = type === "ppm" ? ppmFormSchema : ocmFormSchema;
+  
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: type === "ppm" ? {
@@ -62,6 +76,8 @@ export const AddMachineDialog = ({ type, onAddMachine }: AddMachineDialogProps) 
       serialNumber: "",
       manufacturer: "",
       logNo: "",
+      department: "",
+      type: "PPM",
       q1_date: "",
       q1_engineer: "",
       q2_date: "",
@@ -76,6 +92,8 @@ export const AddMachineDialog = ({ type, onAddMachine }: AddMachineDialogProps) 
       serialNumber: "",
       manufacturer: "",
       logNo: "",
+      department: "",
+      type: "OCM",
       maintenance2024: { date: "", engineer: "" },
       maintenance2025: { date: "", engineer: "" },
       maintenance2026: { date: "", engineer: "" },
@@ -87,7 +105,7 @@ export const AddMachineDialog = ({ type, onAddMachine }: AddMachineDialogProps) 
       // Generate a unique ID for the new machine
       const newId = crypto.randomUUID();
       onAddMachine({ ...data, id: newId });
-      toast.success(`${type.toUpperCase()} machine added successfully`);
+      toast.success(`${data.type} machine added successfully`);
     } catch (error) {
       toast.error("Failed to add machine");
     }
@@ -107,6 +125,30 @@ export const AddMachineDialog = ({ type, onAddMachine }: AddMachineDialogProps) 
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Machine Type</FormLabel>
+                  <FormControl>
+                    <ToggleGroup
+                      type="single"
+                      value={field.value}
+                      onValueChange={(value) => {
+                        if (value) field.onChange(value);
+                      }}
+                      className="justify-start"
+                      variant="outline"
+                    >
+                      <ToggleGroupItem value="PPM">PPM</ToggleGroupItem>
+                      <ToggleGroupItem value="OCM">OCM</ToggleGroupItem>
+                    </ToggleGroup>
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            
             <div className="grid gap-4 md:grid-cols-2">
               <FormField
                 control={form.control}
@@ -169,6 +211,33 @@ export const AddMachineDialog = ({ type, onAddMachine }: AddMachineDialogProps) 
                     <FormControl>
                       <Input placeholder="Enter log number" {...field} />
                     </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="department"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Department</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select department" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {departments.map((dept) => (
+                          <SelectItem key={dept} value={dept}>
+                            {dept}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </FormItem>
                 )}
               />

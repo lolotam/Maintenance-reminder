@@ -8,6 +8,7 @@ export const ppmMachineFormSchema = z.object({
   manufacturer: z.string().min(1, "Manufacturer is required"),
   logNo: z.string().min(1, "Log number is required"),
   department: z.string().optional(),
+  type: z.enum(["PPM", "OCM"]).default("PPM"),
   q1_date: z.string().min(1, "Q1 date is required"),
   q1_engineer: z.string().min(1, "Q1 engineer is required"),
   q2_date: z.string().min(1, "Q2 date is required"),
