@@ -24,8 +24,14 @@ const DepartmentPPMMachines = () => {
   const handleAddMachine = (machineData: any) => {
     // Generate a unique ID for the new machine
     const newId = crypto.randomUUID();
-    ppmMachinesHook.machines.push({ ...machineData, id: newId });
-    ppmMachinesHook.saveToLocalStorage(ppmMachinesHook.machines);
+    const newMachine = { ...machineData, id: newId };
+    
+    // Update machines using the setMachines method available from the hook
+    const updatedMachines = [...ppmMachinesHook.machines, newMachine];
+    ppmMachinesHook.setMachines(updatedMachines);
+    
+    // Save to local storage
+    localStorage.setItem("ppmMachines", JSON.stringify(updatedMachines));
   };
 
   return (
