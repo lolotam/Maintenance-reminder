@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Settings, BellRing, Wrench, Moon, Sun, Menu, X, Info, Calendar, ClipboardCheck } from "lucide-react";
+import { Home, Settings, BellRing, Moon, Sun, Menu, X, Info, Calendar, ClipboardCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -55,13 +55,13 @@ export function MainLayout({ children }: MainLayoutProps) {
   };
 
   return (
-    <div className="flex min-h-screen bg-background transition-colors duration-300">
+    <div className="flex h-screen w-full bg-background transition-colors duration-300 overflow-hidden">
       {/* Sidebar */}
       <DepartmentSidebar />
       
-      <div className="flex flex-col flex-1">
-        <header className="bg-card shadow-sm sticky top-0 z-40">
-          <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+      <div className="flex flex-col flex-1 w-full h-full overflow-hidden">
+        <header className="bg-card shadow-sm sticky top-0 z-40 w-full">
+          <div className="px-4 py-3 flex items-center justify-between w-full">
             <div className="flex items-center gap-4">
               {/* Add sidebar trigger button */}
               <SidebarTrigger className="mr-2" />
@@ -70,7 +70,8 @@ export function MainLayout({ children }: MainLayoutProps) {
                 <BellRing className="h-6 w-6 text-primary-foreground" />
               </div>
               <div className="flex items-center gap-4">
-                <span className="text-xl font-bold text-foreground">Alorf Maintenance Reminder</span>
+                <span className="text-xl font-bold text-foreground hidden sm:inline">Alorf Maintenance Reminder</span>
+                <span className="text-xl font-bold text-foreground sm:hidden">AMR</span>
                 <HoverCard>
                   <HoverCardTrigger asChild>
                     <Button variant="ghost" size="icon" className="rounded-full">
@@ -155,7 +156,7 @@ export function MainLayout({ children }: MainLayoutProps) {
               isMobileMenuOpen ? "max-h-[300px] opacity-100" : "max-h-0 opacity-0"
             )}
           >
-            <div className="container mx-auto px-4 py-2 space-y-1">
+            <div className="px-4 py-2 space-y-1">
               {navItems.map((item) => (
                 <Link
                   key={item.label}
@@ -178,12 +179,14 @@ export function MainLayout({ children }: MainLayoutProps) {
           </div>
         </header>
         
-        <main className="flex-1 container mx-auto px-4 py-8 animate-fade-in">
-          {children}
+        <main className="flex-1 w-full h-full overflow-auto">
+          <div className="p-4 md:p-6 animate-fade-in w-full max-w-full">
+            {children}
+          </div>
         </main>
         
-        <footer className="bg-card border-t py-6">
-          <div className="container mx-auto px-4 text-center text-muted-foreground text-sm">
+        <footer className="bg-card border-t py-4 w-full">
+          <div className="px-4 text-center text-muted-foreground text-sm">
             &copy; {new Date().getFullYear()} Alorf Maintenance Reminder - Smart Machine Maintenance App
           </div>
         </footer>
