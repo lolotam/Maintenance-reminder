@@ -1,5 +1,5 @@
 
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   Sidebar,
@@ -11,15 +11,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { 
-  Home, 
-  LinkIcon, 
-  Layout, 
-  Calendar, 
-  HelpCircle, 
-  Settings, 
-  Mail
-} from "lucide-react";
 
 // List of all departments
 const departments = [
@@ -51,17 +42,6 @@ const departments = [
   "PLASTIC",
 ];
 
-// Icons for navigation menu items
-const navItems = [
-  { icon: Home, label: "Dashboard", path: "/" },
-  { icon: LinkIcon, label: "Shortcuts", path: "/shortcuts" },
-  { icon: Layout, label: "Overview", path: "/overview" },
-  { icon: Calendar, label: "Events", path: "/events" },
-  { icon: HelpCircle, label: "About", path: "/about" },
-  { icon: Settings, label: "Services", path: "/services" },
-  { icon: Mail, label: "Contact", path: "/contact" },
-];
-
 export function DepartmentSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -84,34 +64,12 @@ export function DepartmentSidebar() {
   return (
     <Sidebar>
       <div className="bg-[#0c2840] h-full text-white">
-        <div className="p-4 border-b border-[#1c3a50] flex items-center justify-between">
-          <h2 className="text-lg font-semibold">My App</h2>
-          <button className="text-white/70 hover:text-white">
-            ✕
-          </button>
+        <div className="p-4 border-b border-[#1c3a50] flex items-center justify-center">
+          <h2 className="text-lg font-semibold">Departments</h2>
         </div>
 
         <SidebarContent className="p-0">
-          <div className="flex flex-col">
-            {navItems.map((item) => (
-              <Link
-                key={item.label}
-                to={item.path}
-                className={cn(
-                  "flex items-center gap-3 px-4 py-3 hover:bg-[#143755] transition-colors",
-                  location.pathname === item.path ? "bg-[#143755]" : ""
-                )}
-              >
-                <item.icon className="h-5 w-5 text-white/70" />
-                <span className="text-sm">{item.label}</span>
-              </Link>
-            ))}
-          </div>
-          
-          <SidebarGroup className="mt-4 p-0">
-            <SidebarGroupLabel className="px-4 py-2 text-white/50 uppercase text-xs tracking-wider">
-              Departments
-            </SidebarGroupLabel>
+          <SidebarGroup className="mt-2 p-0">
             <SidebarGroupContent>
               <SidebarMenu>
                 {departments.map((dept) => (
