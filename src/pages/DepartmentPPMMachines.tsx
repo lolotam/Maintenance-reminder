@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { MainLayout } from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
 import { PPMMachinesTable } from "@/components/PPMMachinesTable";
@@ -9,12 +10,23 @@ import { usePPMMachines } from "@/hooks/usePPMMachines";
 
 const DepartmentPPMMachines = () => {
   const { departmentId } = useParams<{ departmentId: string }>();
-  const { machines, addMachine } = usePPMMachines();
+  const ppmMachinesHook = usePPMMachines();
+  
+  // State for machine selection and search
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedMachines, setSelectedMachines] = useState<string[]>([]);
   
   // Format the department name for display
   const displayName = departmentId 
     ? departmentId.toUpperCase().replace(/-/g, ' ')
     : "";
+
+  const handleAddMachine = (machineData: any) => {
+    // Generate a unique ID for the new machine
+    const newId = crypto.randomUUID();
+    ppmMachinesHook.machines.push({ ...machineData, id: newId });
+    ppmMachinesHook.saveToLocalStorage(ppmMachinesHook.machines);
+  };
 
   return (
     <MainLayout>
@@ -29,10 +41,14 @@ const DepartmentPPMMachines = () => {
             </Link>
             <h1 className="text-2xl font-bold tracking-tight">{displayName} PPM Machines</h1>
           </div>
-          <AddMachineDialog type="ppm" onAddMachine={addMachine} />
+          <AddMachineDialog type="ppm" onAddMachine={handleAddMachine} />
         </div>
 
-        <PPMMachinesTable />
+        <PPMMachinesTable 
+          searchTerm={searchTerm}
+          selectedMachines={selectedMachines}
+          setSelectedMachines={setSelectedMachines}
+        />
       </div>
     </MainLayout>
   );

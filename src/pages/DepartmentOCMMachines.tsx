@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { MainLayout } from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
 import { OCMMachinesTable } from "@/components/OCMMachinesTable";
@@ -6,10 +7,16 @@ import { AddMachineDialog } from "@/components/AddMachineDialog";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { useOCMMachines } from "@/hooks/useOCMMachines";
+import { useMachineOperations } from "@/hooks/useMachineOperations";
 
 const DepartmentOCMMachines = () => {
   const { departmentId } = useParams<{ departmentId: string }>();
-  const { machines, addMachine } = useOCMMachines();
+  const { addMachine } = useMachineOperations();
+  const ocmMachinesHook = useOCMMachines();
+  
+  // State for machine selection and search
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedMachines, setSelectedMachines] = useState<string[]>([]);
   
   // Format the department name for display
   const displayName = departmentId 
@@ -32,7 +39,11 @@ const DepartmentOCMMachines = () => {
           <AddMachineDialog type="ocm" onAddMachine={addMachine} />
         </div>
 
-        <OCMMachinesTable />
+        <OCMMachinesTable 
+          searchTerm={searchTerm}
+          selectedMachines={selectedMachines}
+          setSelectedMachines={setSelectedMachines}
+        />
       </div>
     </MainLayout>
   );
