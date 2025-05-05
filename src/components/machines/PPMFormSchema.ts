@@ -1,0 +1,20 @@
+
+import * as z from "zod";
+
+export const ppmMachineFormSchema = z.object({
+  equipment: z.string().min(1, "Equipment name is required"),
+  model: z.string().min(1, "Model is required"),
+  serialNumber: z.string().min(1, "Serial number is required"),
+  manufacturer: z.string().min(1, "Manufacturer is required"),
+  logNo: z.string().min(1, "Log number is required"),
+  q1_date: z.string().min(1, "Q1 date is required"),
+  q1_engineer: z.string().min(1, "Q1 engineer is required"),
+  q2_date: z.string().min(1, "Q2 date is required"),
+  q2_engineer: z.string().min(1, "Q2 engineer is required"),
+  q3_date: z.string().min(1, "Q3 date is required"),
+  q3_engineer: z.string().min(1, "Q3 engineer is required"),
+  q4_date: z.string().min(1, "Q4 date is required"),
+  q4_engineer: z.string().min(1, "Q4 engineer is required"),
+});
+
+export type PPMFormData = z.infer<typeof ppmMachineFormSchema>;

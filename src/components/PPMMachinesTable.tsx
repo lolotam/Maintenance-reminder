@@ -1,16 +1,14 @@
 
 import { Table, TableBody, TableRow, TableCell } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
-import { toast } from "sonner";
-import { PPMMachine, MachineTableProps } from "@/types/machines";
-import { useMachineTable } from "@/hooks/useMachineTable";
-import { MachineFilters } from "@/components/machines/MachineFilters";
-import { EditPPMMachineForm } from "@/components/machines/EditPPMMachineForm";
+import { MachineTableProps } from "@/types/machines";
+import { MachineFilters as MachineFiltersComponent } from "@/components/machines/MachineFilters";
 import { MachineTableHeader } from "@/components/machines/MachineTableHeader";
 import { MachineTableRow } from "@/components/machines/MachineTableRow";
+import { usePPMMachines } from "@/hooks/usePPMMachines";
+import { PPMEditDialog } from "@/components/machines/PPMEditDialog";
 
-const mockPPMMachines: PPMMachine[] = [
+const mockPPMMachines = [
   {
     id: "1",
     equipment: "Ventilator",
@@ -18,6 +16,8 @@ const mockPPMMachines: PPMMachine[] = [
     serialNumber: "V123456",
     manufacturer: "Puritan Bennett",
     logNo: "LG001",
+    type: "PPM" as const,
+    department: "ICU",
     q1: { date: "2025-03-15", engineer: "John Smith" },
     q2: { date: "2025-06-15", engineer: "Emma Davis" },
     q3: { date: "2025-09-15", engineer: "Michael Brown" },
@@ -30,6 +30,8 @@ const mockPPMMachines: PPMMachine[] = [
     serialNumber: "PM789012",
     manufacturer: "Philips",
     logNo: "LG002",
+    type: "PPM" as const,
+    department: "Emergency",
     q1: { date: "2025-02-20", engineer: "John Smith" },
     q2: { date: "2025-05-20", engineer: "Emma Davis" },
     q3: { date: "2025-08-20", engineer: "Michael Brown" },
@@ -39,54 +41,18 @@ const mockPPMMachines: PPMMachine[] = [
 
 export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMachines }: MachineTableProps) => {
   const {
-    machines: storedMachines,
-    setMachines,
+    filteredMachines,
     filters,
     setFilters,
     handleDelete,
-  } = useMachineTable<PPMMachine>("ppm", mockPPMMachines);
+    editingMachine,
+    setEditingMachine,
+    updateMachine,
+    setReminder,
+    markCompleted
+  } = usePPMMachines(mockPPMMachines);
   
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingMachine, setEditingMachine] = useState<PPMMachine | null>(null);
-
-  // Safe string lowercase comparison helper
-  const safeIncludes = (value: string | null | undefined, term: string) => {
-    return value && typeof value === 'string' 
-      ? value.toLowerCase().includes(term.toLowerCase()) 
-      : false;
-  };
-  
-  const filteredMachines = storedMachines.filter((machine) => {
-    const equipmentMatch = safeIncludes(machine.equipment, searchTerm);
-    const modelMatch = safeIncludes(machine.model, searchTerm);
-    const manufacturerMatch = safeIncludes(machine.manufacturer, searchTerm);
-    
-    const matchesSearch = equipmentMatch || modelMatch || manufacturerMatch;
-
-    const matchesEquipmentFilter = !filters.equipment || 
-      safeIncludes(machine.equipment, filters.equipment);
-    const matchesModelFilter = !filters.model || 
-      safeIncludes(machine.model, filters.model);
-    const matchesSerialFilter = !filters.serialNumber || 
-      safeIncludes(machine.serialNumber, filters.serialNumber);
-    const matchesManufacturerFilter = !filters.manufacturer || 
-      safeIncludes(machine.manufacturer, filters.manufacturer);
-    const matchesLogNoFilter = !filters.logNo || 
-      (machine.logNo && safeIncludes(machine.logNo.toString(), filters.logNo));
-
-    const matchesFilters = matchesEquipmentFilter && matchesModelFilter && 
-      matchesSerialFilter && matchesManufacturerFilter && matchesLogNoFilter;
-
-    return matchesSearch && matchesFilters;
-  });
-
-  const setReminder = (machine: PPMMachine, quarter: string) => {
-    toast.success(`Reminder set for ${machine.equipment} ${quarter} maintenance`);
-  };
-
-  const markCompleted = (machine: PPMMachine, quarter: string) => {
-    toast.success(`${quarter} maintenance for ${machine.equipment} marked as completed`);
-  };
 
   const toggleMachineSelection = (machineId: string) => {
     setSelectedMachines(
@@ -97,16 +63,22 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
   };
 
   const handleSelectAll = () => {
-    if (selectedMachines.length === filteredMachines.length) {
+    const machines = filteredMachines(searchTerm);
+    if (selectedMachines.length === machines.length) {
       setSelectedMachines([]);
     } else {
-      setSelectedMachines(filteredMachines.map(m => m.id));
+      setSelectedMachines(machines.map(m => m.id));
     }
   };
 
+  const machines = filteredMachines(searchTerm);
+
   return (
     <div className="space-y-4">
-      <MachineFilters filters={filters} onFilterChange={setFilters} />
+      <MachineFiltersComponent 
+        filters={filters} 
+        onFilterChange={(newFilters) => setFilters(newFilters)} 
+      />
       
       <div className="overflow-x-auto">
         <Table>
@@ -116,8 +88,8 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
             hasSelectedItems={selectedMachines.length > 0}
           />
           <TableBody>
-            {filteredMachines.length > 0 ? (
-              filteredMachines.map((machine) => (
+            {machines.length > 0 ? (
+              machines.map((machine) => (
                 <MachineTableRow
                   key={machine.id}
                   machine={machine}
@@ -135,7 +107,7 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={14} className="text-center py-4">
+                <TableCell colSpan={16} className="text-center py-4">
                   No PPM machines found matching your criteria.
                 </TableCell>
               </TableRow>
@@ -144,30 +116,12 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
         </Table>
       </div>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[700px]">
-          <DialogHeader>
-            <DialogTitle>Edit PPM Machine</DialogTitle>
-          </DialogHeader>
-          <EditPPMMachineForm
-            machine={editingMachine}
-            onSave={(updatedMachine) => {
-              const updatedMachines = storedMachines.map(m =>
-                m.id === updatedMachine.id ? updatedMachine : m
-              );
-              setMachines(updatedMachines);
-              localStorage.setItem("ppmMachines", JSON.stringify(updatedMachines));
-              setDialogOpen(false);
-              setEditingMachine(null);
-              toast.success(`${updatedMachine.equipment} has been updated`);
-            }}
-            onCancel={() => {
-              setDialogOpen(false);
-              setEditingMachine(null);
-            }}
-          />
-        </DialogContent>
-      </Dialog>
+      <PPMEditDialog
+        machine={editingMachine}
+        isOpen={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSave={updateMachine}
+      />
     </div>
   );
 };

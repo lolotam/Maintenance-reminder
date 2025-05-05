@@ -1,4 +1,3 @@
-
 export interface BaseMachine {
   id: string;
   equipment: string;
@@ -6,6 +5,8 @@ export interface BaseMachine {
   serialNumber: string;
   manufacturer: string;
   logNo: string;
+  type?: 'PPM' | 'OCM'; // New field for machine type
+  department?: string; // New field for department
 }
 
 export interface OCMMachine extends BaseMachine {
@@ -41,6 +42,7 @@ export interface MachineFilters {
   serialNumber: string;
   manufacturer: string;
   logNo: string;
+  department?: string; // Add department to filters
 }
 
 export type NotificationType = 'email' | 'whatsapp' | 'push' | 'sms';
