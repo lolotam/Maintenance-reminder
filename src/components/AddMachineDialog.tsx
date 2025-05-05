@@ -13,9 +13,10 @@ import { AddOCMForm } from "./machines/AddOCMForm";
 interface AddMachineDialogProps {
   type: "ppm" | "ocm";
   onAddMachine: (data: any) => void;
+  defaultDepartment?: string; // Make department optional
 }
 
-export const AddMachineDialog = ({ type, onAddMachine }: AddMachineDialogProps) => {
+export const AddMachineDialog = ({ type, onAddMachine, defaultDepartment }: AddMachineDialogProps) => {
   const formSchema = type === "ppm" ? ppmFormSchema : ocmFormSchema;
   
   const form = useForm({
@@ -26,7 +27,7 @@ export const AddMachineDialog = ({ type, onAddMachine }: AddMachineDialogProps) 
       serialNumber: "",
       manufacturer: "",
       logNo: "",
-      department: "",
+      department: defaultDepartment || "", // Set default department if provided
       type: "PPM",
       q1_date: "",
       q1_engineer: "",
@@ -42,7 +43,7 @@ export const AddMachineDialog = ({ type, onAddMachine }: AddMachineDialogProps) 
       serialNumber: "",
       manufacturer: "",
       logNo: "",
-      department: "",
+      department: defaultDepartment || "", // Set default department if provided
       type: "OCM",
       maintenance2024: { date: "", engineer: "" },
       maintenance2025: { date: "", engineer: "" },

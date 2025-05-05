@@ -1,3 +1,4 @@
+
 export interface BaseMachine {
   id: string;
   equipment: string;
