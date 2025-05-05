@@ -63,6 +63,12 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
+				'navy': {
+					DEFAULT: '#0c2840',
+					light: '#143755',
+					dark: '#0a1f33',
+				},
+				'accent-blue': '#34a0ff',
 				warning: {
 					DEFAULT: 'hsl(38, 92%, 50%)',
 					foreground: 'hsl(0, 0%, 0%)'

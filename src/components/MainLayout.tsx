@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Home, Settings, BellRing, Moon, Sun, Menu, X, Info, Calendar, ClipboardCheck } from "lucide-react";
@@ -60,10 +59,12 @@ export function MainLayout({ children }: MainLayoutProps) {
       <DepartmentSidebar />
       
       <div className="flex flex-col flex-1 w-full h-full overflow-hidden">
+        {/* Header section */}
         <header className="bg-card shadow-sm sticky top-0 z-40 w-full">
           <div className="px-4 py-3 flex items-center justify-between w-full">
+            {/* Left side of header */}
             <div className="flex items-center gap-4">
-              {/* Add sidebar trigger button */}
+              {/* Sidebar trigger button */}
               <SidebarTrigger className="mr-2" />
               
               <div className="bg-primary rounded-md p-1">
@@ -93,7 +94,9 @@ export function MainLayout({ children }: MainLayoutProps) {
               </div>
             </div>
             
+            {/* Right side of header */}
             <div className="flex items-center gap-2">
+              {/* Dark/light mode toggle */}
               <Button 
                 variant="ghost" 
                 size="icon" 
@@ -108,6 +111,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                 )}
               </Button>
               
+              {/* Mobile menu toggle */}
               <Button
                 variant="ghost"
                 size="icon"
@@ -123,6 +127,7 @@ export function MainLayout({ children }: MainLayoutProps) {
               </Button>
             </div>
             
+            {/* Desktop navigation */}
             <nav className="hidden lg:flex gap-3 absolute left-1/2 transform -translate-x-1/2">
               {navItems.map((item) => (
                 <Link
@@ -150,6 +155,7 @@ export function MainLayout({ children }: MainLayoutProps) {
             </nav>
           </div>
           
+          {/* Mobile navigation menu */}
           <div 
             className={cn(
               "lg:hidden bg-card border-t overflow-hidden transition-all duration-300 ease-in-out",
@@ -179,12 +185,14 @@ export function MainLayout({ children }: MainLayoutProps) {
           </div>
         </header>
         
+        {/* Main content */}
         <main className="flex-1 w-full h-full overflow-auto">
           <div className="p-4 md:p-6 animate-fade-in w-full max-w-full">
             {children}
           </div>
         </main>
         
+        {/* Footer */}
         <footer className="bg-card border-t py-4 w-full">
           <div className="px-4 text-center text-muted-foreground text-sm">
             &copy; {new Date().getFullYear()} Alorf Maintenance Reminder - Smart Machine Maintenance App
