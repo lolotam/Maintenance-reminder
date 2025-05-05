@@ -16,8 +16,6 @@ export function MachineTableHeader({ type, onSelectAll, hasSelectedItems }: Mach
           <TableHead className="w-12">
             <Checkbox checked={hasSelectedItems} onClick={onSelectAll} />
           </TableHead>
-          <TableHead>Type</TableHead>
-          <TableHead>Department</TableHead>
           <TableHead>Equipment_Name</TableHead>
           <TableHead>Model</TableHead>
           <TableHead>Serial Number</TableHead>
@@ -39,8 +37,6 @@ export function MachineTableHeader({ type, onSelectAll, hasSelectedItems }: Mach
         <TableHead className="w-12">
           <Checkbox checked={hasSelectedItems} onClick={onSelectAll} />
         </TableHead>
-        <TableHead>Type</TableHead>
-        <TableHead>Department</TableHead>
         <TableHead>Equipment_Name</TableHead>
         <TableHead>Model</TableHead>
         <TableHead>Serial Number</TableHead>

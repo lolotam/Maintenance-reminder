@@ -1,12 +1,29 @@
 
 import { Button } from "@/components/ui/button";
-import { Form } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { PPMMachine } from "@/types/machines";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { PPMMachineInfoFields } from "./PPMMachineInfoFields";
-import { PPMQuarterFields } from "./PPMQuarterFields";
-import { ppmMachineFormSchema, PPMFormData } from "./PPMFormSchema";
+import * as z from "zod";
+
+const formSchema = z.object({
+  equipment: z.string().min(1, "Equipment name is required"),
+  model: z.string().min(1, "Model is required"),
+  serialNumber: z.string().min(1, "Serial number is required"),
+  manufacturer: z.string().min(1, "Manufacturer is required"),
+  logNo: z.string().min(1, "Log number is required"),
+  q1_date: z.string().min(1, "Q1 date is required"),
+  q1_engineer: z.string().min(1, "Q1 engineer is required"),
+  q2_date: z.string().min(1, "Q2 date is required"),
+  q2_engineer: z.string().min(1, "Q2 engineer is required"),
+  q3_date: z.string().min(1, "Q3 date is required"),
+  q3_engineer: z.string().min(1, "Q3 engineer is required"),
+  q4_date: z.string().min(1, "Q4 date is required"),
+  q4_engineer: z.string().min(1, "Q4 engineer is required"),
+});
+
+type FormData = z.infer<typeof formSchema>;
 
 interface EditPPMMachineFormProps {
   machine: PPMMachine | null;
@@ -15,8 +32,8 @@ interface EditPPMMachineFormProps {
 }
 
 export function EditPPMMachineForm({ machine, onSave, onCancel }: EditPPMMachineFormProps) {
-  const form = useForm<PPMFormData>({
-    resolver: zodResolver(ppmMachineFormSchema),
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
     defaultValues: machine ? {
       equipment: machine.equipment,
       model: machine.model,
@@ -34,7 +51,7 @@ export function EditPPMMachineForm({ machine, onSave, onCancel }: EditPPMMachine
     } : undefined,
   });
 
-  const onSubmit = (data: PPMFormData) => {
+  const onSubmit = (data: FormData) => {
     if (!machine) return;
     
     onSave({
@@ -54,13 +71,194 @@ export function EditPPMMachineForm({ machine, onSave, onCancel }: EditPPMMachine
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <PPMMachineInfoFields form={form} />
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="equipment"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Equipment</FormLabel>
+                <FormControl>
+                  <Input placeholder="Equipment name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="model"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Model</FormLabel>
+                <FormControl>
+                  <Input placeholder="Model" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="serialNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Serial Number</FormLabel>
+                <FormControl>
+                  <Input placeholder="Serial number" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="manufacturer"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Manufacturer</FormLabel>
+                <FormControl>
+                  <Input placeholder="Manufacturer" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="logNo"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Log No</FormLabel>
+                <FormControl>
+                  <Input placeholder="Log number" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <div className="grid grid-cols-4 gap-4">
-          <PPMQuarterFields form={form} quarter="q1" title="Q1" />
-          <PPMQuarterFields form={form} quarter="q2" title="Q2" />
-          <PPMQuarterFields form={form} quarter="q3" title="Q3" />
-          <PPMQuarterFields form={form} quarter="q4" title="Q4" />
+          <div className="space-y-4">
+            <h3 className="font-medium">Q1</h3>
+            <FormField
+              control={form.control}
+              name="q1_date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="q1_engineer"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Engineer</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Engineer name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="font-medium">Q2</h3>
+            <FormField
+              control={form.control}
+              name="q2_date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="q2_engineer"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Engineer</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Engineer name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="font-medium">Q3</h3>
+            <FormField
+              control={form.control}
+              name="q3_date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="q3_engineer"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Engineer</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Engineer name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="font-medium">Q4</h3>
+            <FormField
+              control={form.control}
+              name="q4_date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="q4_engineer"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Engineer</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Engineer name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
 
         <div className="flex justify-end gap-2">

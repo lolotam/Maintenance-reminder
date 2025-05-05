@@ -18,7 +18,6 @@ export function useMachineTable<T extends { id: string; equipment: string }>(
     serialNumber: "",
     manufacturer: "",
     logNo: "",
-    department: "", // Added department filter
   });
 
   const saveToLocalStorage = (updatedMachines: T[]) => {
