@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Home, Settings, BellRing, Moon, Sun, Menu, X, Info, Calendar, ClipboardCheck } from "lucide-react";
@@ -127,8 +128,8 @@ export function MainLayout({ children }: MainLayoutProps) {
               </Button>
             </div>
             
-            {/* Desktop navigation */}
-            <nav className="hidden lg:flex gap-3 absolute left-1/2 transform -translate-x-1/2">
+            {/* Desktop navigation - moved slightly to the right */}
+            <nav className="hidden lg:flex gap-3 absolute left-[55%] transform -translate-x-1/2">
               {navItems.map((item) => (
                 <Link
                   key={item.label}

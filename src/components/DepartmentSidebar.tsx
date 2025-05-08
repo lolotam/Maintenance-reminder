@@ -69,21 +69,21 @@ export function DepartmentSidebar() {
         </div>
 
         <SidebarContent className="p-0">
-          <SidebarGroup className="mt-2 p-0">
+          <SidebarGroup className="mt-2 p-2">
             <SidebarGroupContent>
               <SidebarMenu>
                 {departments.map((dept) => (
-                  <SidebarMenuItem key={dept}>
-                    <SidebarMenuButton 
-                      isActive={isDepartmentActive(dept)}
+                  <SidebarMenuItem key={dept} className="mb-1">
+                    <button
                       onClick={() => handleDepartmentClick(dept)}
                       className={cn(
-                        "transition-colors hover:bg-[#143755] text-white/90 hover:text-white",
+                        "w-full px-3 py-2 rounded-md text-left text-sm font-medium transition-colors",
+                        "border border-[#1c3a50] hover:bg-[#143755] text-white/90 hover:text-white",
                         isDepartmentActive(dept) ? "bg-[#143755] text-white" : ""
                       )}
                     >
-                      <span>{dept}</span>
-                    </SidebarMenuButton>
+                      {dept}
+                    </button>
                   </SidebarMenuItem>
                 ))}
               </SidebarMenu>
