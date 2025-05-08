@@ -2,7 +2,7 @@
 import { MainLayout } from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Wrench, Settings, Bell } from "lucide-react";
+import { Wrench, Settings } from "lucide-react";
 import { useAppContext } from "@/contexts/AppContext";
 import { toast } from "sonner";
 import { useEffect, useState, useCallback } from "react";
@@ -38,16 +38,6 @@ const LdrMachines = () => {
     };
   }, [updateCounts, navigate]); 
 
-  const handleDashboardLink = () => {
-    // Integration with dashboard will be implemented here
-    toast.info("Redirecting to dashboard...");
-  };
-
-  const handleNotifications = () => {
-    // Integration with notifications will be implemented here
-    toast.info("Checking maintenance notifications...");
-  };
-
   return (
     <MainLayout>
       <div className="space-y-6">
@@ -63,10 +53,6 @@ const LdrMachines = () => {
               Maintenance Management Dashboard
             </p>
           </div>
-          <Button variant="outline" size="sm" onClick={handleNotifications}>
-            <Bell className="h-4 w-4 mr-2" />
-            Notifications
-          </Button>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
