@@ -1,5 +1,4 @@
-
-import { addMonths, addYears, isValid, parseISO } from "date-fns";
+import { addMonths, addYears, isValid, parseISO, format } from "date-fns";
 
 export const parseExcelDate = (value: any): string => {
   if (!value) return '';
@@ -57,5 +56,19 @@ export const calculateNextDate = (lastDate: string, frequency: string) => {
   } catch (error) {
     console.error("Error calculating next date:", error);
     return '';
+  }
+};
+
+export const formatDate = (dateString: string | undefined | null): string => {
+  if (!dateString) return 'Not scheduled';
+  
+  try {
+    const date = parseISO(dateString);
+    if (!isValid(date)) return 'Invalid date';
+    
+    return format(date, 'dd/MM/yyyy');
+  } catch (error) {
+    console.error("Error formatting date:", error);
+    return 'Invalid date';
   }
 };

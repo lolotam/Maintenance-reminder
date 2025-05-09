@@ -6,6 +6,7 @@ export const useMachineStats = () => {
 
   const countMachinesByType = (machineType: "PPM" | "OCM"): number => {
     return machines.filter(machine => {
+      // If machine has explicit type, use it
       if (machine.type) {
         return machine.type === machineType;
       }
@@ -13,15 +14,15 @@ export const useMachineStats = () => {
       // Identify PPM machines by quarterly maintenance fields
       if (machineType === "PPM") {
         return machine.frequency === 'Quarterly' || 
-               machine.q1 !== undefined || 
-               machine.quarters !== undefined ||
+               machine.quarters !== undefined || 
+               (machine.q1 !== undefined) ||
                (machine.maintenance_interval && machine.maintenance_interval === 'quarterly');
       }
       
       // Identify OCM machines by yearly maintenance fields
       if (machineType === "OCM") {
         return machine.frequency === 'Yearly' || 
-               machine.maintenanceDate !== undefined || 
+               (machine.maintenanceDate !== undefined) || 
                machine.years !== undefined ||
                (machine.maintenance_interval && machine.maintenance_interval === 'yearly');
       }

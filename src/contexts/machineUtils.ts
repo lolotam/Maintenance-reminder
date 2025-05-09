@@ -1,3 +1,4 @@
+
 export const filterMachines = (machines: any[], searchTerm: string, filters: any = {}) => {
   return machines.filter((machine) => {
     // Search term filter
@@ -77,4 +78,31 @@ export const filterMachines = (machines: any[], searchTerm: string, filters: any
     
     return searchTermMatch && frequencyMatch && statusMatch && departmentFilterMatch && typeFilterMatch;
   });
+};
+
+// Add calculateNextDate function that was missing
+export const calculateNextDate = (lastDate: string, frequency: string): string => {
+  try {
+    if (!lastDate) return '';
+    
+    const date = new Date(lastDate);
+    if (isNaN(date.getTime())) {
+      throw new Error("Invalid date");
+    }
+    
+    if (frequency.toLowerCase() === "quarterly") {
+      const nextDate = new Date(date);
+      nextDate.setMonth(date.getMonth() + 3);
+      return nextDate.toISOString();
+    } else if (frequency.toLowerCase() === "yearly") {
+      const nextDate = new Date(date);
+      nextDate.setFullYear(date.getFullYear() + 1);
+      return nextDate.toISOString();
+    } else {
+      throw new Error(`Unknown frequency: ${frequency}`);
+    }
+  } catch (error) {
+    console.error("Error calculating next date:", error);
+    return '';
+  }
 };

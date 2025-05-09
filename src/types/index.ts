@@ -1,4 +1,5 @@
 
+
 export interface Machine {
   id: string;
   name: string;
@@ -20,6 +21,13 @@ export interface Machine {
     '2025'?: { date: string; engineer: string };
     '2026'?: { date: string; engineer: string };
   };
+  // Add missing properties
+  type?: 'PPM' | 'OCM';
+  department?: string;
+  location?: string;
+  q1?: { date: string; engineer: string };
+  maintenance_interval?: string;
+  maintenanceDate?: string;
 }
 
 export interface NotificationSettings {
@@ -36,3 +44,4 @@ export interface AppSettings {
   whatsappEnabled?: boolean;
   whatsappNumber?: string;
 }
+
