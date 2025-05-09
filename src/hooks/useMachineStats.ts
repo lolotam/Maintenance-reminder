@@ -1,20 +1,33 @@
 
+import { useAppContext } from "@/contexts/AppContext";
+
 export const useMachineStats = () => {
-  const countMachinesByType = (type: "PPM" | "OCM") => {
-    try {
-      let storedMachines = [];
-      const key = type === "OCM" ? "ocmMachines" : "ppmMachines";
-      
-      const storedData = localStorage.getItem(key);
-      if (storedData) {
-        storedMachines = JSON.parse(storedData);
+  const { machines } = useAppContext();
+
+  const countMachinesByType = (machineType: "PPM" | "OCM"): number => {
+    return machines.filter(machine => {
+      if (machine.type) {
+        return machine.type === machineType;
+      }
+
+      // Identify PPM machines by quarterly maintenance fields
+      if (machineType === "PPM") {
+        return machine.frequency === 'Quarterly' || 
+               machine.q1 !== undefined || 
+               machine.quarters !== undefined ||
+               (machine.maintenance_interval && machine.maintenance_interval === 'quarterly');
       }
       
-      return Array.isArray(storedMachines) ? storedMachines.length : 0;
-    } catch (error) {
-      console.error("Error counting machines:", error);
-      return 0;
-    }
+      // Identify OCM machines by yearly maintenance fields
+      if (machineType === "OCM") {
+        return machine.frequency === 'Yearly' || 
+               machine.maintenanceDate !== undefined || 
+               machine.years !== undefined ||
+               (machine.maintenance_interval && machine.maintenance_interval === 'yearly');
+      }
+
+      return false;
+    }).length;
   };
 
   return {

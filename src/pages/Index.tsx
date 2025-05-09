@@ -8,6 +8,8 @@ import { DashboardStats } from "@/components/dashboard/DashboardStats";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { MachinesList } from "@/components/dashboard/MachinesList";
 import { Clock } from "@/components/dashboard/Clock";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AllMachinesTable } from "@/components/machines/AllMachinesTable";
 
 const Dashboard = () => {
   const { markMachineComplete, filteredMachines, getAllMachines, countMachinesByType } = useAppContext();
@@ -20,6 +22,7 @@ const Dashboard = () => {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const isMobile = useIsMobile();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
 
   // Get accurate counts from context
   const ppmCount = countMachinesByType("PPM");
@@ -122,20 +125,35 @@ const Dashboard = () => {
           ocmCount={ocmCount}
         />
 
-        <DashboardFilters
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          filters={filters}
-          setFilters={setFilters}
-          isMobile={isMobile}
-          isFiltersOpen={isFiltersOpen}
-          setIsFiltersOpen={setIsFiltersOpen}
-        />
+        <Tabs defaultValue="cards" onValueChange={(value) => setViewMode(value as "cards" | "table")}>
+          <div className="flex justify-between items-center mb-4">
+            <TabsList>
+              <TabsTrigger value="cards">Card View</TabsTrigger>
+              <TabsTrigger value="table">Table View</TabsTrigger>
+            </TabsList>
+          </div>
+          
+          <TabsContent value="cards" className="space-y-4">
+            <DashboardFilters
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              filters={filters}
+              setFilters={setFilters}
+              isMobile={isMobile}
+              isFiltersOpen={isFiltersOpen}
+              setIsFiltersOpen={setIsFiltersOpen}
+            />
 
-        <MachinesList
-          machines={displayedMachines}
-          onMarkComplete={markMachineComplete}
-        />
+            <MachinesList
+              machines={displayedMachines}
+              onMarkComplete={markMachineComplete}
+            />
+          </TabsContent>
+          
+          <TabsContent value="table">
+            <AllMachinesTable />
+          </TabsContent>
+        </Tabs>
       </div>
     </MainLayout>
   );
