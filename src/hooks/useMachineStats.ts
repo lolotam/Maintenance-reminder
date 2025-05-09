@@ -1,9 +1,5 @@
 
-import { useAppContext } from "@/contexts/AppContext";
-
-export const useMachineStats = () => {
-  const { machines } = useAppContext();
-
+export const useMachineStats = (machines: any[] = []) => {
   const countMachinesByType = (machineType: "PPM" | "OCM"): number => {
     return machines.filter(machine => {
       // If machine has explicit type, use it

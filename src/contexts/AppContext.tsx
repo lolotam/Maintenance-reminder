@@ -14,7 +14,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const { machines, setMachines, addMachines, updateMachine, deleteMachine, markMachineComplete } = useMachineManagement(initialMachines);
   const { settings, updateSettings } = useSettings(initialSettings);
   const { filteredMachines } = useMachineFiltering();
-  const { countMachinesByType } = useMachineStats();
+  
+  // Pass machines directly to useMachineStats
+  const machineStats = useMachineStats(machines);
+  const { countMachinesByType } = machineStats;
 
   const getAllMachines = () => machines;
 
