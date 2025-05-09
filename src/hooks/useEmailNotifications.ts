@@ -8,17 +8,24 @@ export function useEmailNotifications() {
   
   // Send test email notification
   const sendTestEmailNotification = async (email: string) => {
-    if (!email) return false;
+    if (!email) {
+      toast.error('Please provide a valid email address');
+      return false;
+    }
     
     setLoading(prev => ({ ...prev, email: true }));
     
     try {
-      const { error } = await supabase.functions.invoke('send-test-email', {
+      console.log(`Sending test email to: ${email}`);
+      
+      const { data, error } = await supabase.functions.invoke('send-test-email', {
         body: { email, name: user?.user_metadata?.name || "User" },
       });
       
       if (error) throw new Error(error.message);
+      if (!data?.success) throw new Error('Failed to send email');
       
+      console.log('Test email response:', data);
       toast.success('Test email sent successfully!');
       return true;
     } catch (error: any) {

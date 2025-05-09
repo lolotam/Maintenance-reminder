@@ -15,11 +15,15 @@ serve(async (req) => {
   }
 
   try {
-    const { email, name } = await req.json();
+    // Parse request body as JSON
+    const body = await req.json();
+    const { email, name } = body;
     
     if (!email) {
       throw new Error("Missing required parameter: email");
     }
+    
+    console.log(`Attempting to send email to: ${email}`);
     
     // Setup SMTP client with credentials from environment variables
     const client = new SMTPClient({
@@ -34,12 +38,8 @@ serve(async (req) => {
       },
     });
 
-    // Send test email
-    await client.send({
-      from: Deno.env.get("SMTP_USERNAME") || "",
-      to: email,
-      subject: "Test Email from Hospital Equipment Maintenance System",
-      content: `
+    // Construct HTML content - avoiding string methods that might not be available
+    const htmlContent = `
         <html>
           <body>
             <h1>Test Email Notification</h1>
@@ -50,13 +50,20 @@ serve(async (req) => {
             <p><em>This is an automated message, please do not reply.</em></p>
           </body>
         </html>
-      `,
+      `;
+
+    // Send test email
+    await client.send({
+      from: Deno.env.get("SMTP_USERNAME") || "",
+      to: email,
+      subject: "Test Email from Hospital Equipment Maintenance System",
+      content: htmlContent,
       html: true,
     });
     
     await client.close();
     
-    console.log(`Test email sent to ${email}`);
+    console.log(`Test email sent successfully to ${email}`);
     
     return new Response(JSON.stringify({ success: true, email }), {
       status: 200,
