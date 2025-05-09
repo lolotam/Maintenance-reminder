@@ -108,20 +108,20 @@ export function useNotificationHandler() {
     }
   };
   
-  // Send test notifications for each notification type
-  const sendTestEmailNotification = async () => {
-    if (!user) return false;
+  // Send test email notification
+  const sendTestEmailNotification = async (email: string) => {
+    if (!email) return false;
     
     setLoading(prev => ({ ...prev, email: true }));
     
     try {
       const { error } = await supabase.functions.invoke('send-test-email', {
-        body: { userId: user.id },
+        body: { email, name: user?.user_metadata?.name || "User" },
       });
       
       if (error) throw new Error(error.message);
       
-      toast.success('Test email sent');
+      toast.success('Test email sent successfully!');
       return true;
     } catch (error: any) {
       console.error('Error sending test email:', error);

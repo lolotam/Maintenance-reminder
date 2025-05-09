@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/lib/supabase";
 
 interface EmailNotificationCardProps {
   email: string;
@@ -19,20 +21,30 @@ export const EmailNotificationCard = ({
   setEmail,
   emailVerificationStatus,
 }: EmailNotificationCardProps) => {
+  const [isSending, setIsSending] = useState(false);
+
   const handleTestEmail = async () => {
     if (!email) {
       toast.error("Please enter an email address first");
       return;
     }
 
-    toast.promise(
-      new Promise((resolve) => setTimeout(resolve, 2000)),
-      {
-        loading: 'Sending test email...',
-        success: 'Test email sent successfully!',
-        error: 'Failed to send test email',
-      }
-    );
+    setIsSending(true);
+
+    try {
+      const { error } = await supabase.functions.invoke('send-test-email', {
+        body: { email, name: "User" }
+      });
+
+      if (error) throw new Error(error.message);
+      
+      toast.success("Test email sent successfully!");
+    } catch (error: any) {
+      console.error("Error sending test email:", error);
+      toast.error(`Failed to send test email: ${error.message}`);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -85,9 +97,9 @@ export const EmailNotificationCard = ({
           <Button 
             variant="outline" 
             onClick={handleTestEmail}
-            disabled={!email}
+            disabled={!email || isSending}
           >
-            Send Test Email
+            {isSending ? "Sending..." : "Send Test Email"}
           </Button>
         </div>
       </CardContent>
