@@ -34,13 +34,13 @@ export function TasksList() {
     
     return {
       id: machine.id,
-      name: machine.name || machine.equipment,
-      type: machine.type || (machine.frequency === "Quarterly" ? "PPM" : "OCM"),
+      name: machine.name, // Use name directly
+      type: machine.frequency === "Quarterly" ? "PPM" : "OCM", // Determine type from frequency
       status,
       daysRemaining,
       date: machine.nextMaintenanceDate,
-      engineer: machine.engineer || machine.engineerId || "Not assigned",
-      department: machine.department || machine.location || "Not specified",
+      engineer: "Not assigned", // Default value since we don't have this property
+      department: machine.department || "Not specified", // Use department or default
     };
   });
   
@@ -71,7 +71,7 @@ export function TasksList() {
       case "overdue":
         return <Badge variant="destructive">Overdue</Badge>;
       case "soon":
-        return <Badge variant="warning" className="bg-warning text-warning-foreground">Within 7 days</Badge>;
+        return <Badge variant="outline" className="bg-amber-100 text-amber-700 hover:bg-amber-200">Within 7 days</Badge>;
       default:
         return <Badge variant="outline">Upcoming</Badge>;
     }
