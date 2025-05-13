@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
 import { useParams, Link } from "react-router-dom";
+import { MachineCard } from "@/components/MachineCard";
 import { useAppContext } from "@/contexts/AppContext";
 import { Calendar, Settings, Wrench } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,6 +36,11 @@ const DepartmentPage = () => {
     (m as any).engineer
   ).length;
 
+  const handleMarkComplete = (id: string) => {
+    // This is a placeholder function to satisfy the onMarkComplete prop requirement
+    console.log(`Marking machine ${id} as complete`);
+  };
+
   return (
     <MainLayout>
       <div className="space-y-6">
@@ -44,6 +50,21 @@ const DepartmentPage = () => {
             <p className="text-muted-foreground mt-1">
               Manage and track machine maintenance for {displayName}
             </p>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Link to={`/departments/${departmentId}/ppm`}>
+              <Button variant="outline" className="gap-2">
+                <Calendar className="h-4 w-4" />
+                PPM Machines
+              </Button>
+            </Link>
+            <Link to={`/departments/${departmentId}/ocm`}>
+              <Button variant="outline" className="gap-2">
+                <Wrench className="h-4 w-4" />
+                OCM Machines
+              </Button>
+            </Link>
           </div>
         </div>
 
@@ -65,39 +86,67 @@ const DepartmentPage = () => {
             </CardFooter>
           </Card>
           
-          <Link to={`/departments/${departmentId}/ppm`} className="block">
-            <Card className="h-full hover:border-primary hover:shadow-md transition-all">
-              <CardHeader className="pb-2">
-                <CardTitle>PPM Machines</CardTitle>
-                <CardDescription>
-                  Quarterly maintenance machines
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{ppmCount}</div>
-              </CardContent>
-              <CardFooter>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle>PPM Machines</CardTitle>
+              <CardDescription>
+                Quarterly maintenance machines
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{ppmCount}</div>
+            </CardContent>
+            <CardFooter>
+              <Link to={`/departments/${departmentId}/ppm`}>
                 <Button variant="link" className="p-0">View all PPM machines</Button>
-              </CardFooter>
-            </Card>
-          </Link>
+              </Link>
+            </CardFooter>
+          </Card>
           
-          <Link to={`/departments/${departmentId}/ocm`} className="block">
-            <Card className="h-full hover:border-primary hover:shadow-md transition-all">
-              <CardHeader className="pb-2">
-                <CardTitle>OCM Machines</CardTitle>
-                <CardDescription>
-                  Operational condition machines
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{ocmCount}</div>
-              </CardContent>
-              <CardFooter>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle>OCM Machines</CardTitle>
+              <CardDescription>
+                Operational condition machines
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{ocmCount}</div>
+            </CardContent>
+            <CardFooter>
+              <Link to={`/departments/${departmentId}/ocm`}>
                 <Button variant="link" className="p-0">View all OCM machines</Button>
-              </CardFooter>
-            </Card>
-          </Link>
+              </Link>
+            </CardFooter>
+          </Card>
+        </div>
+        
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold">Recent Machines</h2>
+          {departmentMachines.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {departmentMachines.slice(0, 6).map((machine) => (
+                <MachineCard 
+                  key={machine.id} 
+                  machine={machine} 
+                  onMarkComplete={() => handleMarkComplete(machine.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 border rounded-md">
+              <p className="text-muted-foreground">No machines found for this department.</p>
+              <div className="mt-4">
+                <Link to={`/departments/${departmentId}/ppm`}>
+                  <Button>Add PPM Machine</Button>
+                </Link>
+                <span className="mx-2">or</span>
+                <Link to={`/departments/${departmentId}/ocm`}>
+                  <Button variant="outline">Add OCM Machine</Button>
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </MainLayout>

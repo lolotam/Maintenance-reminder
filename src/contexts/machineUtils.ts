@@ -1,108 +1,55 @@
 
-export const filterMachines = (machines: any[], searchTerm: string, filters: any = {}) => {
-  return machines.filter((machine) => {
-    // Search term filter
-    const nameMatch = machine.equipment?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      machine.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const modelMatch = machine.model?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const serialMatch = machine.serialNumber?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                       machine.serial_number?.toLowerCase().includes(searchTerm.toLowerCase());
-                       
-    const manufacturerMatch = machine.manufacturer?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const logNoMatch = machine.logNo?.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
-                       machine.log_number?.toString().toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const departmentMatch = (machine.department || machine.location)?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const searchTermMatch = !searchTerm || 
-      nameMatch || modelMatch || serialMatch || manufacturerMatch || logNoMatch || departmentMatch;
-    
-    // Frequency filter
-    let frequencyMatch = true;
-    if (filters.frequency) {
-      if (filters.frequency === 'quarterly') {
-        frequencyMatch = machine.frequency === 'Quarterly' || machine.q1 || machine.quarters;
-      } else if (filters.frequency === 'yearly') {
-        frequencyMatch = machine.frequency === 'Yearly' || machine.maintenanceDate || machine.years;
-      }
-    }
-    
-    // Status filter
-    let statusMatch = true;
-    if (filters.status) {
-      const today = new Date();
-      const nextDate = machine.nextMaintenanceDate || machine.next_maintenance_date;
-      
-      if (nextDate) {
-        const nextDateObj = new Date(nextDate);
-        const diffDays = Math.ceil((nextDateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        
-        if (filters.status === 'overdue') {
-          statusMatch = diffDays < 0;
-        } else if (filters.status === 'upcoming') {
-          statusMatch = diffDays >= 0 && diffDays <= 7;
-        } else if (filters.status === 'ok') {
-          statusMatch = diffDays > 7;
-        }
-      } else {
-        // If no next maintenance date, it's neither overdue nor upcoming
-        statusMatch = filters.status === 'ok';
-      }
-    }
-    
-    // Department filter
-    let departmentFilterMatch = true;
-    if (filters.department) {
-      const machineDepartment = (machine.department || machine.location || '').toLowerCase();
-      departmentFilterMatch = machineDepartment === filters.department.toLowerCase();
-    }
-    
-    // Type filter
-    let typeFilterMatch = true;
-    if (filters.type) {
-      if (filters.type === 'PPM') {
-        typeFilterMatch = machine.type === 'PPM' || 
-                         machine.frequency === 'Quarterly' ||
-                         machine.q1 || 
-                         machine.quarters;
-      } else if (filters.type === 'OCM') {
-        typeFilterMatch = machine.type === 'OCM' || 
-                         machine.frequency === 'Yearly' ||
-                         machine.maintenanceDate || 
-                         machine.years;
-      }
-    }
-    
-    return searchTermMatch && frequencyMatch && statusMatch && departmentFilterMatch && typeFilterMatch;
-  });
-};
+import { Machine } from "@/types";
+import { addMonths, addYears } from "date-fns";
 
-// Add calculateNextDate function that was missing
-export const calculateNextDate = (lastDate: string, frequency: string): string => {
+// Calculate next maintenance date based on last date and frequency
+export const calculateNextDate = (lastDate: string, frequency: "Quarterly" | "Yearly"): string => {
   try {
-    if (!lastDate) return '';
-    
     const date = new Date(lastDate);
     if (isNaN(date.getTime())) {
-      throw new Error("Invalid date");
+      console.error("Invalid date in calculateNextDate:", lastDate);
+      return "";
     }
     
-    if (frequency.toLowerCase() === "quarterly") {
-      const nextDate = new Date(date);
-      nextDate.setMonth(date.getMonth() + 3);
-      return nextDate.toISOString();
-    } else if (frequency.toLowerCase() === "yearly") {
-      const nextDate = new Date(date);
-      nextDate.setFullYear(date.getFullYear() + 1);
-      return nextDate.toISOString();
+    if (frequency === "Quarterly") {
+      return addMonths(date, 3).toISOString();
     } else {
-      throw new Error(`Unknown frequency: ${frequency}`);
+      return addYears(date, 1).toISOString();
     }
   } catch (error) {
-    console.error("Error calculating next date:", error);
-    return '';
+    console.error("Error in calculateNextDate:", error);
+    return "";
   }
+};
+
+// Filter machines based on search term and filters
+export const filterMachines = (
+  machines: Machine[],
+  searchTerm: string,
+  filters: any
+): Machine[] => {
+  return machines.filter((machine) => {
+    // Search term filtering (case insensitive)
+    const matchesSearch = !searchTerm ||
+      machine.name.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Frequency filtering
+    const matchesFrequency = !filters.frequency || 
+      machine.frequency === filters.frequency;
+      
+    // Status filtering (overdue, upcoming, all)
+    let matchesStatus = true;
+    if (filters.status) {
+      const today = new Date();
+      const nextDate = new Date(machine.nextMaintenanceDate || "");
+      
+      if (filters.status === "overdue") {
+        matchesStatus = nextDate < today;
+      } else if (filters.status === "upcoming") {
+        matchesStatus = nextDate > today;
+      }
+    }
+    
+    return matchesSearch && matchesFrequency && matchesStatus;
+  });
 };

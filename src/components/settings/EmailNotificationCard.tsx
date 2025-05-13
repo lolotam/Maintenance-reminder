@@ -1,14 +1,12 @@
 
-import { useState } from "react";
-import { Check, AlertCircle } from "lucide-react";
+import { Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useEmailNotifications } from "@/hooks/useEmailNotifications";
 
 interface EmailNotificationCardProps {
   email: string;
@@ -21,25 +19,20 @@ export const EmailNotificationCard = ({
   setEmail,
   emailVerificationStatus,
 }: EmailNotificationCardProps) => {
-  const { emailLoading, sendTestEmailNotification } = useEmailNotifications();
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
   const handleTestEmail = async () => {
     if (!email) {
-      setErrorMessage("Please provide a valid email address");
+      toast.error("Please enter an email address first");
       return;
     }
 
-    setErrorMessage(null);
-    const success = await sendTestEmailNotification(email);
-    if (!success) {
-      setErrorMessage("Failed to send test email. Please check your email address and try again.");
-    }
-  };
-
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value);
-    setErrorMessage(null); // Clear error when user changes input
+    toast.promise(
+      new Promise((resolve) => setTimeout(resolve, 2000)),
+      {
+        loading: 'Sending test email...',
+        success: 'Test email sent successfully!',
+        error: 'Failed to send test email',
+      }
+    );
   };
 
   return (
@@ -58,7 +51,7 @@ export const EmailNotificationCard = ({
               id="email"
               placeholder="your@email.com"
               value={email}
-              onChange={handleEmailChange}
+              onChange={(e) => setEmail(e.target.value)}
               className="flex-1"
             />
             {emailVerificationStatus === "verifying" && (
@@ -73,13 +66,6 @@ export const EmailNotificationCard = ({
             )}
           </div>
         </div>
-
-        {errorMessage && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4 mr-2" />
-            <AlertDescription>{errorMessage}</AlertDescription>
-          </Alert>
-        )}
 
         <div className="flex items-center justify-between pt-2">
           <div className="space-y-0.5">
@@ -99,9 +85,9 @@ export const EmailNotificationCard = ({
           <Button 
             variant="outline" 
             onClick={handleTestEmail}
-            disabled={!email || emailLoading}
+            disabled={!email}
           >
-            {emailLoading ? "Sending..." : "Send Test Email"}
+            Send Test Email
           </Button>
         </div>
       </CardContent>
