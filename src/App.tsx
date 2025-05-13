@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +17,7 @@ import NotFound from "./pages/NotFound";
 import PPMMachines from "./pages/PPMMachines";
 import OCMMachines from "./pages/OCMMachines";
 import Training from "./pages/Training";
+import Tasks from "./pages/Tasks"; // Add Tasks import
 import Login from "./pages/Login";
 import DepartmentPage from "./pages/DepartmentPage";
 import DepartmentPPMMachines from "./pages/DepartmentPPMMachines";
@@ -55,6 +57,7 @@ const App = () => {
                     <Route path="/login" element={<Login />} />
                     <Route element={<PrivateRoute />}>
                       <Route path="/" element={<Index />} />
+                      <Route path="/tasks" element={<Tasks />} /> {/* Add Tasks route */}
                       <Route path="/notifications" element={<Notifications />} />
                       <Route path="/settings" element={<Settings />} />
                       <Route path="/training" element={<Training />} />

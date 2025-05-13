@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/hover-card";
 import { DepartmentSidebar } from "./DepartmentSidebar";
 import { SidebarTrigger } from "./ui/sidebar";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -62,37 +63,39 @@ export function MainLayout({ children }: MainLayoutProps) {
       
       <div className="flex flex-col flex-1 w-full h-full overflow-hidden">
         {/* Header section */}
-        <header className="bg-card shadow-sm sticky top-0 z-40 w-full">
-          <div className="px-4 py-3 flex items-center justify-between w-full">
+        <header className="bg-card shadow-md sticky top-0 z-40 w-full border-b border-border">
+          <div className="px-6 py-4 flex items-center justify-between w-full">
             {/* Left side of header */}
             <div className="flex items-center gap-4">
               {/* Sidebar trigger button */}
               <SidebarTrigger className="mr-2" />
               
-              <div className="bg-primary rounded-md p-1">
+              <div className="bg-primary rounded-md p-2">
                 <BellRing className="h-6 w-6 text-primary-foreground" />
               </div>
               <div className="flex items-center gap-4">
-                <span className="text-xl font-bold text-foreground hidden sm:inline">AL ORF MAINTENANCE</span>
+                <span className="text-2xl font-bold text-foreground hidden sm:inline">AL ORF MAINTENANCE</span>
                 <span className="text-xl font-bold text-foreground sm:hidden">AMR</span>
-                <HoverCard>
-                  <HoverCardTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full">
-                      <Info className="h-4 w-4 text-muted-foreground" />
-                      <span className="sr-only">About</span>
-                    </Button>
-                  </HoverCardTrigger>
-                  <HoverCardContent className="w-80">
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-semibold">Developer Information</h4>
-                      <div className="text-sm text-muted-foreground space-y-1">
-                        <p><span className="font-medium">Developer:</span> Waleed Mohamed</p>
-                        <p><span className="font-medium">Contact:</span> +96555683677</p>
-                        <p><span className="font-medium">Email:</span> dr.vet.waleedtam@gmail.com</p>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="rounded-full">
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                        <span className="sr-only">About</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="p-4 max-w-xs">
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-semibold">Developer Information</h4>
+                        <div className="text-sm text-muted-foreground space-y-1">
+                          <p><span className="font-medium">Developer:</span> Waleed Mohamed</p>
+                          <p><span className="font-medium">Contact:</span> +96555683677</p>
+                          <p><span className="font-medium">Email:</span> dr.vet.waleedtam@gmail.com</p>
+                        </div>
                       </div>
-                    </div>
-                  </HoverCardContent>
-                </HoverCard>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
             
@@ -100,10 +103,10 @@ export function MainLayout({ children }: MainLayoutProps) {
             <div className="flex items-center gap-2">
               {/* Dark/light mode toggle */}
               <Button 
-                variant="ghost" 
+                variant="outline" 
                 size="icon" 
                 onClick={toggleDarkMode}
-                className="rounded-full"
+                className="rounded-full hover:shadow-sm"
                 aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
               >
                 {isDarkMode ? (
@@ -115,10 +118,10 @@ export function MainLayout({ children }: MainLayoutProps) {
               
               {/* Mobile menu toggle */}
               <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="lg:hidden"
+                className="lg:hidden hover:shadow-sm"
                 aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
               >
                 {isMobileMenuOpen ? (
@@ -129,8 +132,8 @@ export function MainLayout({ children }: MainLayoutProps) {
               </Button>
             </div>
             
-            {/* Desktop navigation - moved slightly to the right */}
-            <nav className="hidden lg:flex gap-3 absolute left-[55%] transform -translate-x-1/2">
+            {/* Desktop navigation */}
+            <nav className="hidden lg:flex gap-4 absolute left-1/2 transform -translate-x-1/2">
               {navItems.map((item) => (
                 <Link
                   key={item.label}
@@ -139,18 +142,18 @@ export function MainLayout({ children }: MainLayoutProps) {
                 >
                   <Button
                     variant={location.pathname === item.path ? "default" : "outline"}
-                    size="sm"
+                    size="lg"
                     className={cn(
-                      "flex items-center gap-2 transition-all duration-200 hover:scale-105",
+                      "flex items-center gap-2 transition-all duration-200 hover:shadow-md",
                       location.pathname === item.path 
-                        ? "font-medium shadow-md" 
-                        : "text-foreground/70 hover:text-primary hover:border-primary"
+                        ? "font-semibold shadow-sm" 
+                        : "text-foreground hover:bg-accent hover:text-primary"
                     )}
                   >
-                    <item.icon className={cn("h-4 w-4", 
+                    <item.icon className={cn("h-5 w-5", 
                       location.pathname === item.path ? "" : "group-hover:text-primary"
                     )} />
-                    <span>{item.label}</span>
+                    <span className="text-base">{item.label}</span>
                   </Button>
                 </Link>
               ))}
@@ -160,11 +163,11 @@ export function MainLayout({ children }: MainLayoutProps) {
           {/* Mobile navigation menu */}
           <div 
             className={cn(
-              "lg:hidden bg-card border-t overflow-hidden transition-all duration-300 ease-in-out",
+              "lg:hidden bg-card border-t overflow-hidden transition-all duration-300 ease-in-out shadow-md",
               isMobileMenuOpen ? "max-h-[300px] opacity-100" : "max-h-0 opacity-0"
             )}
           >
-            <div className="px-4 py-2 space-y-1">
+            <div className="px-4 py-3 space-y-2">
               {navItems.map((item) => (
                 <Link
                   key={item.label}
@@ -174,12 +177,13 @@ export function MainLayout({ children }: MainLayoutProps) {
                   <Button
                     variant={location.pathname === item.path ? "default" : "ghost"}
                     className={cn(
-                      "w-full justify-start",
-                      location.pathname === item.path ? "bg-primary" : ""
+                      "w-full justify-start rounded-lg",
+                      location.pathname === item.path ? "bg-primary shadow-sm" : ""
                     )}
+                    size="lg"
                   >
-                    <item.icon className="h-5 w-5 mr-2" />
-                    <span>{item.label}</span>
+                    <item.icon className="h-5 w-5 mr-3" />
+                    <span className="text-base">{item.label}</span>
                   </Button>
                 </Link>
               ))}
@@ -189,14 +193,14 @@ export function MainLayout({ children }: MainLayoutProps) {
         
         {/* Main content */}
         <main className="flex-1 w-full h-full overflow-auto">
-          <div className="p-4 md:p-6 animate-fade-in w-full max-w-full">
+          <div className="p-6 md:p-8 animate-fade-in w-full max-w-full">
             {children}
           </div>
         </main>
         
         {/* Footer */}
         <footer className="bg-card border-t py-4 w-full">
-          <div className="px-4 text-center text-muted-foreground text-sm">
+          <div className="px-6 text-center text-muted-foreground text-sm">
             &copy; {new Date().getFullYear()} Alorf Maintenance Reminder - Smart Machine Maintenance App
           </div>
         </footer>

@@ -43,6 +43,12 @@
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 210 40% 25%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 0%;
+    
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
   }
 
   .dark {
@@ -96,7 +102,7 @@
   }
 
   h1 {
-    @apply text-3xl font-bold text-foreground mb-4;
+    @apply text-3xl font-bold text-foreground mb-4 border-b pb-2;
   }
 
   h2 {
@@ -117,6 +123,35 @@
 }
 
 @layer components {
+  /* Enhanced form inputs */
+  .form-input {
+    @apply border border-input bg-background px-3 py-2 text-sm ring-offset-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+  }
+  
+  .form-select {
+    @apply border border-input bg-background px-3 py-2 text-sm ring-offset-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+  }
+  
+  /* Card styling */
+  .enhanced-card {
+    @apply bg-white dark:bg-card border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 p-5;
+  }
+  
+  /* Button hover effects */
+  .btn-hover {
+    @apply transition-all duration-200 hover:translate-y-[-2px] hover:shadow-md;
+  }
+  
+  /* Navigation styling */
+  .nav-pill {
+    @apply rounded-full px-4 py-2 transition-colors hover:bg-accent text-foreground font-medium;
+  }
+  
+  .nav-pill.active {
+    @apply bg-primary text-primary-foreground;
+  }
+  
+  /* Engineer name styling */
   .engineer-name {
     @apply text-blue-600 dark:text-blue-400 font-medium;
   }
@@ -125,10 +160,20 @@
     @apply text-lg font-medium;
   }
   
+  /* Table styling */
   .responsive-table {
-    @apply w-full;
+    @apply w-full border border-border rounded-lg overflow-hidden;
   }
   
+  .responsive-table th {
+    @apply bg-muted p-3 text-left text-foreground font-semibold;
+  }
+  
+  .responsive-table td {
+    @apply p-3 border-t border-border;
+  }
+  
+  /* Mobile responsive tables */
   @media (max-width: 768px) {
     .responsive-table thead {
       @apply hidden;
@@ -154,6 +199,7 @@
     }
   }
   
+  /* Countdown timer */
   .countdown-timer {
     @apply relative inline-flex items-center justify-center;
   }
@@ -172,8 +218,9 @@
     @apply text-center text-xs font-medium;
   }
   
+  /* Status badges */
   .status-badge {
-    @apply px-2 py-1 rounded-full text-xs font-semibold;
+    @apply px-2.5 py-1 rounded-full text-xs font-semibold;
   }
   
   .status-badge-overdue {
@@ -188,8 +235,9 @@
     @apply bg-success text-success-foreground;
   }
 
+  /* Card hover effects */
   .card-hover {
-    @apply transition-all duration-200 hover:shadow-md hover:-translate-y-1;
+    @apply transition-all duration-200 hover:shadow-md hover:-translate-y-1 border border-border;
   }
 
   /* Improved mobile tabs */
@@ -213,6 +261,34 @@
   
   /* Mobile card styles */
   .mobile-card {
-    @apply p-4 border rounded-lg mb-4 bg-card;
+    @apply p-4 border rounded-lg mb-4 bg-card shadow-sm;
+  }
+  
+  /* Enhanced section headers */
+  .section-header {
+    @apply text-xl md:text-2xl font-bold pb-2 border-b border-border mb-6;
+  }
+  
+  /* Form groups */
+  .form-group {
+    @apply mb-4;
+  }
+  
+  .form-label {
+    @apply block text-sm font-medium mb-1 text-foreground;
+  }
+  
+  /* Loading animations */
+  .loading-pulse {
+    @apply animate-pulse bg-muted rounded;
+  }
+  
+  /* Dropdown enhancements */
+  .dropdown-menu {
+    @apply z-50 bg-popover border border-border rounded-md shadow-lg p-1;
+  }
+  
+  .dropdown-item {
+    @apply flex w-full items-center rounded-sm px-2 py-1.5 text-sm hover:bg-accent cursor-pointer;
   }
 }
