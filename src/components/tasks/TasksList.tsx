@@ -34,13 +34,13 @@ export function TasksList() {
     
     return {
       id: machine.id,
-      name: machine.name, // Use name directly
-      type: machine.frequency === "Quarterly" ? "PPM" : "OCM", // Determine type from frequency
+      name: machine.name,
+      type: machine.maintenance_interval === "quarterly" ? "PPM" : "OCM",
       status,
       daysRemaining,
       date: machine.nextMaintenanceDate,
-      engineer: "Not assigned", // Default value since we don't have this property
-      department: machine.department || "Not specified", // Use department or default
+      engineer: "Not assigned",
+      department: machine.department || machine.location || "Not specified",
     };
   });
   
