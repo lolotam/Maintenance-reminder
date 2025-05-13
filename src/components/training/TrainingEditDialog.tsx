@@ -12,6 +12,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { EmployeeTraining } from "@/types/training";
+import { departments } from "@/components/machines/PPMFormSchema";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 
 interface TrainingEditDialogProps {
   employee: EmployeeTraining | null;
@@ -128,12 +136,21 @@ export const TrainingEditDialog: React.FC<TrainingEditDialogProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="department">Department</Label>
-              <Input
-                id="department"
+              <Select 
                 value={formData.department}
-                onChange={(e) => handleChange("department", e.target.value)}
-                placeholder="Department"
-              />
+                onValueChange={(value) => handleChange("department", value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select department" />
+                </SelectTrigger>
+                <SelectContent>
+                  {departments.map((dept) => (
+                    <SelectItem key={dept} value={dept}>
+                      {dept}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="trainer">Trainer</Label>

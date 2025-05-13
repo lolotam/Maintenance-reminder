@@ -21,33 +21,32 @@ export const ppmMachineFormSchema = z.object({
 
 export type PPMFormData = z.infer<typeof ppmMachineFormSchema>;
 
-// List of departments from the provided image
+// Updated department list in the requested order
 export const departments = [
+  "LDR",
   "IM",
-  "Sheet1",
   "ENT",
   "OPTHA",
   "DERMA",
-  "ENDOSCOPY",
+  "ENDOSCOPY", 
   "NURSERY",
   "OB-GYN",
   "X-RAY",
   "OR",
-  "LABORATORY",
   "ER",
   "PT",
   "IVF",
-  "GENERAL SURGERY",
-  "DENTAL",
   "CSSD",
-  "LDR",
   "5 A",
   "5 B",
   "6 A",
   "6 B",
-  "LAUNDRY",
   "4A",
   "4 B",
+  "DENTAL",
   "PEDIA",
-  "PLASTIC"
+  "PLASTIC",
+  "LAUNDRY",
+  "LABORATORY",
+  "GENERAL SURGERY"
 ];
