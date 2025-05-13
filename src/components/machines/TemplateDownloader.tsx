@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
-import { downloadTemplate, downloadTemplateWithSample } from "@/utils/excelTemplates";
+import { createExcelTemplate, createBlankTemplate } from "@/utils/excelTemplates";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface TemplateDownloaderProps {
-  type: 'PPM' | 'OCM';
+  type: 'PPM' | 'OCM' | 'training';
   variant?: 'default' | 'outline';
   size?: 'default' | 'sm' | 'lg';
   fullWidth?: boolean;
@@ -33,12 +33,9 @@ export function TemplateDownloader({
   const handleDownloadBlank = () => {
     setIsLoading(true);
     try {
-      const success = downloadTemplate(type);
-      if (success) {
-        toast.success(`Blank ${type} template downloaded successfully`);
-      } else {
-        toast.error(`Failed to download ${type} template`);
-      }
+      // Convert type to lowercase as the function expects lowercase
+      createBlankTemplate(type.toLowerCase() as 'ppm' | 'ocm' | 'training');
+      toast.success(`Blank ${type} template downloaded successfully`);
     } catch (error) {
       console.error(`Error downloading ${type} template:`, error);
       toast.error(`Failed to download ${type} template`);
@@ -50,15 +47,12 @@ export function TemplateDownloader({
   const handleDownloadWithSamples = () => {
     setIsLoading(true);
     try {
-      const success = downloadTemplateWithSample(type);
-      if (success) {
-        toast.success(`${type} templates downloaded successfully`);
-      } else {
-        toast.error(`Failed to download ${type} templates`);
-      }
+      // Convert type to lowercase as the function expects lowercase
+      createExcelTemplate(type.toLowerCase() as 'ppm' | 'ocm' | 'training');
+      toast.success(`${type} template with samples downloaded successfully`);
     } catch (error) {
-      console.error(`Error downloading ${type} templates:`, error);
-      toast.error(`Failed to download ${type} templates`);
+      console.error(`Error downloading ${type} template with samples:`, error);
+      toast.error(`Failed to download ${type} template with samples`);
     } finally {
       setIsLoading(false);
     }

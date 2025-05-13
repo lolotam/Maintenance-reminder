@@ -93,7 +93,7 @@ export const EmployeeTrainingTable = () => {
             />
           </div>
           <TemplateDownloader 
-            templateType="training" 
+            type="training" 
             variant="outline"
           />
         </div>

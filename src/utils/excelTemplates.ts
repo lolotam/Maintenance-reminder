@@ -1,18 +1,32 @@
 
 import * as XLSX from 'xlsx';
 
+// Define headers for templates
+export const PPM_HEADERS = [
+  'Equipment', 'Model', 'Serial Number', 'Manufacturer', 
+  'Log No', 'Department', 'Type', 'Q1 Date', 'Q1 Engineer',
+  'Q2 Date', 'Q2 Engineer', 'Q3 Date', 'Q3 Engineer',
+  'Q4 Date', 'Q4 Engineer'
+];
+
+export const OCM_HEADERS = [
+  'Equipment', 'Model', 'Serial Number', 'Manufacturer', 
+  'Log No', 'Department', 'Type', 'Last Maintenance Date',
+  'Next Maintenance Date', 'Engineer'
+];
+
+export const TRAINING_HEADERS = [
+  'Name', 'Employee ID', 'Department', 'Trainer',
+  'sonar', 'fmx', 'max', 'box20', 'hex'
+];
+
 // Function to create a blank template with sample structure
 export const createExcelTemplate = (templateType: 'ppm' | 'ocm' | 'training') => {
   let header: string[] = [];
   let sampleData: Record<string, string>[] = [];
 
   if (templateType === 'ppm') {
-    header = [
-      'Equipment', 'Model', 'Serial Number', 'Manufacturer', 
-      'Log No', 'Department', 'Type', 'Q1 Date', 'Q1 Engineer',
-      'Q2 Date', 'Q2 Engineer', 'Q3 Date', 'Q3 Engineer',
-      'Q4 Date', 'Q4 Engineer'
-    ];
+    header = PPM_HEADERS;
     
     sampleData = [
       {
@@ -26,11 +40,7 @@ export const createExcelTemplate = (templateType: 'ppm' | 'ocm' | 'training') =>
     ];
   }
   else if (templateType === 'ocm') {
-    header = [
-      'Equipment', 'Model', 'Serial Number', 'Manufacturer', 
-      'Log No', 'Department', 'Type', 'Last Maintenance Date',
-      'Next Maintenance Date', 'Engineer'
-    ];
+    header = OCM_HEADERS;
     
     sampleData = [
       {
@@ -42,10 +52,7 @@ export const createExcelTemplate = (templateType: 'ppm' | 'ocm' | 'training') =>
     ];
   }
   else if (templateType === 'training') {
-    header = [
-      'Name', 'Employee ID', 'Department', 'Trainer',
-      'sonar', 'fmx', 'max', 'box20', 'hex'
-    ];
+    header = TRAINING_HEADERS;
     
     sampleData = [
       {
@@ -71,6 +78,8 @@ export const createExcelTemplate = (templateType: 'ppm' | 'ocm' | 'training') =>
   
   // Write the workbook and download
   XLSX.writeFile(wb, fileName);
+  
+  return true;
 };
 
 // Create a blank template (without sample data)
@@ -78,25 +87,13 @@ export const createBlankTemplate = (templateType: 'ppm' | 'ocm' | 'training') =>
   let header: string[] = [];
 
   if (templateType === 'ppm') {
-    header = [
-      'Equipment', 'Model', 'Serial Number', 'Manufacturer', 
-      'Log No', 'Department', 'Type', 'Q1 Date', 'Q1 Engineer',
-      'Q2 Date', 'Q2 Engineer', 'Q3 Date', 'Q3 Engineer',
-      'Q4 Date', 'Q4 Engineer'
-    ];
+    header = PPM_HEADERS;
   }
   else if (templateType === 'ocm') {
-    header = [
-      'Equipment', 'Model', 'Serial Number', 'Manufacturer', 
-      'Log No', 'Department', 'Type', 'Last Maintenance Date',
-      'Next Maintenance Date', 'Engineer'
-    ];
+    header = OCM_HEADERS;
   }
   else if (templateType === 'training') {
-    header = [
-      'Name', 'Employee ID', 'Department', 'Trainer',
-      'sonar', 'fmx', 'max', 'box20', 'hex'
-    ];
+    header = TRAINING_HEADERS;
   }
 
   // Create a new worksheet
@@ -111,4 +108,6 @@ export const createBlankTemplate = (templateType: 'ppm' | 'ocm' | 'training') =>
   
   // Write the workbook and download
   XLSX.writeFile(wb, fileName);
+  
+  return true;
 };
