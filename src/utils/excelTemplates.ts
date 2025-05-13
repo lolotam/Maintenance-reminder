@@ -1,120 +1,114 @@
 
 import * as XLSX from 'xlsx';
 
-export const PPM_HEADERS = [
-  'Equipment_Name',
-  'Model',
-  'Serial_Number',
-  'Manufacturer',
-  'Log_Number',
-  'Q1_Date',
-  'Q1_Engineer',
-  'Q2_Date',
-  'Q2_Engineer',
-  'Q3_Date',
-  'Q3_Engineer',
-  'Q4_Date',
-  'Q4_Engineer'
-];
+// Function to create a blank template with sample structure
+export const createExcelTemplate = (templateType: 'ppm' | 'ocm' | 'training') => {
+  let header: string[] = [];
+  let sampleData: Record<string, string>[] = [];
 
-export const OCM_HEADERS = [
-  'Equipment_Name',
-  'Model',
-  'Serial_Number',
-  'Manufacturer',
-  'Log_Number',
-  '2025_Maintenance_Date',
-  '2025_Engineer',
-  '2026_Maintenance_Date',
-  '2026_Engineer'
-];
-
-export const generateTemplate = (headers: string[]) => {
-  const ws = XLSX.utils.aoa_to_sheet([headers]);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Template');
-  
-  // Add column widths for better readability
-  const colWidths = headers.map(() => ({ wch: 20 }));
-  ws['!cols'] = colWidths;
-  
-  return wb;
-};
-
-export const downloadTemplate = (type: 'PPM' | 'OCM') => {
-  try {
-    const headers = type === 'PPM' ? PPM_HEADERS : OCM_HEADERS;
-    const wb = generateTemplate(headers);
-    XLSX.writeFile(wb, `${type}_Maintenance_Template.xlsx`);
-    return true;
-  } catch (error) {
-    console.error(`Error downloading ${type} template:`, error);
-    return false;
-  }
-};
-
-// Generate sample data for templates
-export const generateSampleData = (type: 'PPM' | 'OCM', count: number = 2) => {
-  const headers = type === 'PPM' ? PPM_HEADERS : OCM_HEADERS;
-  const data: string[][] = [headers];
-  
-  const currentYear = new Date().getFullYear();
-  
-  for (let i = 0; i < count; i++) {
-    if (type === 'PPM') {
-      data.push([
-        `Sample Equipment ${i+1}`,
-        `Model-${100+i}`,
-        `SN-${1000+i}`,
-        `Manufacturer ${i+1}`,
-        `LOG-${2000+i}`,
-        `${currentYear}-03-15`,
-        'John Smith',
-        `${currentYear}-06-15`,
-        'Emma Davis',
-        `${currentYear}-09-15`,
-        'Michael Brown',
-        `${currentYear}-12-15`,
-        'Sarah Wilson'
-      ]);
-    } else { // OCM
-      data.push([
-        `Sample Equipment ${i+1}`,
-        `Model-${100+i}`,
-        `SN-${1000+i}`,
-        `Manufacturer ${i+1}`,
-        `LOG-${2000+i}`,
-        `${currentYear+1}-06-15`,
-        'John Smith',
-        `${currentYear+2}-06-15`,
-        'Emma Davis'
-      ]);
-    }
-  }
-  
-  const ws = XLSX.utils.aoa_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Sample Data');
-  
-  // Add column widths for better readability
-  const colWidths = headers.map(() => ({ wch: 20 }));
-  ws['!cols'] = colWidths;
-  
-  XLSX.writeFile(wb, `${type}_Sample_Data.xlsx`);
-};
-
-// Download both blank template and sample data
-export const downloadTemplateWithSample = (type: 'PPM' | 'OCM') => {
-  try {
-    // First download the blank template
-    downloadTemplate(type);
+  if (templateType === 'ppm') {
+    header = [
+      'Equipment', 'Model', 'Serial Number', 'Manufacturer', 
+      'Log No', 'Department', 'Type', 'Q1 Date', 'Q1 Engineer',
+      'Q2 Date', 'Q2 Engineer', 'Q3 Date', 'Q3 Engineer',
+      'Q4 Date', 'Q4 Engineer'
+    ];
     
-    // Then download a template with sample data
-    generateSampleData(type);
-    
-    return true;
-  } catch (error) {
-    console.error(`Error downloading ${type} templates:`, error);
-    return false;
+    sampleData = [
+      {
+        'Equipment': 'Patient Monitor', 'Model': 'IntelliVue MX450', 'Serial Number': 'PM789012', 
+        'Manufacturer': 'Philips', 'Log No': 'LG002', 'Department': 'Emergency', 
+        'Type': 'PPM', 'Q1 Date': '2025-02-20', 'Q1 Engineer': 'John Smith',
+        'Q2 Date': '2025-05-20', 'Q2 Engineer': 'Emma Davis',
+        'Q3 Date': '2025-08-20', 'Q3 Engineer': 'Michael Brown',
+        'Q4 Date': '2025-11-20', 'Q4 Engineer': 'Sarah Wilson'
+      }
+    ];
   }
+  else if (templateType === 'ocm') {
+    header = [
+      'Equipment', 'Model', 'Serial Number', 'Manufacturer', 
+      'Log No', 'Department', 'Type', 'Last Maintenance Date',
+      'Next Maintenance Date', 'Engineer'
+    ];
+    
+    sampleData = [
+      {
+        'Equipment': 'Ultrasound', 'Model': 'Voluson E10', 'Serial Number': 'US456789', 
+        'Manufacturer': 'GE Healthcare', 'Log No': 'LG003', 'Department': 'Radiology', 
+        'Type': 'OCM', 'Last Maintenance Date': '2025-01-15', 
+        'Next Maintenance Date': '2026-01-15', 'Engineer': 'Michael Brown'
+      }
+    ];
+  }
+  else if (templateType === 'training') {
+    header = [
+      'Name', 'Employee ID', 'Department', 'Trainer',
+      'sonar', 'fmx', 'max', 'box20', 'hex'
+    ];
+    
+    sampleData = [
+      {
+        'Name': 'Waleed', 'Employee ID': '7678', 'Department': 'LDR', 'Trainer': 'Marline',
+        'sonar': 'Yes', 'fmx': 'Yes', 'max': 'No', 'box20': 'Yes', 'hex': 'No'
+      },
+      {
+        'Name': 'Ahmed', 'Employee ID': '1234', 'Department': 'ICU', 'Trainer': 'Sarah',
+        'sonar': 'No', 'fmx': 'Yes', 'max': 'Yes', 'box20': 'No', 'hex': 'Yes'
+      }
+    ];
+  }
+
+  // Create worksheet with the header
+  const ws = XLSX.utils.json_to_sheet(sampleData, { header });
+  
+  // Create a new workbook and add the worksheet
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, templateType.toUpperCase());
+  
+  // Generate file name based on template type
+  const fileName = `${templateType}_template.xlsx`;
+  
+  // Write the workbook and download
+  XLSX.writeFile(wb, fileName);
+};
+
+// Create a blank template (without sample data)
+export const createBlankTemplate = (templateType: 'ppm' | 'ocm' | 'training') => {
+  let header: string[] = [];
+
+  if (templateType === 'ppm') {
+    header = [
+      'Equipment', 'Model', 'Serial Number', 'Manufacturer', 
+      'Log No', 'Department', 'Type', 'Q1 Date', 'Q1 Engineer',
+      'Q2 Date', 'Q2 Engineer', 'Q3 Date', 'Q3 Engineer',
+      'Q4 Date', 'Q4 Engineer'
+    ];
+  }
+  else if (templateType === 'ocm') {
+    header = [
+      'Equipment', 'Model', 'Serial Number', 'Manufacturer', 
+      'Log No', 'Department', 'Type', 'Last Maintenance Date',
+      'Next Maintenance Date', 'Engineer'
+    ];
+  }
+  else if (templateType === 'training') {
+    header = [
+      'Name', 'Employee ID', 'Department', 'Trainer',
+      'sonar', 'fmx', 'max', 'box20', 'hex'
+    ];
+  }
+
+  // Create a new worksheet
+  const ws = XLSX.utils.aoa_to_sheet([header]);
+  
+  // Create a new workbook and add the worksheet
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, templateType.toUpperCase());
+  
+  // Generate file name based on template type
+  const fileName = `${templateType}_template_blank.xlsx`;
+  
+  // Write the workbook and download
+  XLSX.writeFile(wb, fileName);
 };

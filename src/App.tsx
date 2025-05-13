@@ -15,6 +15,7 @@ import LdrMachines from "./pages/LdrMachines";
 import NotFound from "./pages/NotFound";
 import PPMMachines from "./pages/PPMMachines";
 import OCMMachines from "./pages/OCMMachines";
+import Training from "./pages/Training";
 import Login from "./pages/Login";
 import DepartmentPage from "./pages/DepartmentPage";
 import DepartmentPPMMachines from "./pages/DepartmentPPMMachines";
@@ -56,6 +57,7 @@ const App = () => {
                       <Route path="/" element={<Index />} />
                       <Route path="/notifications" element={<Notifications />} />
                       <Route path="/settings" element={<Settings />} />
+                      <Route path="/training" element={<Training />} />
                       
                       {/* Legacy LDR routes - keep for backward compatibility */}
                       <Route path="/ldr-machines" element={<LdrMachines />} />

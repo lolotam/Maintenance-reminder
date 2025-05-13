@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Settings, BellRing, Moon, Sun, Menu, X, Info, Calendar, ClipboardCheck } from "lucide-react";
+import { Home, Settings, BellRing, Moon, Sun, Menu, X, Info, Calendar, ClipboardCheck, GraduationCap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ export function MainLayout({ children }: MainLayoutProps) {
     { icon: Home, label: "Dashboard", path: "/" },
     { icon: ClipboardCheck, label: "Tasks", path: "/tasks" },
     { icon: Calendar, label: "Schedule", path: "/schedule" },
+    { icon: GraduationCap, label: "Training", path: "/training" },
     { icon: BellRing, label: "Notifications", path: "/notifications" },
     { icon: Settings, label: "Settings", path: "/settings" },
   ];
@@ -72,7 +73,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                 <BellRing className="h-6 w-6 text-primary-foreground" />
               </div>
               <div className="flex items-center gap-4">
-                <span className="text-xl font-bold text-foreground hidden sm:inline">Alorf Maintenance Reminder</span>
+                <span className="text-xl font-bold text-foreground hidden sm:inline">AL ORF MAINTENANCE</span>
                 <span className="text-xl font-bold text-foreground sm:hidden">AMR</span>
                 <HoverCard>
                   <HoverCardTrigger asChild>
