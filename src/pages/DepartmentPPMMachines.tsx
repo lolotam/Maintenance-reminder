@@ -8,6 +8,8 @@ import { useParams, Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { usePPMMachines } from "@/hooks/usePPMMachines";
 import { useMachineOperations } from "@/hooks/useMachineOperations";
+import { TemplateDownloader } from "@/components/machines/TemplateDownloader";
+import { Card, CardContent } from "@/components/ui/card";
 
 const DepartmentPPMMachines = () => {
   const { departmentId } = useParams<{ departmentId: string }>();
@@ -43,7 +45,7 @@ const DepartmentPPMMachines = () => {
   return (
     <MainLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center space-x-2">
             <Link to={`/departments/${departmentId}`}>
               <Button variant="ghost" size="sm">
@@ -53,19 +55,26 @@ const DepartmentPPMMachines = () => {
             </Link>
             <h1 className="text-2xl font-bold tracking-tight">{displayName} PPM Machines</h1>
           </div>
-          <AddMachineDialog 
-            type="ppm" 
-            onAddMachine={handleAddMachine} 
-            defaultDepartment={displayName}
-          />
+          <div className="flex gap-2">
+            <TemplateDownloader type="PPM" />
+            <AddMachineDialog 
+              type="ppm" 
+              onAddMachine={handleAddMachine} 
+              defaultDepartment={displayName}
+            />
+          </div>
         </div>
 
-        <PPMMachinesTable 
-          searchTerm={searchTerm}
-          selectedMachines={selectedMachines}
-          setSelectedMachines={setSelectedMachines}
-          departmentFilter={displayName} // Add department filter
-        />
+        <Card>
+          <CardContent className="p-6">
+            <PPMMachinesTable 
+              searchTerm={searchTerm}
+              selectedMachines={selectedMachines}
+              setSelectedMachines={setSelectedMachines}
+              departmentFilter={displayName} // Add department filter
+            />
+          </CardContent>
+        </Card>
       </div>
     </MainLayout>
   );

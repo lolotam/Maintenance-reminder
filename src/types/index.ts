@@ -20,6 +20,7 @@ export interface Machine {
     '2025'?: { date: string; engineer: string };
     '2026'?: { date: string; engineer: string };
   };
+  department?: string;
 }
 
 export interface NotificationSettings {
@@ -36,3 +37,14 @@ export interface AppSettings {
   whatsappEnabled?: boolean;
   whatsappNumber?: string;
 }
+
+export interface TemplateDownloaderProps {
+  type: 'PPM' | 'OCM';
+  variant?: 'default' | 'outline';
+  size?: 'default' | 'sm' | 'lg';
+  fullWidth?: boolean;
+  className?: string;
+  buttonText?: string;
+}
+
+export type ExcelTemplateType = 'PPM' | 'OCM';
