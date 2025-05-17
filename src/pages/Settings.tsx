@@ -46,20 +46,20 @@ const Settings = () => {
   const [isDarkMode, setIsDarkMode] = useState(settings.enableDarkMode || false);
   
   const handleReminderDayChange = (day: number) => {
-    setReminderDays(prev => 
-      prev.includes(day) 
-        ? prev.filter(d => d !== day) 
-        : [...prev, day].sort((a, b) => b - a)
+    setReminderDays(reminderDays => 
+      reminderDays.includes(day) 
+        ? reminderDays.filter(d => d !== day) 
+        : [...reminderDays, day].sort((a, b) => b - a)
     );
     
     // Update settings
     updateSettings({
-      defaultReminderDays: prev.includes(day) 
-        ? prev.filter(d => d !== day) 
-        : [...prev, day].sort((a, b) => b - a)
+      defaultReminderDays: reminderDays.includes(day) 
+        ? reminderDays.filter(d => d !== day) 
+        : [...reminderDays, day].sort((a, b) => b - a)
     });
     
-    toast.success(`Reminder ${prev.includes(day) ? "removed" : "added"} for ${day} ${day === 1 ? 'day' : 'days'} before due date`);
+    toast.success(`Reminder ${reminderDays.includes(day) ? "removed" : "added"} for ${day} ${day === 1 ? 'day' : 'days'} before due date`);
   };
   
   const handleEnableNotifications = () => {
