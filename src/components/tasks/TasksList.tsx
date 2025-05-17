@@ -35,12 +35,12 @@ export function TasksList() {
     return {
       id: machine.id,
       name: machine.name,
-      type: machine.maintenance_interval === "quarterly" ? "PPM" : "OCM",
+      type: machine.frequency === "Quarterly" ? "PPM" : "OCM",
       status,
       daysRemaining,
       date: machine.nextMaintenanceDate,
       engineer: "Not assigned",
-      department: machine.department || machine.location || "Not specified",
+      department: machine.department || "Not specified",
     };
   });
   
