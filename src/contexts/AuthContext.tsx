@@ -30,27 +30,66 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const location = useLocation();
 
   useEffect(() => {
+    // Track if component is mounted to prevent state updates after unmount
+    let isMounted = true;
+    
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      if (!isMounted) return;
+      
+      console.log('Auth state changed:', event);
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
-      setLoading(false);
       
-      if (event === 'SIGNED_IN' && location.pathname === '/login') {
-        navigate('/');
+      // Only handle navigation AFTER setting the state
+      if (event === 'SIGNED_IN') {
+        // Don't navigate if we're already on a protected route
+        if (location.pathname === '/login') {
+          setTimeout(() => {
+            navigate('/');
+          }, 0);
+        }
       } else if (event === 'SIGNED_OUT') {
-        navigate('/login');
+        // Only navigate to login if we're not already there
+        if (location.pathname !== '/login') {
+          setTimeout(() => {
+            navigate('/login');
+          }, 0);
+        }
+      }
+      
+      if (isMounted) {
+        setLoading(false);
       }
     });
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      if (!isMounted) return;
+      
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
-      setLoading(false);
+      
+      // Initial navigation based on session
+      if (currentSession) {
+        if (location.pathname === '/login') {
+          setTimeout(() => {
+            navigate('/');
+          }, 0);
+        }
+      } else if (location.pathname !== '/login' && location.pathname !== '/unauthorized') {
+        setTimeout(() => {
+          navigate('/login');
+        }, 0);
+      }
+      
+      if (isMounted) {
+        setLoading(false);
+      }
     });
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, [navigate, location.pathname]);

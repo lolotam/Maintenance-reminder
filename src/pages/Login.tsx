@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +13,15 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, user } = useAuth();
+  const navigate = useNavigate();
+  
+  // If user is already authenticated, redirect to home
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,9 +122,16 @@ const Login = () => {
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Logging in..." : "Login"}
                 </Button>
-                <Link to="/forgot-password" className="text-sm text-center text-primary hover:underline">
+                <Button 
+                  variant="link" 
+                  className="text-sm text-center text-primary hover:underline"
+                  onClick={() => toast({
+                    title: "Reset Password",
+                    description: "Password reset functionality is coming soon.",
+                  })}
+                >
                   Forgot your password?
-                </Link>
+                </Button>
               </CardFooter>
             </form>
           </TabsContent>
