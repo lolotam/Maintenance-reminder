@@ -1,164 +1,134 @@
 
-import { Table, TableBody, TableRow, TableCell } from "@/components/ui/table";
+import { Table, TableBody, TableRow, TableCell, TableHead, TableHeader } from "@/components/ui/table";
 import { useState, useEffect } from "react";
 import { MachineTableProps } from "@/types/machines";
-import { MachineFilters as MachineFiltersComponent } from "@/components/machines/MachineFilters";
-import { MachineTableHeader } from "@/components/machines/MachineTableHeader";
-import { MachineTableRow } from "@/components/machines/MachineTableRow";
 import { useOCMMachines } from "@/hooks/useOCMMachines";
-import { OCMEditDialog } from "@/components/machines/OCMEditDialog";
-import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import { LoadingScreen } from "@/components/ui/LoadingScreen";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { format, parseISO } from "date-fns";
 
-export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMachines, departmentFilter }: MachineTableProps) => {
+// List of all departments
+const departments = [
+  "LDR", "IM", "ENT", "OPTHA", "DERMA", "ENDOSCOPY", "NURSERY", "OB-GYN",
+  "X-RAY", "OR", "LABORATORY", "ER", "PT", "IVF", "GENERAL SURGERY", 
+  "DENTAL", "CSSD", "5 A", "5 B", "6 A", "6 B", "LAUNDRY", "4A", "4 B", 
+  "PEDIA", "PLASTIC"
+];
+
+export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMachines }: MachineTableProps) => {
   const {
     filteredMachines,
-    loading,
-    error,
-    filters,
-    setFilters,
-    editingMachine,
-    setEditingMachine,
-    fetchMachines,
-    updateMachine,
-    deleteMachine,
-    setReminder,
     markCompleted
   } = useOCMMachines();
   
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [departmentFilter, setDepartmentFilter] = useState<string>("");
+  const [machines, setMachines] = useState<any[]>([]);
 
-  // Apply department filter if provided
-  const applyDepartmentFilter = (machines: any[]) => {
-    if (!departmentFilter) return machines;
-    return machines.filter(machine => 
-      (machine.location?.toLowerCase() === departmentFilter.toLowerCase()) ||
-      (machine.department?.toLowerCase() === departmentFilter.toLowerCase())
-    );
-  };
-
-  // Set department filter in filters if provided
+  // Apply department filter and update machines
   useEffect(() => {
-    if (departmentFilter && (!filters.department || filters.department !== departmentFilter)) {
-      setFilters({
-        ...filters,
-        department: departmentFilter
-      });
+    let filtered = filteredMachines(searchTerm);
+    if (departmentFilter) {
+      filtered = filtered.filter(machine => 
+        (machine.location?.toLowerCase() === departmentFilter.toLowerCase()) || 
+        (machine.department?.toLowerCase() === departmentFilter.toLowerCase())
+      );
     }
-  }, [departmentFilter, filters]);
+    setMachines(filtered);
+  }, [filteredMachines, searchTerm, departmentFilter]);
 
-  // Toggle machine selection
-  const toggleMachineSelection = (machineId: string) => {
-    setSelectedMachines(
-      selectedMachines.includes(machineId)
-        ? selectedMachines.filter(id => id !== machineId)
-        : [...selectedMachines, machineId]
-    );
-  };
-
-  // Handle select all
-  const handleSelectAll = () => {
-    const machines = applyDepartmentFilter(filteredMachines(searchTerm));
-    if (selectedMachines.length === machines.length) {
-      setSelectedMachines([]);
-    } else {
-      setSelectedMachines(machines.map(m => m.id));
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "Not scheduled";
+    try {
+      return format(parseISO(dateStr), 'MMM d, yyyy');
+    } catch (e) {
+      console.error("Error formatting date:", e);
+      return dateStr;
     }
   };
 
-  if (loading) {
-    return <LoadingScreen />;
-  }
-
-  if (error) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-red-500">Error loading machines: {error.message}</p>
-        <button 
-          className="mt-4 px-4 py-2 bg-primary text-white rounded"
-          onClick={() => fetchMachines({ type: 'ocm' })}
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
-
-  // Apply both filters
-  const machines = applyDepartmentFilter(filteredMachines(searchTerm));
+  const toggleStatus = (machine: any) => {
+    if (!machine.last_maintenance_date) {
+      markCompleted(machine);
+    }
+  };
 
   return (
-    <ErrorBoundary>
-      <div className="space-y-4">
-        <MachineFiltersComponent 
-          filters={filters} 
-          onFilterChange={(newFilters) => setFilters(newFilters)} 
-        />
-        
-        <div className="overflow-x-auto">
-          <Table>
-            <MachineTableHeader 
-              type="ocm"
-              onSelectAll={handleSelectAll}
-              hasSelectedItems={selectedMachines.length > 0}
-            />
-            <TableBody>
-              {machines.length > 0 ? (
-                machines.map((machine) => (
-                  <MachineTableRow
-                    key={machine.id}
-                    machine={{
-                      id: machine.id,
-                      equipment: machine.name,
-                      model: machine.model || '',
-                      serialNumber: machine.serial_number || '',
-                      manufacturer: machine.manufacturer || '',
-                      logNo: machine.log_number || '',
-                      type: 'OCM', // Add machine type
-                      department: machine.location || '', // Use location field for department
-                      maintenanceDate: machine.next_maintenance_date || '',
-                      engineer: machine.engineer_id || '',
-                      location: machine.location || '',
-                      lastMaintenanceDate: machine.last_maintenance_date,
-                      nextMaintenanceDate: machine.next_maintenance_date,
-                    }}
-                    type="ocm"
-                    isSelected={selectedMachines.includes(machine.id)}
-                    onSelect={toggleMachineSelection}
-                    onReminder={() => setReminder(machine)}
-                    onComplete={() => markCompleted(machine)}
-                    onEdit={() => {
-                      setEditingMachine(machine);
-                      setDialogOpen(true);
-                    }}
-                    onDelete={() => {
-                      if (window.confirm(`Are you sure you want to delete ${machine.name}?`)) {
-                        deleteMachine(machine.id);
-                      }
-                    }}
-                  />
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={12} className="text-center py-4">
-                    No OCM machines found matching your criteria.
+    <div className="space-y-4">
+      <div className="flex items-center gap-4">
+        <Select 
+          value={departmentFilter} 
+          onValueChange={setDepartmentFilter}
+        >
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Filter by Department" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All Departments</SelectItem>
+            {departments.map((dept) => (
+              <SelectItem key={dept} value={dept.toLowerCase()}>
+                {dept}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[100px]">OCM</TableHead>
+              <TableHead>Equipment</TableHead>
+              <TableHead>Department</TableHead>
+              <TableHead>Model</TableHead>
+              <TableHead>Serial Number</TableHead>
+              <TableHead>Due Date</TableHead>
+              <TableHead className="w-[150px] text-right">Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {machines.length > 0 ? (
+              machines.map((machine) => (
+                <TableRow key={machine.id}>
+                  <TableCell>Yes</TableCell>
+                  <TableCell>{machine.name || machine.equipment}</TableCell>
+                  <TableCell>{machine.location || machine.department}</TableCell>
+                  <TableCell>{machine.model}</TableCell>
+                  <TableCell>{machine.serial_number || machine.serialNumber}</TableCell>
+                  <TableCell>
+                    {formatDate(machine.next_maintenance_date)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end space-x-2">
+                      <Label htmlFor={`status-${machine.id}`}>
+                        {machine.last_maintenance_date ? "Maintained" : "Pending"}
+                      </Label>
+                      <Switch
+                        id={`status-${machine.id}`}
+                        checked={!!machine.last_maintenance_date}
+                        onCheckedChange={() => toggleStatus(machine)}
+                      />
+                    </div>
                   </TableCell>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        <OCMEditDialog
-          machine={editingMachine}
-          isOpen={dialogOpen}
-          onOpenChange={(open) => {
-            setDialogOpen(open);
-            if (!open) setEditingMachine(null);
-          }}
-          onUpdate={updateMachine}
-        />
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-4">
+                  No OCM machines found matching your criteria.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
-    </ErrorBoundary>
+    </div>
   );
 };

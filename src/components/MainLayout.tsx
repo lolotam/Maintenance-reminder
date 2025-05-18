@@ -11,8 +11,6 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { DepartmentSidebar } from "./DepartmentSidebar";
-import { SidebarTrigger } from "./ui/sidebar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface MainLayoutProps {
@@ -28,9 +26,8 @@ export function MainLayout({ children }: MainLayoutProps) {
   
   const navItems = [
     { icon: Home, label: "Dashboard", path: "/" },
-    { icon: ClipboardCheck, label: "Tasks", path: "/tasks" },
-    { icon: Calendar, label: "Schedule", path: "/schedule" },
-    { icon: GraduationCap, label: "Training", path: "/training" },
+    { icon: ClipboardCheck, label: "PPM", path: "/ppm" },
+    { icon: Calendar, label: "OCM", path: "/ocm" },
     { icon: BellRing, label: "Notifications", path: "/notifications" },
     { icon: Settings, label: "Settings", path: "/settings" },
   ];
@@ -58,18 +55,12 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   return (
     <div className="flex h-screen w-full bg-background transition-colors duration-300 overflow-hidden">
-      {/* Sidebar */}
-      <DepartmentSidebar />
-      
       <div className="flex flex-col flex-1 w-full h-full overflow-hidden">
         {/* Header section */}
         <header className="bg-card shadow-md sticky top-0 z-40 w-full border-b border-border">
           <div className="px-6 py-4 flex items-center justify-between w-full">
             {/* Left side of header */}
             <div className="flex items-center gap-4">
-              {/* Sidebar trigger button */}
-              <SidebarTrigger className="mr-2" />
-              
               <div className="bg-primary rounded-md p-2">
                 <BellRing className="h-6 w-6 text-primary-foreground" />
               </div>

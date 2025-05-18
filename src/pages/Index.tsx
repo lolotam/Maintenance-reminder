@@ -1,112 +1,87 @@
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/MainLayout";
 import { useAppContext } from "@/contexts/AppContext";
-import { differenceInDays, parseISO } from "date-fns";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { DashboardStats } from "@/components/dashboard/DashboardStats";
-import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
-import { MachinesList } from "@/components/dashboard/MachinesList";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PPMMachinesTable } from "@/components/PPMMachinesTable";
+import { OCMMachinesTable } from "@/components/OCMMachinesTable";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Clock } from "@/components/dashboard/Clock";
+import { differenceInDays, parseISO } from "date-fns";
 
 const Dashboard = () => {
-  const { markMachineComplete, filteredMachines, getAllMachines, countMachinesByType } = useAppContext();
-  const [allMachines, setAllMachines] = useState([]);
+  const { getAllMachines, countMachinesByType } = useAppContext();
   const [searchTerm, setSearchTerm] = useState("");
-  const [filters, setFilters] = useState({
-    frequency: "",
-    status: "",
-  });
-  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const isMobile = useIsMobile();
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
+  const [selectedPPMMachines, setSelectedPPMMachines] = useState<string[]>([]);
+  const [selectedOCMMachines, setSelectedOCMMachines] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState("ppm");
+  
   // Get accurate counts from context
   const ppmCount = countMachinesByType("PPM");
   const ocmCount = countMachinesByType("OCM");
   const totalMachines = ppmCount + ocmCount;
 
+  // Calculate statistics for dashboard
+  const [stats, setStats] = useState({
+    total: totalMachines,
+    ppm: ppmCount,
+    ocm: ocmCount,
+    pending: 0,
+    maintained: 0,
+    dueThisWeek: 0,
+    overdue: 0,
+  });
+
   useEffect(() => {
-    const fetchMachines = () => {
-      const machines = getAllMachines();
-      setAllMachines(machines);
-    };
-    
-    fetchMachines();
-    const intervalId = setInterval(fetchMachines, 5000);
-    
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [getAllMachines]);
+    const machines = getAllMachines();
+    let pendingCount = 0;
+    let maintainedCount = 0;
+    let dueThisWeekCount = 0;
+    let overdueCount = 0;
 
-  // Safe days difference calculation
-  const safeDaysDifference = (dateStr: string | null | undefined): number | null => {
-    if (!dateStr) return null;
-    try {
-      const date = parseISO(dateStr);
-      if (isNaN(date.getTime())) return null;
-      const today = new Date();
-      return differenceInDays(date, today);
-    } catch (e) {
-      console.error("Error calculating days difference:", e, dateStr);
-      return null;
-    }
-  };
+    machines.forEach(machine => {
+      if (!machine.lastMaintenanceDate) {
+        pendingCount++;
+      } else {
+        maintainedCount++;
+      }
 
-  // Calculate counters from ALL machines, including those from LDR
-  const counters = allMachines.reduce(
-    (acc, machine) => {
-      const daysRemaining = safeDaysDifference(machine.nextMaintenanceDate);
-      
-      if (daysRemaining !== null) {
-        if (daysRemaining < 0) {
-          acc.overdue += 1;
-        } else {
-          if (daysRemaining <= 7) {
-            acc.upcoming += 1;
+      if (machine.nextMaintenanceDate) {
+        try {
+          const daysRemaining = differenceInDays(
+            parseISO(machine.nextMaintenanceDate),
+            new Date()
+          );
+          
+          if (daysRemaining < 0) {
+            overdueCount++;
+          } else if (daysRemaining <= 7) {
+            dueThisWeekCount++;
           }
-          if (daysRemaining <= 14) {
-            acc.upcoming14 += 1;
-          }
-          if (daysRemaining <= 21) {
-            acc.upcoming21 += 1;
-          }
-          if (daysRemaining <= 30) {
-            acc.upcoming30 += 1;
-          }
-          if (daysRemaining <= 60) {
-            acc.upcoming60 += 1;
-          }
-          if (daysRemaining <= 90) {
-            acc.upcoming90 += 1;
-          }
+        } catch (e) {
+          console.error("Error calculating days difference:", e);
         }
       }
-      
-      return acc;
-    },
-    { 
-      overdue: 0, 
-      upcoming: 0, 
-      upcoming14: 0, 
-      upcoming21: 0, 
-      upcoming30: 0, 
-      upcoming60: 0, 
-      upcoming90: 0, 
-      quarterly: 0, 
-      yearly: 0 
-    }
-  );
+    });
 
-  const displayedMachines = filteredMachines(searchTerm, filters);
+    setStats({
+      total: totalMachines,
+      ppm: ppmCount,
+      ocm: ocmCount,
+      pending: pendingCount,
+      maintained: maintainedCount,
+      dueThisWeek: dueThisWeekCount,
+      overdue: overdueCount,
+    });
+  }, [getAllMachines, totalMachines, ppmCount, ocmCount]);
 
   return (
     <MainLayout>
-      <div className="space-y-8 animate-fade-in">
+      <div className="space-y-6 animate-fade-in">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight mb-2">Dashboard</h1>
+            <h1 className="text-3xl font-bold tracking-tight mb-2">Maintenance Dashboard</h1>
             <p className="text-muted-foreground">
               Monitor and manage your machine maintenance schedule
             </p>
@@ -114,28 +89,95 @@ const Dashboard = () => {
           <Clock />
         </div>
 
-        <DashboardStats 
-          counters={counters} 
-          isMobile={isMobile} 
-          totalMachines={totalMachines}
-          ppmCount={ppmCount}
-          ocmCount={ocmCount}
-        />
+        {/* Dashboard Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-sm font-medium">Total Machines</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.total}</div>
+              <p className="text-xs text-muted-foreground mt-2">
+                PPM: {stats.ppm} • OCM: {stats.ocm}
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-sm font-medium">Pending Maintenance</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.pending}</div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Machines awaiting maintenance
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-sm font-medium">Due This Week</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.dueThisWeek}</div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Machines due within 7 days
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-sm font-medium">Overdue</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-500">{stats.overdue}</div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Machines past their maintenance date
+              </p>
+            </CardContent>
+          </Card>
+        </div>
 
-        <DashboardFilters
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          filters={filters}
-          setFilters={setFilters}
-          isMobile={isMobile}
-          isFiltersOpen={isFiltersOpen}
-          setIsFiltersOpen={setIsFiltersOpen}
-        />
-
-        <MachinesList
-          machines={displayedMachines}
-          onMarkComplete={markMachineComplete}
-        />
+        {/* Main Tabs for PPM and OCM */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid grid-cols-2 mb-4 w-full md:w-[400px]">
+            <TabsTrigger value="ppm">PPM Machines</TabsTrigger>
+            <TabsTrigger value="ocm">OCM Machines</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="ppm" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Preventive Maintenance Machines</h2>
+              <Button
+                variant="outline"
+                onClick={() => setSearchTerm("")}
+              >
+                Clear Filters
+              </Button>
+            </div>
+            <PPMMachinesTable
+              searchTerm={searchTerm}
+              selectedMachines={selectedPPMMachines}
+              setSelectedMachines={setSelectedPPMMachines}
+            />
+          </TabsContent>
+          
+          <TabsContent value="ocm" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold">On-Call Maintenance Machines</h2>
+              <Button
+                variant="outline"
+                onClick={() => setSearchTerm("")}
+              >
+                Clear Filters
+              </Button>
+            </div>
+            <OCMMachinesTable
+              searchTerm={searchTerm}
+              selectedMachines={selectedOCMMachines}
+              setSelectedMachines={setSelectedOCMMachines}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
     </MainLayout>
   );

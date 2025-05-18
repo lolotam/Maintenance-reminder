@@ -13,31 +13,60 @@ serve(async (req) => {
     // This function is intended to be called by a cron job
     
     // Get all machines with next_maintenance_date within the next month
+    // that are still pending maintenance (status not marked as maintained)
     const now = new Date();
     const oneMonthFromNow = new Date();
     oneMonthFromNow.setDate(now.getDate() + 30);
     
-    const { data: machines, error: machinesError } = await supabase
+    // Query for PPM machines that are pending
+    const { data: ppmMachines, error: ppmError } = await supabase
       .from("machines")
       .select(`
         id, 
         name, 
         next_maintenance_date, 
         user_id,
-        user_id, 
-        maintenance_interval
+        last_maintenance_date,
+        location,
+        equipment_type
       `)
+      .eq("equipment_type", "PPM")
+      .is("last_maintenance_date", null)
       .lte("next_maintenance_date", oneMonthFromNow.toISOString())
       .gte("next_maintenance_date", now.toISOString());
       
-    if (machinesError) {
-      throw machinesError;
+    if (ppmError) {
+      throw ppmError;
     }
     
-    console.log(`Found ${machines?.length || 0} machines due for maintenance`);
+    // Query for OCM machines that are pending
+    const { data: ocmMachines, error: ocmError } = await supabase
+      .from("machines")
+      .select(`
+        id, 
+        name, 
+        next_maintenance_date, 
+        user_id,
+        last_maintenance_date,
+        location,
+        equipment_type
+      `)
+      .eq("equipment_type", "OCM")
+      .is("last_maintenance_date", null)
+      .lte("next_maintenance_date", oneMonthFromNow.toISOString())
+      .gte("next_maintenance_date", now.toISOString());
+      
+    if (ocmError) {
+      throw ocmError;
+    }
+    
+    // Combine both types of machines
+    const pendingMachines = [...(ppmMachines || []), ...(ocmMachines || [])];
+    
+    console.log(`Found ${pendingMachines.length} pending machines due for maintenance`);
     
     // For each machine, check user notification preferences and send reminders
-    const results = await Promise.all((machines || []).map(async (machine) => {
+    const results = await Promise.all(pendingMachines.map(async (machine) => {
       try {
         // Get user profile to see notification preferences
         const { data: profile, error: profileError } = await supabase
@@ -98,7 +127,8 @@ serve(async (req) => {
             type: "system",
             status: "pending",
             content: {
-              message: `Maintenance for ${machine.name} is due in ${daysUntil} days`,
+              message: `Maintenance for ${machine.name} in ${machine.location} is due in ${daysUntil} days`,
+              machineType: machine.equipment_type,
               daysUntil,
               maintenanceDate: machine.next_maintenance_date,
             },
@@ -111,14 +141,111 @@ serve(async (req) => {
           return { machine: machine.id, success: false, error: notificationError.message };
         }
         
-        // In a real production app, we would now call other functions to send actual notifications
-        // based on user preferences (email, push, etc.)
+        // Call the notification service to send various types of notifications
+        const sendEmailNotification = settings.email !== false && profile.email;
+        const sendWhatsappNotification = settings.whatsapp === true && profile.whatsapp_number;
+        const sendPushNotification = settings.push !== false;
         
-        return { 
-          machine: machine.id, 
-          success: true, 
-          notificationId: notification.id 
-        };
+        // Track which notifications were sent
+        const notificationsSent = [];
+        
+        // Send email notification
+        if (sendEmailNotification) {
+          try {
+            const { data: emailResult } = await supabase.functions.invoke("send-notification", {
+              body: {
+                notificationId: notification.id,
+                type: "email",
+                machineId: machine.id
+              }
+            });
+            
+            if (emailResult?.success) {
+              notificationsSent.push("email");
+            }
+          } catch (error) {
+            console.error(`Error sending email for machine ${machine.id}:`, error);
+          }
+        }
+        
+        // Send WhatsApp notification
+        if (sendWhatsappNotification) {
+          try {
+            const { data: whatsappResult } = await supabase.functions.invoke("send-notification", {
+              body: {
+                notificationId: notification.id,
+                type: "whatsapp",
+                machineId: machine.id
+              }
+            });
+            
+            if (whatsappResult?.success) {
+              notificationsSent.push("whatsapp");
+            }
+          } catch (error) {
+            console.error(`Error sending WhatsApp for machine ${machine.id}:`, error);
+          }
+        }
+        
+        // Send push notification
+        if (sendPushNotification) {
+          try {
+            const { data: pushResult } = await supabase.functions.invoke("send-notification", {
+              body: {
+                notificationId: notification.id,
+                type: "push",
+                machineId: machine.id
+              }
+            });
+            
+            if (pushResult?.success) {
+              notificationsSent.push("push");
+            }
+          } catch (error) {
+            console.error(`Error sending push notification for machine ${machine.id}:`, error);
+          }
+        }
+        
+        // Update notification status based on what was sent
+        if (notificationsSent.length > 0) {
+          await supabase
+            .from("notifications")
+            .update({
+              status: "sent",
+              sent_at: now.toISOString(),
+              content: {
+                ...notification.content,
+                notificationsSent
+              }
+            })
+            .eq("id", notification.id);
+            
+          return { 
+            machine: machine.id, 
+            success: true, 
+            notificationId: notification.id,
+            notificationsSent
+          };
+        } else {
+          await supabase
+            .from("notifications")
+            .update({
+              status: "failed",
+              content: {
+                ...notification.content,
+                error: "No notification methods were successfully sent"
+              }
+            })
+            .eq("id", notification.id);
+            
+          return { 
+            machine: machine.id, 
+            success: false, 
+            notificationId: notification.id,
+            error: "Failed to send any notifications"
+          };
+        }
+        
       } catch (err) {
         console.error(`Error processing machine ${machine.id}:`, err);
         return { machine: machine.id, success: false, error: err instanceof Error ? err.message : "Unknown error" };
@@ -127,7 +254,7 @@ serve(async (req) => {
     
     return new Response(JSON.stringify({ 
       success: true, 
-      machinesChecked: machines?.length || 0,
+      machinesChecked: pendingMachines.length,
       results 
     }), {
       status: 200,

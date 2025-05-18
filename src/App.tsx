@@ -14,18 +14,14 @@ import { SidebarProvider } from "./components/ui/sidebar";
 import Index from "./pages/Index";
 import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
-import LdrMachines from "./pages/LdrMachines";
 import NotFound from "./pages/NotFound";
-import PPMMachines from "./pages/PPMMachines";
-import OCMMachines from "./pages/OCMMachines";
 import Training from "./pages/Training";
 import Tasks from "./pages/Tasks";
 import Schedule from "./pages/Schedule";
 import Login from "./pages/Login";
 import Unauthorized from "./pages/Unauthorized";
-import DepartmentPage from "./pages/DepartmentPage";
-import DepartmentPPMMachines from "./pages/DepartmentPPMMachines";
-import DepartmentOCMMachines from "./pages/DepartmentOCMMachines";
+import PPMMachinePage from "./pages/PPMMachinePage";
+import OCMMachinePage from "./pages/OCMMachinePage";
 import { useEffect } from "react";
 
 const queryClient = new QueryClient();
@@ -65,6 +61,8 @@ const App = () => {
                       {/* Basic authenticated routes */}
                       <Route element={<PrivateRoute />}>
                         <Route path="/" element={<Index />} />
+                        <Route path="/ppm" element={<PPMMachinePage />} />
+                        <Route path="/ocm" element={<OCMMachinePage />} />
                         <Route path="/tasks" element={<Tasks />} />
                         <Route path="/schedule" element={<Schedule />} />
                         <Route path="/notifications" element={<Notifications />} />
@@ -76,16 +74,6 @@ const App = () => {
                         
                         <Route element={<PermissionRoute requiredPermission="viewRecords" />}>
                           <Route path="/training" element={<Training />} />
-                          
-                          {/* Legacy LDR routes - keep for backward compatibility */}
-                          <Route path="/ldr-machines" element={<LdrMachines />} />
-                          <Route path="/ldr-machines/ppm" element={<PPMMachines />} />
-                          <Route path="/ldr-machines/ocm" element={<OCMMachines />} />
-                          
-                          {/* New department routes */}
-                          <Route path="/departments/:departmentId" element={<DepartmentPage />} />
-                          <Route path="/departments/:departmentId/ppm" element={<DepartmentPPMMachines />} />
-                          <Route path="/departments/:departmentId/ocm" element={<DepartmentOCMMachines />} />
                         </Route>
                       </Route>
                       

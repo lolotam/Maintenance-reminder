@@ -1,132 +1,116 @@
 
-import { Table, TableBody, TableRow, TableCell } from "@/components/ui/table";
-import { useState } from "react";
+import { Table, TableBody, TableRow, TableCell, TableHead, TableHeader } from "@/components/ui/table";
+import { useState, useEffect } from "react";
 import { MachineTableProps } from "@/types/machines";
-import { MachineFilters as MachineFiltersComponent } from "@/components/machines/MachineFilters";
-import { MachineTableHeader } from "@/components/machines/MachineTableHeader";
-import { MachineTableRow } from "@/components/machines/MachineTableRow";
 import { usePPMMachines } from "@/hooks/usePPMMachines";
-import { PPMEditDialog } from "@/components/machines/PPMEditDialog";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
-const mockPPMMachines = [
-  {
-    id: "1",
-    equipment: "Ventilator",
-    model: "PB840",
-    serialNumber: "V123456",
-    manufacturer: "Puritan Bennett",
-    logNo: "LG001",
-    type: "PPM" as const,
-    department: "ICU",
-    q1: { date: "2025-03-15", engineer: "John Smith" },
-    q2: { date: "2025-06-15", engineer: "Emma Davis" },
-    q3: { date: "2025-09-15", engineer: "Michael Brown" },
-    q4: { date: "2025-12-15", engineer: "Sarah Wilson" },
-  },
-  {
-    id: "2",
-    equipment: "Patient Monitor",
-    model: "IntelliVue MX450",
-    serialNumber: "PM789012",
-    manufacturer: "Philips",
-    logNo: "LG002",
-    type: "PPM" as const,
-    department: "Emergency",
-    q1: { date: "2025-02-20", engineer: "John Smith" },
-    q2: { date: "2025-05-20", engineer: "Emma Davis" },
-    q3: { date: "2025-08-20", engineer: "Michael Brown" },
-    q4: { date: "2025-11-20", engineer: "Sarah Wilson" },
-  },
+// List of all departments
+const departments = [
+  "LDR", "IM", "ENT", "OPTHA", "DERMA", "ENDOSCOPY", "NURSERY", "OB-GYN",
+  "X-RAY", "OR", "LABORATORY", "ER", "PT", "IVF", "GENERAL SURGERY", 
+  "DENTAL", "CSSD", "5 A", "5 B", "6 A", "6 B", "LAUNDRY", "4A", "4 B", 
+  "PEDIA", "PLASTIC"
 ];
 
-export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMachines, departmentFilter }: MachineTableProps) => {
+export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMachines }: MachineTableProps) => {
   const {
     filteredMachines,
-    filters,
-    setFilters,
-    handleDelete,
-    editingMachine,
-    setEditingMachine,
-    updateMachine,
-    setReminder,
-    markCompleted
-  } = usePPMMachines(mockPPMMachines);
+    markCompleted,
+    setReminder
+  } = usePPMMachines();
   
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [departmentFilter, setDepartmentFilter] = useState<string>("");
+  const [machines, setMachines] = useState<any[]>([]);
 
-  // Apply department filter if provided
-  const applyDepartmentFilter = (machines: any[]) => {
-    if (!departmentFilter) return machines;
-    return machines.filter(m => 
-      m.department?.toLowerCase() === departmentFilter.toLowerCase()
-    );
-  };
+  // Apply department filter and update machines
+  useEffect(() => {
+    let filtered = filteredMachines(searchTerm);
+    if (departmentFilter) {
+      filtered = filtered.filter(machine => 
+        machine.department?.toLowerCase() === departmentFilter.toLowerCase()
+      );
+    }
+    setMachines(filtered);
+  }, [filteredMachines, searchTerm, departmentFilter]);
 
-  const toggleMachineSelection = (machineId: string) => {
-    setSelectedMachines(
-      selectedMachines.includes(machineId)
-        ? selectedMachines.filter(id => id !== machineId)
-        : [...selectedMachines, machineId]
-    );
-  };
-
-  const handleSelectAll = () => {
-    const machines = applyDepartmentFilter(filteredMachines(searchTerm));
-    if (selectedMachines.length === machines.length) {
-      setSelectedMachines([]);
-    } else {
-      setSelectedMachines(machines.map(m => m.id));
+  const toggleStatus = (machine: any) => {
+    if (!machine.q1?.date) {
+      markCompleted(machine, "Current");
     }
   };
-
-  // Apply both filters
-  const machines = applyDepartmentFilter(filteredMachines(searchTerm));
-
-  // Set department filter in filters if not already set
-  useState(() => {
-    if (departmentFilter && (!filters.department || filters.department !== departmentFilter)) {
-      setFilters({
-        ...filters,
-        department: departmentFilter
-      });
-    }
-  });
 
   return (
     <div className="space-y-4">
-      <MachineFiltersComponent 
-        filters={filters} 
-        onFilterChange={(newFilters) => setFilters(newFilters)} 
-      />
+      <div className="flex items-center gap-4">
+        <Select 
+          value={departmentFilter} 
+          onValueChange={setDepartmentFilter}
+        >
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Filter by Department" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All Departments</SelectItem>
+            {departments.map((dept) => (
+              <SelectItem key={dept} value={dept.toLowerCase()}>
+                {dept}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
       
       <div className="overflow-x-auto">
         <Table>
-          <MachineTableHeader 
-            type="ppm"
-            onSelectAll={handleSelectAll}
-            hasSelectedItems={selectedMachines.length > 0}
-          />
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[100px]">PPM</TableHead>
+              <TableHead>Equipment</TableHead>
+              <TableHead>Department</TableHead>
+              <TableHead>Model</TableHead>
+              <TableHead>Serial Number</TableHead>
+              <TableHead>Due Date</TableHead>
+              <TableHead className="w-[150px] text-right">Status</TableHead>
+            </TableRow>
+          </TableHeader>
           <TableBody>
             {machines.length > 0 ? (
               machines.map((machine) => (
-                <MachineTableRow
-                  key={machine.id}
-                  machine={machine}
-                  type="ppm"
-                  isSelected={selectedMachines.includes(machine.id)}
-                  onSelect={toggleMachineSelection}
-                  onReminder={() => setReminder(machine, "Current")}
-                  onComplete={() => markCompleted(machine, "Current")}
-                  onEdit={() => {
-                    setEditingMachine(machine);
-                    setDialogOpen(true);
-                  }}
-                  onDelete={() => handleDelete(machine)}
-                />
+                <TableRow key={machine.id}>
+                  <TableCell>Yes</TableCell>
+                  <TableCell>{machine.equipment}</TableCell>
+                  <TableCell>{machine.department}</TableCell>
+                  <TableCell>{machine.model}</TableCell>
+                  <TableCell>{machine.serialNumber}</TableCell>
+                  <TableCell>
+                    {machine.q1?.date || "Not scheduled"}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end space-x-2">
+                      <Label htmlFor={`status-${machine.id}`}>
+                        {machine.q1?.date ? "Maintained" : "Pending"}
+                      </Label>
+                      <Switch
+                        id={`status-${machine.id}`}
+                        checked={!!machine.q1?.date}
+                        onCheckedChange={() => toggleStatus(machine)}
+                      />
+                    </div>
+                  </TableCell>
+                </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={16} className="text-center py-4">
+                <TableCell colSpan={7} className="text-center py-4">
                   No PPM machines found matching your criteria.
                 </TableCell>
               </TableRow>
@@ -134,13 +118,6 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
           </TableBody>
         </Table>
       </div>
-
-      <PPMEditDialog
-        machine={editingMachine}
-        isOpen={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onSave={updateMachine}
-      />
     </div>
   );
 };
