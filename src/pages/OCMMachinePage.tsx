@@ -43,7 +43,7 @@ const OCMMachinePage = () => {
               Clear
             </Button>
             
-            <TemplateDownloader type="ocm" />
+            <TemplateDownloader type="OCM" />
             
             <Sheet open={importSheetOpen} onOpenChange={setImportSheetOpen}>
               <SheetTrigger asChild>
@@ -57,7 +57,7 @@ const OCMMachinePage = () => {
                   <SheetTitle>Import OCM Machines Data</SheetTitle>
                 </SheetHeader>
                 <div className="space-y-6">
-                  <TemplateDownloader type="ocm" fullWidth buttonText="Download Template" />
+                  <TemplateDownloader type="OCM" fullWidth buttonText="Download Template" />
                   <FileUploader 
                     onDataReady={(machines) => {
                       toast.success(`${machines.length} machines imported successfully!`);

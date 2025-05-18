@@ -43,7 +43,7 @@ const PPMMachinePage = () => {
               Clear
             </Button>
             
-            <TemplateDownloader type="ppm" />
+            <TemplateDownloader type="PPM" />
             
             <Sheet open={importSheetOpen} onOpenChange={setImportSheetOpen}>
               <SheetTrigger asChild>
@@ -57,7 +57,7 @@ const PPMMachinePage = () => {
                   <SheetTitle>Import PPM Machines Data</SheetTitle>
                 </SheetHeader>
                 <div className="space-y-6">
-                  <TemplateDownloader type="ppm" fullWidth buttonText="Download Template" />
+                  <TemplateDownloader type="PPM" fullWidth buttonText="Download Template" />
                   <FileUploader 
                     onDataReady={(machines) => {
                       toast.success(`${machines.length} machines imported successfully!`);
