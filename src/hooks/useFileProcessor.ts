@@ -4,10 +4,11 @@ import * as XLSX from "xlsx";
 import { v4 as uuidv4 } from "uuid";
 import { Machine } from "@/types";
 import { parseExcelDate } from "@/utils/dateUtils";
-import { PPM_HEADERS, OCM_HEADERS } from "@/utils/excelTemplates";
+import { PPM_HEADERS, OCM_HEADERS, TRAINING_HEADERS } from "@/utils/excelTemplates";
+import { EmployeeTraining, TrainingMachine } from "@/types/training";
 
-export const useFileProcessor = (type: 'PPM' | 'OCM') => {
-  const [parsedData, setParsedData] = useState<Machine[]>([]);
+export const useFileProcessor = (type: 'PPM' | 'OCM' | 'training') => {
+  const [parsedData, setParsedData] = useState<Machine[] | EmployeeTraining[]>([]);
   const [processingError, setProcessingError] = useState<string | null>(null);
 
   const validateHeaders = (headers: string[], expectedHeaders: string[]) => {
@@ -15,7 +16,7 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
     const normalizedExpected = expectedHeaders.map(h => h.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, ''));
     
     const missingColumns = normalizedExpected.filter(expected => 
-      !normalizedHeaders.some(header => header.toLowerCase() === expected.toLowerCase())
+      !normalizedHeaders.some(header => header.toLowerCase().includes(expected.toLowerCase()))
     );
     
     if (missingColumns.length) {
@@ -27,11 +28,11 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
 
   const getExistingMachines = () => {
     try {
-      const key = type === 'PPM' ? "ppmMachines" : "ocmMachines";
+      const key = type === 'PPM' ? "ppmMachines" : type === 'OCM' ? "ocmMachines" : "employeeTraining";
       const stored = localStorage.getItem(key);
       return stored ? JSON.parse(stored) : [];
     } catch (error) {
-      console.error("Error getting existing machines:", error);
+      console.error("Error getting existing data:", error);
       return [];
     }
   };
@@ -42,35 +43,47 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
         throw new Error("No data found in file");
       }
 
-      console.log("Processing file data:", data);
+      console.log(`Processing ${type} file data:`, data);
       const headers = Object.keys(data[0]);
-      const expectedHeaders = type === 'PPM' ? PPM_HEADERS : OCM_HEADERS;
+      let expectedHeaders: string[];
+      
+      if (type === 'PPM') {
+        expectedHeaders = PPM_HEADERS;
+      } else if (type === 'OCM') {
+        expectedHeaders = OCM_HEADERS;
+      } else {
+        expectedHeaders = TRAINING_HEADERS;
+      }
 
       // Validate and normalize headers
       validateHeaders(headers, expectedHeaders);
       
-      const existingMachines = getExistingMachines();
+      const existingData = getExistingMachines();
       
-      let machines: Machine[] = [];
+      let processedData: Machine[] | EmployeeTraining[] = [];
       if (type === 'PPM') {
-        machines = data.map(row => processPPMRow(normalizeRowData(row)));
+        processedData = data.map(row => processPPMRow(normalizeRowData(row)));
+      } else if (type === 'OCM') {
+        processedData = data.map(row => processOCMRow(normalizeRowData(row)));
       } else {
-        machines = data.map(row => processOCMRow(normalizeRowData(row)));
+        processedData = data.map(row => processTrainingRow(normalizeRowData(row)));
       }
 
-      // Merge new machines with existing ones, replacing duplicates
-      const mergedMachines = mergeMachines(existingMachines, machines);
+      // Merge new data with existing one, replacing duplicates
+      const mergedData = mergeData(existingData, processedData);
       
-      const storageKey = type === 'PPM' ? "ppmMachines" : "ocmMachines";
-      localStorage.setItem(storageKey, JSON.stringify(mergedMachines));
+      const storageKey = type === 'PPM' ? "ppmMachines" : type === 'OCM' ? "ocmMachines" : "employeeTraining";
+      localStorage.setItem(storageKey, JSON.stringify(mergedData));
       
-      console.log(`Processed ${machines.length} ${type} machines`, machines);
-      setParsedData(machines);
+      console.log(`Processed ${processedData.length} ${type} records`, processedData);
+      setParsedData(processedData);
       setProcessingError(null);
+      return processedData;
     } catch (error: any) {
       console.error("Error processing file:", error);
       setProcessingError(error.message || "Unknown error processing file");
       setParsedData([]);
+      return [];
     }
   };
 
@@ -86,34 +99,37 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
     return normalized;
   };
 
-  const mergeMachines = (existingMachines: any[], newMachines: any[]) => {
-    const result = [...existingMachines];
+  const mergeData = (existingData: any[], newData: any[]) => {
+    const result = [...existingData];
     
-    newMachines.forEach(newMachine => {
+    newData.forEach(newItem => {
+      const keyField = type === 'training' ? 'name' : 'equipment';
+      const secondaryField = type === 'training' ? 'employeeId' : 'serialNumber';
+      
       const existingIndex = result.findIndex(
         existing => 
-          existing.equipment === newMachine.equipment && 
-          existing.serialNumber === newMachine.serialNumber
+          existing[keyField] === newItem[keyField] && 
+          existing[secondaryField] === newItem[secondaryField]
       );
       
       if (existingIndex >= 0) {
-        result[existingIndex] = { ...newMachine, id: result[existingIndex].id };
+        result[existingIndex] = { ...newItem, id: result[existingIndex].id };
       } else {
-        result.push(newMachine);
+        result.push(newItem);
       }
     });
     
     return result;
   };
 
-  const processPPMRow = (row: any): any => {
+  const processPPMRow = (row: any): Machine => {
     return {
       id: uuidv4(),
-      equipment: row.Equipment_Name || "",
+      equipment: row.Equipment || "",
       manufacturer: row.Manufacturer || "",
       model: row.Model || "",
       serialNumber: row.Serial_Number || "",
-      logNo: row.Log_Number || "",
+      logNo: row.Log_No || "",
       q1: { 
         date: parseExcelDate(row.Q1_Date) || "", 
         engineer: row.Q1_Engineer || "" 
@@ -133,17 +149,53 @@ export const useFileProcessor = (type: 'PPM' | 'OCM') => {
     };
   };
 
-  const processOCMRow = (row: any): any => {
+  const processOCMRow = (row: any): Machine => {
     return {
       id: uuidv4(),
-      equipment: row.Equipment_Name || "",
+      equipment: row.Equipment || "",
       manufacturer: row.Manufacturer || "",
       model: row.Model || "",
       serialNumber: row.Serial_Number || "",
-      logNo: row.Log_Number || "",
-      maintenanceDate: parseExcelDate(row['2025_Maintenance_Date']) || "",
-      engineer: row['2025_Engineer'] || "",
-      nextMaintenanceDate: parseExcelDate(row['2026_Maintenance_Date']) || ""
+      logNo: row.Log_No || "",
+      maintenanceDate: parseExcelDate(row.Last_Maintenance_Date) || "",
+      engineer: row.Engineer || "",
+      nextMaintenanceDate: parseExcelDate(row.Next_Maintenance_Date) || ""
+    };
+  };
+  
+  const processTrainingRow = (row: any): EmployeeTraining => {
+    // Extract machine training statuses
+    // Check for common machine names in the app
+    const commonMachines = ['sonar', 'fmx', 'max', 'box20', 'hex'];
+    const machineTraining: TrainingMachine[] = [];
+    
+    // Process all columns that might be machine names
+    Object.keys(row).forEach(key => {
+      // Skip columns that are definitely not machine names
+      if (['Name', 'Employee_ID', 'Department', 'Trainer'].includes(key)) {
+        return;
+      }
+      
+      // For each potential machine column, treat it as a machine name
+      const machineName = key.toLowerCase();
+      const value = row[key];
+      const trained = value?.toString().toLowerCase() === 'yes' || 
+                     value?.toString().toLowerCase() === 'true' || 
+                     value === true;
+                     
+      machineTraining.push({
+        name: machineName,
+        trained
+      });
+    });
+    
+    return {
+      id: uuidv4(),
+      name: row.Name || "",
+      employeeId: row.Employee_ID || "",
+      department: row.Department || "",
+      trainer: row.Trainer || "",
+      machines: machineTraining
     };
   };
 

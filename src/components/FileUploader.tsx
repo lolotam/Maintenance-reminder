@@ -59,7 +59,7 @@ export function FileUploader({ onDataReady, type }: FileUploaderProps) {
     };
     
     reader.readAsBinaryString(file);
-  }, []);
+  }, [processFileData, setProcessingError]);
 
   const saveToApplication = () => {
     try {

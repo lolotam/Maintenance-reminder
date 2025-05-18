@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface TemplateDownloaderProps {
-  type: 'PPM' | 'OCM' | 'training';
+  type: 'PPM' | 'OCM' | 'training' | 'ppm' | 'ocm';
   variant?: 'default' | 'outline';
   size?: 'default' | 'sm' | 'lg';
   fullWidth?: boolean;
@@ -30,15 +30,22 @@ export function TemplateDownloader({
 }: TemplateDownloaderProps) {
   const [isLoading, setIsLoading] = useState(false);
   
+  // Normalize type to lowercase for internal processing
+  const normalizedType = type.toLowerCase() as 'ppm' | 'ocm' | 'training';
+  
+  // Display type in uppercase for the UI
+  const displayType = type === 'ppm' ? 'PPM' : 
+                      type === 'ocm' ? 'OCM' : 
+                      type.charAt(0).toUpperCase() + type.slice(1);
+  
   const handleDownloadBlank = () => {
     setIsLoading(true);
     try {
-      // Convert type to lowercase as the function expects lowercase
-      createBlankTemplate(type.toLowerCase() as 'ppm' | 'ocm' | 'training');
-      toast.success(`Blank ${type} template downloaded successfully`);
+      createBlankTemplate(normalizedType);
+      toast.success(`Blank ${displayType} template downloaded successfully`);
     } catch (error) {
-      console.error(`Error downloading ${type} template:`, error);
-      toast.error(`Failed to download ${type} template`);
+      console.error(`Error downloading ${displayType} template:`, error);
+      toast.error(`Failed to download ${displayType} template`);
     } finally {
       setIsLoading(false);
     }
@@ -47,12 +54,11 @@ export function TemplateDownloader({
   const handleDownloadWithSamples = () => {
     setIsLoading(true);
     try {
-      // Convert type to lowercase as the function expects lowercase
-      createExcelTemplate(type.toLowerCase() as 'ppm' | 'ocm' | 'training');
-      toast.success(`${type} template with samples downloaded successfully`);
+      createExcelTemplate(normalizedType);
+      toast.success(`${displayType} template with samples downloaded successfully`);
     } catch (error) {
-      console.error(`Error downloading ${type} template with samples:`, error);
-      toast.error(`Failed to download ${type} template with samples`);
+      console.error(`Error downloading ${displayType} template with samples:`, error);
+      toast.error(`Failed to download ${displayType} template with samples`);
     } finally {
       setIsLoading(false);
     }
@@ -68,7 +74,7 @@ export function TemplateDownloader({
           disabled={isLoading}
         >
           <Download className="h-4 w-4" />
-          {buttonText || `Download ${type} Template`}
+          {buttonText || `Download ${displayType} Template`}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
