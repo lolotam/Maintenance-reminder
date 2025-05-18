@@ -15,7 +15,7 @@ import { useEmployeeTraining } from "@/hooks/useEmployeeTraining";
 const Training = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [importSheetOpen, setImportSheetOpen] = useState(false);
-  const { trainingRecords } = useEmployeeTraining();
+  const { employees } = useEmployeeTraining();
 
   return (
     <MainLayout>
@@ -46,7 +46,7 @@ const Training = () => {
             </Button>
             
             <ExcelExporter 
-              data={trainingRecords} 
+              data={employees} 
               filename="training_records"
               buttonText="Export to Excel"
             />
@@ -79,7 +79,7 @@ const Training = () => {
           </div>
         </div>
         
-        <EmployeeTrainingTable searchTerm={searchTerm} />
+        <EmployeeTrainingTable />
       </div>
     </MainLayout>
   );

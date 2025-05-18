@@ -7,10 +7,11 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useFileProcessor } from "@/hooks/useFileProcessor";
 import { DropZone } from "./upload/DropZone";
 import { ParsedDataTable } from "./upload/ParsedDataTable";
+import { EmployeeTraining } from "@/types/training";
 
 interface FileUploaderProps {
-  onDataReady: (machines: Machine[]) => void;
-  type: 'PPM' | 'OCM';
+  onDataReady: (data: Machine[] | EmployeeTraining[]) => void;
+  type: 'PPM' | 'OCM' | 'training';
 }
 
 export function FileUploader({ onDataReady, type }: FileUploaderProps) {

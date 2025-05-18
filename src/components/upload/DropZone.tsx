@@ -5,7 +5,7 @@ import { Upload } from 'lucide-react';
 
 interface DropZoneProps {
   onDrop: (acceptedFiles: File[]) => void;
-  type: 'PPM' | 'OCM';
+  type: 'PPM' | 'OCM' | 'training';
 }
 
 export function DropZone({ onDrop, type }: DropZoneProps) {
