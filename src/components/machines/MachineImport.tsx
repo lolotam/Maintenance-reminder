@@ -5,34 +5,46 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { FileUp } from "lucide-react";
 import { TemplateDownloader } from "@/components/machines/TemplateDownloader";
 import { FileUploader } from "@/components/FileUploader";
-import { EmployeeTraining } from "@/types/training";
+import { ImportType } from "@/hooks/useExcelImport";
 
-interface TrainingImportProps {
+interface MachineImportProps {
+  type: ImportType;
   onImportSuccess?: () => void;
+  buttonText?: string;
+  variant?: "default" | "outline";
+  size?: "default" | "sm" | "lg";
 }
 
-export const TrainingImport: React.FC<TrainingImportProps> = ({ onImportSuccess }) => {
+export const MachineImport: React.FC<MachineImportProps> = ({ 
+  type,
+  onImportSuccess,
+  buttonText = "Import Data",
+  variant = "outline",
+  size = "sm"
+}) => {
   const [importSheetOpen, setImportSheetOpen] = useState(false);
+  
+  const displayType = type === 'PPM' ? 'PPM' : type === 'OCM' ? 'OCM' : type;
 
   return (
     <Sheet open={importSheetOpen} onOpenChange={setImportSheetOpen}>
       <SheetTrigger asChild>
         <Button
-          variant="outline"
-          size="sm"
+          variant={variant}
+          size={size}
           className="gap-1"
         >
           <FileUp className="h-4 w-4" />
-          <span>Import</span>
+          <span>{buttonText}</span>
         </Button>
       </SheetTrigger>
       <SheetContent side="right" className="w-full sm:w-[600px]">
         <SheetHeader className="mb-5">
-          <SheetTitle>Import Employee Training Data</SheetTitle>
+          <SheetTitle>Import {displayType} Machines Data</SheetTitle>
         </SheetHeader>
         <div className="space-y-6">
           <TemplateDownloader 
-            type="training" 
+            type={type} 
             fullWidth 
             buttonText="Download Template" 
           />
@@ -41,7 +53,7 @@ export const TrainingImport: React.FC<TrainingImportProps> = ({ onImportSuccess 
               setImportSheetOpen(false);
               if (onImportSuccess) onImportSuccess();
             }} 
-            type="training"
+            type={type}
           />
         </div>
       </SheetContent>

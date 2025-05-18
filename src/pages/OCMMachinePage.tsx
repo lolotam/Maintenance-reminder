@@ -4,16 +4,13 @@ import { MainLayout } from "@/components/MainLayout";
 import { OCMMachinesTable } from "@/components/OCMMachinesTable";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, FileUp } from "lucide-react";
+import { Search } from "lucide-react";
 import { TemplateDownloader } from "@/components/machines/TemplateDownloader";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { FileUploader } from "@/components/FileUploader";
-import { toast } from "sonner";
+import { MachineImport } from "@/components/machines/MachineImport";
 
 const OCMMachinePage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMachines, setSelectedMachines] = useState<string[]>([]);
-  const [importSheetOpen, setImportSheetOpen] = useState(false);
 
   return (
     <MainLayout>
@@ -45,29 +42,10 @@ const OCMMachinePage = () => {
             
             <TemplateDownloader type="OCM" />
             
-            <Sheet open={importSheetOpen} onOpenChange={setImportSheetOpen}>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="sm" className="flex items-center gap-2">
-                  <FileUp className="h-4 w-4" />
-                  Import Data
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-full sm:w-[600px]">
-                <SheetHeader className="mb-5">
-                  <SheetTitle>Import OCM Machines Data</SheetTitle>
-                </SheetHeader>
-                <div className="space-y-6">
-                  <TemplateDownloader type="OCM" fullWidth buttonText="Download Template" />
-                  <FileUploader 
-                    onDataReady={(machines) => {
-                      toast.success(`${machines.length} machines imported successfully!`);
-                      window.location.reload();
-                    }} 
-                    type="OCM"
-                  />
-                </div>
-              </SheetContent>
-            </Sheet>
+            <MachineImport 
+              type="OCM" 
+              onImportSuccess={() => window.location.reload()} 
+            />
           </div>
         </div>
 

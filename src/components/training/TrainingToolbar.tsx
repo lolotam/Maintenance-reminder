@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, Trash2 } from "lucide-react";
@@ -7,6 +6,7 @@ import { TemplateDownloader } from "@/components/machines/TemplateDownloader";
 import { ExcelExporter } from "@/components/machines/ExcelExporter";
 import { TrainingImport } from "@/components/training/TrainingImport";
 import { useEmployeeTraining } from "@/hooks/useEmployeeTraining";
+import { useExcelExport } from "@/hooks/useExcelExport";
 
 interface TrainingToolbarProps {
   searchTerm: string;
@@ -28,24 +28,10 @@ export const TrainingToolbar: React.FC<TrainingToolbarProps> = ({
   onImportSuccess
 }) => {
   const { employees } = useEmployeeTraining();
+  const { formatTrainingDataForExport } = useExcelExport();
   
   // Prepare data for export
-  const exportData = employees.map(employee => {
-    const baseData = {
-      Name: employee.name,
-      'Employee ID': employee.employeeId,
-      Department: employee.department,
-      Trainer: employee.trainer
-    };
-    
-    // Add machine training status
-    const machineData: {[key: string]: string} = {};
-    employee.machines.forEach(machine => {
-      machineData[machine.name] = machine.trained ? 'Yes' : 'No';
-    });
-    
-    return { ...baseData, ...machineData };
-  });
+  const exportData = formatTrainingDataForExport(employees);
   
   return (
     <div className="flex flex-col sm:flex-row gap-4 justify-between">

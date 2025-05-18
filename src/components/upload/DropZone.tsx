@@ -2,10 +2,11 @@
 import React from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload } from 'lucide-react';
+import { ImportType } from '@/hooks/useExcelImport';
 
 interface DropZoneProps {
   onDrop: (acceptedFiles: File[]) => void;
-  type: 'PPM' | 'OCM' | 'training';
+  type: ImportType;
 }
 
 export function DropZone({ onDrop, type }: DropZoneProps) {

@@ -1,9 +1,8 @@
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
-import { createExcelTemplate, createBlankTemplate } from "@/utils/excelTemplates";
-import { toast } from "sonner";
+import { useExcelTemplates } from "@/hooks/useExcelTemplates";
+import { ImportType } from "@/hooks/useExcelImport";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface TemplateDownloaderProps {
-  type: 'PPM' | 'OCM' | 'training' | 'ppm' | 'ocm';
+  type: ImportType | string;
   variant?: 'default' | 'outline';
   size?: 'default' | 'sm' | 'lg';
   fullWidth?: boolean;
@@ -28,41 +27,15 @@ export function TemplateDownloader({
   className = '',
   buttonText
 }: TemplateDownloaderProps) {
-  const [isLoading, setIsLoading] = useState(false);
+  const { isGenerating, createTemplateWithSamples, createBlankTemplate } = useExcelTemplates();
   
-  // Normalize type to lowercase for internal processing
-  const normalizedType = type.toLowerCase() as 'ppm' | 'ocm' | 'training';
+  // Normalize type for internal processing (ensure uppercase for ImportType)
+  const normalizedType = type.toUpperCase() as ImportType;
   
   // Display type in uppercase for the UI
-  const displayType = type === 'ppm' ? 'PPM' : 
-                      type === 'ocm' ? 'OCM' : 
-                      type.charAt(0).toUpperCase() + type.slice(1);
-  
-  const handleDownloadBlank = () => {
-    setIsLoading(true);
-    try {
-      createBlankTemplate(normalizedType);
-      toast.success(`Blank ${displayType} template downloaded successfully`);
-    } catch (error) {
-      console.error(`Error downloading ${displayType} template:`, error);
-      toast.error(`Failed to download ${displayType} template`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const handleDownloadWithSamples = () => {
-    setIsLoading(true);
-    try {
-      createExcelTemplate(normalizedType);
-      toast.success(`${displayType} template with samples downloaded successfully`);
-    } catch (error) {
-      console.error(`Error downloading ${displayType} template with samples:`, error);
-      toast.error(`Failed to download ${displayType} template with samples`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const displayType = normalizedType === 'PPM' ? 'PPM' : 
+                      normalizedType === 'OCM' ? 'OCM' : 
+                      normalizedType.charAt(0).toUpperCase() + normalizedType.slice(1).toLowerCase();
   
   return (
     <DropdownMenu>
@@ -71,17 +44,17 @@ export function TemplateDownloader({
           variant={variant}
           size={size}
           className={`flex items-center gap-2 ${fullWidth ? 'w-full' : ''} ${className}`}
-          disabled={isLoading}
+          disabled={isGenerating}
         >
           <Download className="h-4 w-4" />
           {buttonText || `Download ${displayType} Template`}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={handleDownloadBlank}>
+        <DropdownMenuItem onClick={() => createBlankTemplate(normalizedType)}>
           Blank Template
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleDownloadWithSamples}>
+        <DropdownMenuItem onClick={() => createTemplateWithSamples(normalizedType)}>
           Template with Sample Data
         </DropdownMenuItem>
       </DropdownMenuContent>

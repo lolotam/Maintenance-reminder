@@ -1,4 +1,3 @@
-
 import { Table, TableBody, TableRow, TableCell, TableHead, TableHeader } from "@/components/ui/table";
 import { useState, useEffect } from "react";
 import { MachineTableProps } from "@/types/machines";
@@ -14,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { DEPARTMENT_OPTIONS } from "@/utils/constants";
 import { ExcelExporter } from "@/components/machines/ExcelExporter";
+import { useExcelExport } from "@/hooks/useExcelExport";
 
 export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMachines }: MachineTableProps) => {
   const {
@@ -22,6 +22,7 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
     setReminder
   } = usePPMMachines();
   
+  const { formatPPMDataForExport } = useExcelExport();
   const [departmentFilter, setDepartmentFilter] = useState<string>("");
   const [machines, setMachines] = useState<any[]>([]);
 
@@ -43,21 +44,7 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
   };
 
   // Prepare data for export
-  const exportData = machines.map(machine => ({
-    Equipment: machine.equipment || '',
-    Department: machine.department || '',
-    Model: machine.model || '',
-    SerialNumber: machine.serialNumber || '',
-    Q1Date: machine.q1?.date || 'Not scheduled',
-    Q1Engineer: machine.q1?.engineer || '',
-    Q2Date: machine.q2?.date || 'Not scheduled',
-    Q2Engineer: machine.q2?.engineer || '',
-    Q3Date: machine.q3?.date || 'Not scheduled',
-    Q3Engineer: machine.q3?.engineer || '',
-    Q4Date: machine.q4?.date || 'Not scheduled',
-    Q4Engineer: machine.q4?.engineer || '',
-    Status: machine.q1?.date ? 'Maintained' : 'Pending'
-  }));
+  const exportData = formatPPMDataForExport(machines);
 
   return (
     <div className="space-y-4">
