@@ -11,6 +11,12 @@ import { TrainingTableRow } from "@/components/training/TrainingTableRow";
 import { TrainingEditDialog } from "@/components/training/TrainingEditDialog";
 import { EmployeeTraining } from "@/types/training";
 import { TemplateDownloader } from "@/components/machines/TemplateDownloader";
+import { ExcelExporter } from "@/components/machines/ExcelExporter";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { FileUploader } from "@/components/FileUploader";
+import { toast } from "sonner";
+import * as XLSX from "xlsx";
+import { v4 as uuidv4 } from "uuid";
 
 export const EmployeeTrainingTable = () => {
   const {
@@ -23,12 +29,14 @@ export const EmployeeTrainingTable = () => {
     bulkDelete,
     addEmployee,
     updateEmployee,
-    availableMachines
+    availableMachines,
+    importEmployees
   } = useEmployeeTraining();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importSheetOpen, setImportSheetOpen] = useState(false);
 
   const employees = filteredEmployees(searchTerm);
 
@@ -58,26 +66,81 @@ export const EmployeeTrainingTable = () => {
     setSelectedEmployees([]);
   };
 
-  // Mock function for importing
-  const handleImport = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.xlsx,.xls,.csv';
-    input.onchange = () => {
-      // This would be where file processing happens
-      if (input.files?.length) {
-        console.log("File selected:", input.files[0].name);
-        // You'd process the file here
+  // Function to handle file import
+  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = e.target?.result;
+        if (!data) throw new Error("No data read from file");
+        
+        const workbook = XLSX.read(data, { type: "binary" });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+        console.log("Raw imported training data:", jsonData);
+        
+        if (jsonData.length === 0) {
+          toast.error("No data found in the file");
+          return;
+        }
+
+        // Process and import the data
+        const processedData = processTrainingData(jsonData);
+        importEmployees(processedData);
+        
+        toast.success(`${processedData.length} employees imported successfully`);
+      } catch (error: any) {
+        console.error("Error reading file:", error);
+        toast.error(error.message || "Error reading file");
       }
     };
-    input.click();
+    
+    reader.readAsBinaryString(file);
   };
 
-  // Mock function for exporting
-  const handleExport = () => {
-    console.log("Exporting data");
-    // Here you would generate and download the file
+  // Process imported training data
+  const processTrainingData = (data: any[]) => {
+    return data.map(row => {
+      // Extract machine training status
+      const machineTraining = availableMachines.map(machineName => ({
+        name: machineName,
+        trained: (row[machineName]?.toString().toLowerCase() === 'yes' || 
+                 row[machineName]?.toString().toLowerCase() === 'true')
+      }));
+
+      return {
+        id: uuidv4(),
+        name: row.Name || row.name || '',
+        employeeId: row['Employee ID'] || row.employeeId || '',
+        department: row.Department || row.department || '',
+        trainer: row.Trainer || row.trainer || '',
+        machines: machineTraining
+      };
+    });
   };
+
+  // Prepare data for export
+  const exportData = employees.map(employee => {
+    const baseData = {
+      Name: employee.name,
+      'Employee ID': employee.employeeId,
+      Department: employee.department,
+      Trainer: employee.trainer
+    };
+    
+    // Add machine training status
+    const machineData: {[key: string]: string} = {};
+    employee.machines.forEach(machine => {
+      machineData[machine.name] = machine.trained ? 'Yes' : 'No';
+    });
+    
+    return { ...baseData, ...machineData };
+  });
 
   return (
     <div className="space-y-4">
@@ -92,10 +155,6 @@ export const EmployeeTrainingTable = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <TemplateDownloader 
-            type="training" 
-            variant="outline"
-          />
         </div>
         <div className="flex items-center gap-2">
           {selectedEmployees.length > 0 && (
@@ -110,24 +169,56 @@ export const EmployeeTrainingTable = () => {
             </Button>
           )}
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleImport}
-              className="gap-1"
-            >
-              <FileUp className="h-4 w-4" />
-              <span>Import</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExport}
-              className="gap-1"
-            >
-              <FileDown className="h-4 w-4" />
-              <span>Export</span>
-            </Button>
+            <TemplateDownloader type="training" variant="outline" />
+            
+            <Sheet open={importSheetOpen} onOpenChange={setImportSheetOpen}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1"
+                >
+                  <FileUp className="h-4 w-4" />
+                  <span>Import</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-full sm:w-[600px]">
+                <SheetHeader className="mb-5">
+                  <SheetTitle>Import Employee Training Data</SheetTitle>
+                </SheetHeader>
+                <div className="space-y-6">
+                  <TemplateDownloader 
+                    type="training" 
+                    fullWidth 
+                    buttonText="Download Template" 
+                  />
+                  <div className="border-2 border-dashed rounded-lg p-10 text-center cursor-pointer transition-colors hover:border-primary/50">
+                    <Input
+                      type="file"
+                      accept=".xlsx,.xls,.csv"
+                      onChange={handleImport}
+                      className="hidden"
+                      id="file-upload"
+                    />
+                    <label htmlFor="file-upload" className="flex flex-col items-center justify-center space-y-2 cursor-pointer">
+                      <FileUp className="h-10 w-10 text-gray-400" />
+                      <p className="text-lg font-medium">
+                        Drag & drop your Excel file here
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        or click to select a file (xlsx, xls, csv)
+                      </p>
+                    </label>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+            
+            <ExcelExporter
+              data={exportData}
+              filename="employee_training"
+              buttonText="Export"
+            />
           </div>
           <Button
             onClick={openAddDialog}

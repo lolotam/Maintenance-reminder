@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { EmployeeTraining, TrainingFilters } from '@/types/training';
+import { v4 as uuidv4 } from 'uuid';
 
 const mockTrainingData: EmployeeTraining[] = [
   {
@@ -106,6 +107,44 @@ export function useEmployeeTraining() {
     toast.success(`${updatedEmployee.name} has been updated`);
     return true;
   };
+
+  const importEmployees = (newEmployees: EmployeeTraining[]) => {
+    if (!newEmployees || newEmployees.length === 0) {
+      toast.error("No valid employees to import");
+      return false;
+    }
+
+    try {
+      // Assign ID to any employees without an ID
+      const employeesWithIds = newEmployees.map(emp => ({
+        ...emp,
+        id: emp.id || uuidv4()
+      }));
+      
+      // Merge with existing employees, replacing duplicates by name and employee ID
+      const mergedEmployees = [...employees];
+      
+      employeesWithIds.forEach(newEmp => {
+        const existingIndex = mergedEmployees.findIndex(
+          e => e.name === newEmp.name && e.employeeId === newEmp.employeeId
+        );
+        
+        if (existingIndex >= 0) {
+          mergedEmployees[existingIndex] = newEmp;
+        } else {
+          mergedEmployees.push(newEmp);
+        }
+      });
+      
+      setEmployees(mergedEmployees);
+      saveToLocalStorage(mergedEmployees);
+      return true;
+    } catch (error) {
+      console.error("Error importing employees:", error);
+      toast.error("Failed to import employee data");
+      return false;
+    }
+  };
   
   // Safe string lowercase comparison helper
   const safeIncludes = (value: string | null | undefined, term: string) => {
@@ -152,6 +191,7 @@ export function useEmployeeTraining() {
     bulkDelete,
     addEmployee,
     updateEmployee,
+    importEmployees,
     availableMachines
   };
 }

@@ -2,6 +2,8 @@
 import { useState } from "react";
 import { MainLayout } from "@/components/MainLayout";
 import { EmployeeTrainingTable } from "@/components/EmployeeTrainingTable";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 
 const Training = () => {
   const [searchTerm, setSearchTerm] = useState("");

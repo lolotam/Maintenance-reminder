@@ -4,11 +4,16 @@ import { MainLayout } from "@/components/MainLayout";
 import { PPMMachinesTable } from "@/components/PPMMachinesTable";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
+import { Search, FileUp } from "lucide-react";
+import { TemplateDownloader } from "@/components/machines/TemplateDownloader";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { FileUploader } from "@/components/FileUploader";
+import { toast } from "sonner";
 
 const PPMMachinePage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMachines, setSelectedMachines] = useState<string[]>([]);
+  const [importSheetOpen, setImportSheetOpen] = useState(false);
 
   return (
     <MainLayout>
@@ -20,8 +25,8 @@ const PPMMachinePage = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1">
+        <div className="flex flex-wrap items-center gap-4 justify-between">
+          <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input 
               placeholder="Search machines..."
@@ -30,12 +35,40 @@ const PPMMachinePage = () => {
               className="pl-10"
             />
           </div>
-          <Button
-            variant="outline"
-            onClick={() => setSearchTerm("")}
-          >
-            Clear
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setSearchTerm("")}
+            >
+              Clear
+            </Button>
+            
+            <TemplateDownloader type="ppm" />
+            
+            <Sheet open={importSheetOpen} onOpenChange={setImportSheetOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                  <FileUp className="h-4 w-4" />
+                  Import Data
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-full sm:w-[600px]">
+                <SheetHeader className="mb-5">
+                  <SheetTitle>Import PPM Machines Data</SheetTitle>
+                </SheetHeader>
+                <div className="space-y-6">
+                  <TemplateDownloader type="ppm" fullWidth buttonText="Download Template" />
+                  <FileUploader 
+                    onDataReady={(machines) => {
+                      toast.success(`${machines.length} machines imported successfully!`);
+                      window.location.reload();
+                    }} 
+                    type="PPM"
+                  />
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
 
         <PPMMachinesTable 

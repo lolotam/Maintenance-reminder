@@ -1,66 +1,76 @@
 
-import React from 'react';
-import { format, isValid } from 'date-fns';
-import { Machine } from '@/types';
-import { FileCheck } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
+import { useState } from "react";
+import { Table, TableBody, TableRow, TableCell, TableHead, TableHeader } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Check, AlertCircle } from "lucide-react";
 
 interface ParsedDataTableProps {
-  data: Machine[];
+  data: any[];
   onSave: () => void;
 }
 
 export function ParsedDataTable({ data, onSave }: ParsedDataTableProps) {
-  if (data.length === 0) return null;
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = () => {
+    onSave();
+    setSaved(true);
+  };
+
+  if (!data.length) {
+    return null;
+  }
+
+  const headers = Object.keys(data[0]);
 
   return (
-    <Card className="overflow-hidden">
-      <div className="p-4 bg-muted flex items-center justify-between">
-        <div className="flex items-center">
-          <FileCheck className="h-5 w-5 mr-2 text-green-500" />
-          <h3 className="font-medium">File Processed Successfully</h3>
-        </div>
-        <Button onClick={onSave}>
-          Save Data
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-medium">Preview ({data.length} items)</h2>
+        <Button
+          onClick={handleSave}
+          disabled={saved}
+          className="gap-2"
+        >
+          {saved ? <Check className="h-4 w-4" /> : null}
+          {saved ? "Imported Successfully" : "Import Data"}
         </Button>
       </div>
 
-      <div className="p-0 overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Machine Name</TableHead>
-              <TableHead>Last Maintenance</TableHead>
-              <TableHead>Frequency</TableHead>
-              <TableHead>Next Maintenance</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.map((machine) => {
-              const lastDate = new Date(machine.lastMaintenanceDate);
-              const nextDate = machine.nextMaintenanceDate ? new Date(machine.nextMaintenanceDate) : null;
-              
-              return (
-                <TableRow key={machine.id}>
-                  <TableCell className="font-medium">{machine.name}</TableCell>
-                  <TableCell>{isValid(lastDate) ? format(lastDate, "MMM d, yyyy") : "N/A"}</TableCell>
-                  <TableCell>{machine.frequency}</TableCell>
-                  <TableCell>{nextDate && isValid(nextDate) ? format(nextDate, "MMM d, yyyy") : "N/A"}</TableCell>
+      {data.length > 0 && (
+        <div className="border rounded-lg overflow-hidden">
+          <div className="max-h-[400px] overflow-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  {headers.slice(0, 5).map((header) => (
+                    <TableHead key={header}>
+                      {header.replace(/_/g, ' ')}
+                    </TableHead>
+                  ))}
                 </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </div>
-    </Card>
+              </TableHeader>
+              <TableBody>
+                {data.slice(0, 10).map((row, i) => (
+                  <TableRow key={i}>
+                    {headers.slice(0, 5).map((header) => (
+                      <TableCell key={header}>
+                        {row[header] || "-"}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          {data.length > 10 && (
+            <div className="p-2 text-center text-sm text-muted-foreground">
+              <AlertCircle className="inline mr-1 h-3 w-3" />
+              Showing 10 of {data.length} records
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }

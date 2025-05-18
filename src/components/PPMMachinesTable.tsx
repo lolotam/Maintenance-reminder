@@ -13,6 +13,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { DEPARTMENT_OPTIONS } from "@/utils/constants";
+import { ExcelExporter } from "@/components/machines/ExcelExporter";
 
 export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMachines }: MachineTableProps) => {
   const {
@@ -27,7 +28,7 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
   // Apply department filter and update machines
   useEffect(() => {
     let filtered = filteredMachines(searchTerm);
-    if (departmentFilter) {
+    if (departmentFilter && departmentFilter !== "all") {
       filtered = filtered.filter(machine => 
         machine.department?.toLowerCase() === departmentFilter.toLowerCase()
       );
@@ -41,9 +42,26 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
     }
   };
 
+  // Prepare data for export
+  const exportData = machines.map(machine => ({
+    Equipment: machine.equipment || '',
+    Department: machine.department || '',
+    Model: machine.model || '',
+    SerialNumber: machine.serialNumber || '',
+    Q1Date: machine.q1?.date || 'Not scheduled',
+    Q1Engineer: machine.q1?.engineer || '',
+    Q2Date: machine.q2?.date || 'Not scheduled',
+    Q2Engineer: machine.q2?.engineer || '',
+    Q3Date: machine.q3?.date || 'Not scheduled',
+    Q3Engineer: machine.q3?.engineer || '',
+    Q4Date: machine.q4?.date || 'Not scheduled',
+    Q4Engineer: machine.q4?.engineer || '',
+    Status: machine.q1?.date ? 'Maintained' : 'Pending'
+  }));
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4 justify-between">
         <Select 
           value={departmentFilter} 
           onValueChange={setDepartmentFilter}
@@ -60,6 +78,12 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
             ))}
           </SelectContent>
         </Select>
+
+        <ExcelExporter 
+          data={exportData}
+          filename="ppm_machines"
+          buttonText="Export PPM Data"
+        />
       </div>
       
       <div className="overflow-x-auto">

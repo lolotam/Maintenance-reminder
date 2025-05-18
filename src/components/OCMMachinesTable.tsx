@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { format, parseISO } from "date-fns";
 import { DEPARTMENT_OPTIONS } from "@/utils/constants";
+import { ExcelExporter } from "@/components/machines/ExcelExporter";
 
 export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMachines }: MachineTableProps) => {
   const {
@@ -27,7 +28,7 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
   // Apply department filter and update machines
   useEffect(() => {
     let filtered = filteredMachines(searchTerm);
-    if (departmentFilter) {
+    if (departmentFilter && departmentFilter !== "all") {
       filtered = filtered.filter(machine => 
         (machine.location?.toLowerCase() === departmentFilter.toLowerCase())
       );
@@ -51,9 +52,20 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
     }
   };
 
+  // Prepare data for export
+  const exportData = machines.map(machine => ({
+    Equipment: machine.name || '',
+    Department: machine.location || '',
+    Model: machine.model || '',
+    SerialNumber: machine.serial_number || '',
+    LastMaintenance: machine.last_maintenance_date ? formatDate(machine.last_maintenance_date) : 'Not Done',
+    NextDueDate: machine.next_maintenance_date ? formatDate(machine.next_maintenance_date) : 'Not Scheduled',
+    Status: machine.last_maintenance_date ? 'Maintained' : 'Pending'
+  }));
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4 justify-between">
         <Select 
           value={departmentFilter} 
           onValueChange={setDepartmentFilter}
@@ -70,6 +82,12 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
             ))}
           </SelectContent>
         </Select>
+        
+        <ExcelExporter 
+          data={exportData}
+          filename="ocm_machines"
+          buttonText="Export OCM Data"
+        />
       </div>
       
       <div className="overflow-x-auto">
