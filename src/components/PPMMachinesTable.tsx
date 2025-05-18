@@ -12,14 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-
-// List of all departments
-const departments = [
-  "LDR", "IM", "ENT", "OPTHA", "DERMA", "ENDOSCOPY", "NURSERY", "OB-GYN",
-  "X-RAY", "OR", "LABORATORY", "ER", "PT", "IVF", "GENERAL SURGERY", 
-  "DENTAL", "CSSD", "5 A", "5 B", "6 A", "6 B", "LAUNDRY", "4A", "4 B", 
-  "PEDIA", "PLASTIC"
-];
+import { DEPARTMENT_OPTIONS } from "@/utils/constants";
 
 export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMachines }: MachineTableProps) => {
   const {
@@ -59,10 +52,10 @@ export const PPMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
             <SelectValue placeholder="Filter by Department" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Departments</SelectItem>
-            {departments.map((dept) => (
-              <SelectItem key={dept} value={dept.toLowerCase()}>
-                {dept}
+            <SelectItem value="all">All Departments</SelectItem>
+            {DEPARTMENT_OPTIONS.map((dept) => (
+              <SelectItem key={dept.value} value={dept.value.toLowerCase()}>
+                {dept.label}
               </SelectItem>
             ))}
           </SelectContent>

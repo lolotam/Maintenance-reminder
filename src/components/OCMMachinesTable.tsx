@@ -62,7 +62,7 @@ export const OCMMachinesTable = ({ searchTerm, selectedMachines, setSelectedMach
             <SelectValue placeholder="Filter by Department" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Departments</SelectItem>
+            <SelectItem value="all">All Departments</SelectItem>
             {DEPARTMENT_OPTIONS.map((dept) => (
               <SelectItem key={dept.value} value={dept.value.toLowerCase()}>
                 {dept.label}
