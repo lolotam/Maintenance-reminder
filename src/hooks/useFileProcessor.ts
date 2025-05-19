@@ -1,13 +1,31 @@
-
 import { useState } from "react";
 import * as XLSX from "xlsx";
 import { v4 as uuidv4 } from "uuid";
 import { Machine } from "@/types";
 import { parseExcelDate } from "@/utils/dateUtils";
-import { PPM_HEADERS, OCM_HEADERS, TRAINING_HEADERS } from "@/utils/excelTemplates";
 import { EmployeeTraining, TrainingMachine } from "@/types/training";
+import { ImportType } from "@/hooks/useExcelImport";
 
-export const useFileProcessor = (type: 'PPM' | 'OCM' | 'training') => {
+// Define the headers directly in this file since they're no longer available from excelTemplates
+const PPM_HEADERS = [
+  'Equipment', 'Model', 'Serial Number', 'Manufacturer', 
+  'Log No', 'Department', 'Type', 'Q1 Date', 'Q1 Engineer',
+  'Q2 Date', 'Q2 Engineer', 'Q3 Date', 'Q3 Engineer',
+  'Q4 Date', 'Q4 Engineer'
+];
+
+const OCM_HEADERS = [
+  'Equipment', 'Model', 'Serial Number', 'Manufacturer', 
+  'Log No', 'Department', 'Type', 'Last Maintenance Date',
+  'Next Maintenance Date', 'Engineer'
+];
+
+const TRAINING_HEADERS = [
+  'Name', 'Employee ID', 'Department', 'Trainer',
+  'sonar', 'fmx', 'max', 'box20', 'hex'
+];
+
+export const useFileProcessor = (type: ImportType) => {
   const [parsedData, setParsedData] = useState<Machine[] | EmployeeTraining[]>([]);
   const [processingError, setProcessingError] = useState<string | null>(null);
 
