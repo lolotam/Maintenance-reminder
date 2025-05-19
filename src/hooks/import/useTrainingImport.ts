@@ -3,13 +3,15 @@ import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { EmployeeTraining, TrainingMachine } from "@/types/training";
 import { TRAINING_HEADERS, validateHeaders, normalizeRowData, getExistingData, mergeData } from "./importUtils";
+import { toast } from "sonner";
 
 /**
- * Hook for handling employee training data import
+ * Hook for handling training data import
  */
 export const useTrainingImport = () => {
   const [parsedData, setParsedData] = useState<EmployeeTraining[]>([]);
   const [processingError, setProcessingError] = useState<string | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
 
   /**
    * Processes training row data
@@ -49,7 +51,7 @@ export const useTrainingImport = () => {
   };
 
   /**
-   * Process file data for employee training
+   * Process file data for training records
    */
   const processFileData = (data: any[]) => {
     try {
@@ -76,14 +78,20 @@ export const useTrainingImport = () => {
       console.log(`Processed ${processedData.length} training records`, processedData);
       setParsedData(processedData);
       setProcessingError(null);
+      
+      toast.success(`${processedData.length} training records imported successfully!`);
+      
       return processedData;
     } catch (error: any) {
       console.error("Error processing file:", error);
       setProcessingError(error.message || "Unknown error processing file");
+      toast.error(`Import error: ${error.message || "Unknown error"}`);
       setParsedData([]);
       return [];
+    } finally {
+      setIsImporting(false);
     }
   };
 
-  return { parsedData, processingError, processFileData, setProcessingError };
+  return { parsedData, processingError, isImporting, processFileData, setProcessingError };
 };

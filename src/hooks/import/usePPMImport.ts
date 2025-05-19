@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Machine } from "@/types";
 import { parseExcelDate } from "@/utils/dateUtils";
 import { PPM_HEADERS, validateHeaders, normalizeRowData, getExistingData, mergeData } from "./importUtils";
+import { toast } from "sonner";
 
 /**
  * Hook for handling PPM machine data import
@@ -11,6 +12,7 @@ import { PPM_HEADERS, validateHeaders, normalizeRowData, getExistingData, mergeD
 export const usePPMImport = () => {
   const [parsedData, setParsedData] = useState<Machine[]>([]);
   const [processingError, setProcessingError] = useState<string | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
 
   /**
    * Processes PPM row data
@@ -72,14 +74,20 @@ export const usePPMImport = () => {
       console.log(`Processed ${processedData.length} PPM records`, processedData);
       setParsedData(processedData);
       setProcessingError(null);
+      
+      toast.success(`${processedData.length} PPM records imported successfully!`);
+      
       return processedData;
     } catch (error: any) {
       console.error("Error processing file:", error);
       setProcessingError(error.message || "Unknown error processing file");
+      toast.error(`Import error: ${error.message || "Unknown error"}`);
       setParsedData([]);
       return [];
+    } finally {
+      setIsImporting(false);
     }
   };
 
-  return { parsedData, processingError, processFileData, setProcessingError };
+  return { parsedData, processingError, isImporting, processFileData, setProcessingError };
 };

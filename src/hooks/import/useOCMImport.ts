@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Machine } from "@/types";
 import { parseExcelDate } from "@/utils/dateUtils";
 import { OCM_HEADERS, validateHeaders, normalizeRowData, getExistingData, mergeData } from "./importUtils";
+import { toast } from "sonner";
 
 /**
  * Hook for handling OCM machine data import
@@ -11,6 +12,7 @@ import { OCM_HEADERS, validateHeaders, normalizeRowData, getExistingData, mergeD
 export const useOCMImport = () => {
   const [parsedData, setParsedData] = useState<Machine[]>([]);
   const [processingError, setProcessingError] = useState<string | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
 
   /**
    * Processes OCM row data
@@ -59,14 +61,20 @@ export const useOCMImport = () => {
       console.log(`Processed ${processedData.length} OCM records`, processedData);
       setParsedData(processedData);
       setProcessingError(null);
+      
+      toast.success(`${processedData.length} OCM records imported successfully!`);
+      
       return processedData;
     } catch (error: any) {
       console.error("Error processing file:", error);
       setProcessingError(error.message || "Unknown error processing file");
+      toast.error(`Import error: ${error.message || "Unknown error"}`);
       setParsedData([]);
       return [];
+    } finally {
+      setIsImporting(false);
     }
   };
 
-  return { parsedData, processingError, processFileData, setProcessingError };
+  return { parsedData, processingError, isImporting, processFileData, setProcessingError };
 };

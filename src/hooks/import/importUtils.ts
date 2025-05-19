@@ -95,3 +95,46 @@ export const mergeData = (existingData: any[], newData: any[], type: ImportType)
   
   return result;
 };
+
+/**
+ * Handle file upload and conversion to JSON data
+ */
+export const handleFileUpload = (file: File, processFileData: (data: any[]) => void, setError: (error: string | null) => void, setIsImporting: (isImporting: boolean) => void) => {
+  setError(null);
+  setIsImporting(true);
+  
+  const validTypes = [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-excel",
+    "text/csv"
+  ];
+  
+  if (!validTypes.includes(file.type)) {
+    setError("Invalid file type. Please upload Excel or CSV file");
+    setIsImporting(false);
+    return;
+  }
+  
+  const reader = new FileReader();
+  
+  reader.onload = (e) => {
+    try {
+      const data = e.target?.result;
+      if (!data) throw new Error("No data read from file");
+      
+      const workbook = XLSX.read(data, { type: "binary" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      processFileData(jsonData);
+    } catch (error: any) {
+      console.error("Error reading file:", error);
+      setError(error.message || "Error reading file");
+    } finally {
+      setIsImporting(false);
+    }
+  };
+  
+  reader.readAsBinaryString(file);
+};
